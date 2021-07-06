@@ -6,11 +6,9 @@
 //! use nonempty_collections::NEVec;
 //!
 //! let mut l = NEVec { head: 42, tail: vec![36, 58] };
-//!
 //! assert_eq!(l.head, 42);
 //!
 //! l.push(9001);
-//!
 //! assert_eq!(l.last(), &9001);
 //!
 //! let v: Vec<i32> = l.into();
@@ -21,6 +19,33 @@ use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::mem;
 use std::{iter, vec};
+
+/// Like the `vec!` macro, but enforces at least one argument. A nice short-hand
+/// for constructing [`NonEmpty`] values.
+///
+/// ```
+/// use nonempty_collections::{NEVec, nev};
+///
+/// let v = nev![1, 2, 3];
+/// assert_eq!(v, NEVec { head: 1, tail: vec![2, 3] });
+///
+/// let v = nev![1];
+/// assert_eq!(v, NEVec { head: 1, tail: Vec::new() });
+///
+/// // Doesn't compile!
+/// // let v = nev![];
+/// ```
+#[macro_export]
+macro_rules! nev {
+    ($h:expr, $( $x:expr ),*) => {{
+        let mut tail = Vec::new();
+        $( tail.push($x); )*
+        $crate::NEVec { head: $h, tail }
+    }};
+    ($h:expr) => {
+        $crate::NEVec { head: $h, tail: Vec::new() }
+    }
+}
 
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[cfg_attr(
