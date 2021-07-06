@@ -3,7 +3,7 @@
 //! # Examples
 //!
 //! ```
-//! use nonempty::NonEmpty;
+//! use nonempty_collections::NonEmpty;
 //!
 //! let mut l = NonEmpty { head: 42, tail: vec![36, 58] };
 //!
@@ -16,7 +16,7 @@
 //! let v: Vec<i32> = l.into();
 //! assert_eq!(v, vec![42, 36, 58, 9001]);
 //! ```
-#[cfg(feature = "serialize")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::mem;
@@ -24,9 +24,9 @@ use std::{iter, vec};
 
 pub mod nonzero;
 
-#[cfg_attr(feature = "serialize", derive(Deserialize, Serialize))]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[cfg_attr(
-    feature = "serialize",
+    feature = "serde",
     serde(bound(serialize = "T: Clone + Serialize")),
     serde(into = "Vec<T>", try_from = "Vec<T>")
 )]
@@ -37,7 +37,7 @@ pub struct NonEmpty<T> {
 }
 
 impl<T> NonEmpty<T> {
-    /// Alias for [`NonEmpty::singleton`].
+    /// Alias for [`nonempty_collections::singleton`].
     pub const fn new(e: T) -> Self {
         Self::singleton(e)
     }
@@ -65,7 +65,7 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let mut non_empty = NonEmpty::new(42);
     /// let head = non_empty.first_mut();
@@ -84,7 +84,7 @@ impl<T> NonEmpty<T> {
     /// Get the possibly-empty tail of the list.
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty = NonEmpty::new(42);
     /// assert_eq!(non_empty.tail(), &[]);
@@ -115,7 +115,7 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let mut non_empty = NonEmpty::from((1, vec![2, 3]));
     /// non_empty.insert(1, 4);
@@ -166,7 +166,7 @@ impl<T> NonEmpty<T> {
     /// Check whether an element is contained in the list.
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let mut l = NonEmpty::from((42, vec![36, 58]));
     ///
@@ -205,7 +205,7 @@ impl<T> NonEmpty<T> {
     }
 
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let mut l = NonEmpty::from((42, vec![36, 58]));
     ///
@@ -221,7 +221,7 @@ impl<T> NonEmpty<T> {
     }
 
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let mut l = NonEmpty::new(42);
     /// l.push(36);
@@ -250,7 +250,7 @@ impl<T> NonEmpty<T> {
     /// # Example Use
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty_vec = NonEmpty::from_slice(&[1, 2, 3, 4, 5]);
     /// assert_eq!(non_empty_vec, Some(NonEmpty::from((1, vec![2, 3, 4, 5]))));
@@ -279,7 +279,7 @@ impl<T> NonEmpty<T> {
     /// # Example Use
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty_vec = NonEmpty::from_vec(vec![1, 2, 3, 4, 5]);
     /// assert_eq!(non_empty_vec, Some(NonEmpty::from((1, vec![2, 3, 4, 5]))));
@@ -303,7 +303,7 @@ impl<T> NonEmpty<T> {
     /// # Example Use
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let mut non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
     ///
@@ -327,7 +327,7 @@ impl<T> NonEmpty<T> {
     /// # Example Use
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let mut non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
     ///
@@ -352,7 +352,7 @@ impl<T> NonEmpty<T> {
     /// # Example Use
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let mut non_empty = NonEmpty::new(1);
     /// let mut vec = vec![2, 3, 4, 5];
@@ -374,7 +374,7 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
     ///
@@ -401,7 +401,7 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
     ///
@@ -434,7 +434,7 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty = NonEmpty::from((
     ///     NonEmpty::from((1, vec![2, 3])),
@@ -460,7 +460,7 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty = NonEmpty::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
     /// assert_eq!(non_empty.binary_search(&0),   Ok(0));
@@ -474,7 +474,7 @@ impl<T> NonEmpty<T> {
     /// If you want to insert an item to a sorted non-empty vector, while maintaining sort order:
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let mut non_empty = NonEmpty::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
     /// let num = 42;
@@ -505,7 +505,7 @@ impl<T> NonEmpty<T> {
     /// position; the second and third are not found; the fourth could match any position in [1,4].
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty = NonEmpty::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
     /// let seek = 0;
@@ -550,7 +550,7 @@ impl<T> NonEmpty<T> {
     /// the fourth could match any position in [1, 4].
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty = NonEmpty::from((
     ///     (0, 0),
@@ -581,7 +581,7 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty = NonEmpty::new(42);
     /// assert_eq!(non_empty.maximum(), &42);
@@ -603,7 +603,7 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty = NonEmpty::new(42);
     /// assert_eq!(non_empty.minimum(), &42);
@@ -625,7 +625,7 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty = NonEmpty::new((0, 42));
     /// assert_eq!(non_empty.maximum_by(|(k, _), (l, _)| k.cmp(l)), &(0, 42));
@@ -653,7 +653,7 @@ impl<T> NonEmpty<T> {
     /// This will return the first item in the vector if the tail is empty.
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty = NonEmpty::new((0, 42));
     /// assert_eq!(non_empty.minimum_by(|(k, _), (l, _)| k.cmp(l)), &(0, 42));
@@ -675,7 +675,7 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty = NonEmpty::new((0, 42));
     /// assert_eq!(non_empty.maximum_by_key(|(k, _)| k), &(0, 42));
@@ -698,7 +698,7 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty = NonEmpty::new((0, 42));
     /// assert_eq!(non_empty.minimum_by_key(|(k, _)| k), &(0, 42));
@@ -759,7 +759,7 @@ impl<T> std::ops::Index<usize> for NonEmpty<T> {
     type Output = T;
 
     /// ```
-    /// use nonempty::NonEmpty;
+    /// use nonempty_collections::NonEmpty;
     ///
     /// let non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
     ///
@@ -786,7 +786,7 @@ impl<T> std::ops::IndexMut<usize> for NonEmpty<T> {
     }
 }
 
-#[cfg(feature = "serialize")]
+#[cfg(feature = "serde")]
 pub mod serialize {
     use std::{convert::TryFrom, fmt};
 
@@ -858,7 +858,7 @@ mod tests {
         assert_eq!(non_empty.head, 42);
     }
 
-    #[cfg(feature = "serialize")]
+    #[cfg(feature = "serde")]
     mod serialize {
         use crate::NonEmpty;
         use serde::{Deserialize, Serialize};
