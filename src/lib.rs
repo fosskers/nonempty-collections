@@ -3,9 +3,9 @@
 //! # Examples
 //!
 //! ```
-//! use nonempty_collections::NonEmpty;
+//! use nonempty_collections::NEVec;
 //!
-//! let mut l = NonEmpty { head: 42, tail: vec![36, 58] };
+//! let mut l = NEVec { head: 42, tail: vec![36, 58] };
 //!
 //! assert_eq!(l.head, 42);
 //!
@@ -22,8 +22,6 @@ use std::cmp::Ordering;
 use std::mem;
 use std::{iter, vec};
 
-pub mod nonzero;
-
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[cfg_attr(
     feature = "serde",
@@ -31,12 +29,12 @@ pub mod nonzero;
     serde(into = "Vec<T>", try_from = "Vec<T>")
 )]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct NonEmpty<T> {
+pub struct NEVec<T> {
     pub head: T,
     pub tail: Vec<T>,
 }
 
-impl<T> NonEmpty<T> {
+impl<T> NEVec<T> {
     /// Alias for [`nonempty_collections::singleton`].
     pub const fn new(e: T) -> Self {
         Self::singleton(e)
@@ -44,7 +42,7 @@ impl<T> NonEmpty<T> {
 
     /// Create a new non-empty list with an initial element.
     pub const fn singleton(head: T) -> Self {
-        NonEmpty {
+        NEVec {
             head,
             tail: Vec::new(),
         }
@@ -65,14 +63,14 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let mut non_empty = NonEmpty::new(42);
+    /// let mut non_empty = NEVec::new(42);
     /// let head = non_empty.first_mut();
     /// *head += 1;
     /// assert_eq!(non_empty.first(), &43);
     ///
-    /// let mut non_empty = NonEmpty::from((1, vec![4, 2, 3]));
+    /// let mut non_empty = NEVec::from((1, vec![4, 2, 3]));
     /// let head = non_empty.first_mut();
     /// *head *= 42;
     /// assert_eq!(non_empty.first(), &42);
@@ -84,12 +82,12 @@ impl<T> NonEmpty<T> {
     /// Get the possibly-empty tail of the list.
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty = NonEmpty::new(42);
+    /// let non_empty = NEVec::new(42);
     /// assert_eq!(non_empty.tail(), &[]);
     ///
-    /// let non_empty = NonEmpty::from((1, vec![4, 2, 3]));
+    /// let non_empty = NEVec::from((1, vec![4, 2, 3]));
     /// assert_eq!(non_empty.tail(), &[4, 2, 3]);
     /// ```
     pub fn tail(&self) -> &[T] {
@@ -115,15 +113,15 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let mut non_empty = NonEmpty::from((1, vec![2, 3]));
+    /// let mut non_empty = NEVec::from((1, vec![2, 3]));
     /// non_empty.insert(1, 4);
-    /// assert_eq!(non_empty, NonEmpty::from((1, vec![4, 2, 3])));
+    /// assert_eq!(non_empty, NEVec::from((1, vec![4, 2, 3])));
     /// non_empty.insert(4, 5);
-    /// assert_eq!(non_empty, NonEmpty::from((1, vec![4, 2, 3, 5])));
+    /// assert_eq!(non_empty, NEVec::from((1, vec![4, 2, 3, 5])));
     /// non_empty.insert(0, 42);
-    /// assert_eq!(non_empty, NonEmpty::from((42, vec![1, 4, 2, 3, 5])));
+    /// assert_eq!(non_empty, NEVec::from((42, vec![1, 4, 2, 3, 5])));
     /// ```
     pub fn insert(&mut self, index: usize, element: T) {
         let len = self.len();
@@ -166,9 +164,9 @@ impl<T> NonEmpty<T> {
     /// Check whether an element is contained in the list.
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let mut l = NonEmpty::from((42, vec![36, 58]));
+    /// let mut l = NEVec::from((42, vec![36, 58]));
     ///
     /// assert!(l.contains(&42));
     /// assert!(!l.contains(&101));
@@ -205,9 +203,9 @@ impl<T> NonEmpty<T> {
     }
 
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let mut l = NonEmpty::from((42, vec![36, 58]));
+    /// let mut l = NEVec::from((42, vec![36, 58]));
     ///
     /// let mut l_iter = l.iter();
     ///
@@ -221,9 +219,9 @@ impl<T> NonEmpty<T> {
     }
 
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let mut l = NonEmpty::new(42);
+    /// let mut l = NEVec::new(42);
     /// l.push(36);
     /// l.push(58);
     ///
@@ -242,75 +240,75 @@ impl<T> NonEmpty<T> {
         iter::once(&mut self.head).chain(self.tail.iter_mut())
     }
 
-    /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is `NonEmpty` before
+    /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is `NEVec` before
     /// proceeding with a computation. Using `from_slice` will give us a proof
-    /// that we have a `NonEmpty` in the `Some` branch, otherwise it allows
+    /// that we have a `NEVec` in the `Some` branch, otherwise it allows
     /// the caller to handle the `None` case.
     ///
     /// # Example Use
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty_vec = NonEmpty::from_slice(&[1, 2, 3, 4, 5]);
-    /// assert_eq!(non_empty_vec, Some(NonEmpty::from((1, vec![2, 3, 4, 5]))));
+    /// let non_empty_vec = NEVec::from_slice(&[1, 2, 3, 4, 5]);
+    /// assert_eq!(non_empty_vec, Some(NEVec::from((1, vec![2, 3, 4, 5]))));
     ///
-    /// let empty_vec: Option<NonEmpty<&u32>> = NonEmpty::from_slice(&[]);
+    /// let empty_vec: Option<NEVec<&u32>> = NEVec::from_slice(&[]);
     /// assert!(empty_vec.is_none());
     /// ```
-    pub fn from_slice(slice: &[T]) -> Option<NonEmpty<T>>
+    pub fn from_slice(slice: &[T]) -> Option<NEVec<T>>
     where
         T: Clone,
     {
-        slice.split_first().map(|(h, t)| NonEmpty {
+        slice.split_first().map(|(h, t)| NEVec {
             head: h.clone(),
             tail: t.into(),
         })
     }
 
-    /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is `NonEmpty` before
+    /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is `NEVec` before
     /// proceeding with a computation. Using `from_vec` will give us a proof
-    /// that we have a `NonEmpty` in the `Some` branch, otherwise it allows
+    /// that we have a `NEVec` in the `Some` branch, otherwise it allows
     /// the caller to handle the `None` case.
     ///
     /// This version will consume the `Vec` you pass in. If you would rather pass the data as a
-    /// slice then use `NonEmpty::from_slice`.
+    /// slice then use `NEVec::from_slice`.
     ///
     /// # Example Use
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty_vec = NonEmpty::from_vec(vec![1, 2, 3, 4, 5]);
-    /// assert_eq!(non_empty_vec, Some(NonEmpty::from((1, vec![2, 3, 4, 5]))));
+    /// let non_empty_vec = NEVec::from_vec(vec![1, 2, 3, 4, 5]);
+    /// assert_eq!(non_empty_vec, Some(NEVec::from((1, vec![2, 3, 4, 5]))));
     ///
-    /// let empty_vec: Option<NonEmpty<&u32>> = NonEmpty::from_vec(vec![]);
+    /// let empty_vec: Option<NEVec<&u32>> = NEVec::from_vec(vec![]);
     /// assert!(empty_vec.is_none());
     /// ```
-    pub fn from_vec(mut vec: Vec<T>) -> Option<NonEmpty<T>> {
+    pub fn from_vec(mut vec: Vec<T>) -> Option<NEVec<T>> {
         if vec.is_empty() {
             None
         } else {
             let head = vec.remove(0);
-            Some(NonEmpty { head, tail: vec })
+            Some(NEVec { head, tail: vec })
         }
     }
 
-    /// Deconstruct a `NonEmpty` into its head and tail.
+    /// Deconstruct a `NEVec` into its head and tail.
     /// This operation never fails since we are guranteed
     /// to have a head element.
     ///
     /// # Example Use
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let mut non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
+    /// let mut non_empty = NEVec::from((1, vec![2, 3, 4, 5]));
     ///
     /// // Guaranteed to have the head and we also get the tail.
     /// assert_eq!(non_empty.split_first(), (&1, &[2, 3, 4, 5][..]));
     ///
-    /// let non_empty = NonEmpty::new(1);
+    /// let non_empty = NEVec::new(1);
     ///
     /// // Guaranteed to have the head element.
     /// assert_eq!(non_empty.split_first(), (&1, &[][..]));
@@ -319,7 +317,7 @@ impl<T> NonEmpty<T> {
         (&self.head, &self.tail)
     }
 
-    /// Deconstruct a `NonEmpty` into its first, last, and
+    /// Deconstruct a `NEVec` into its first, last, and
     /// middle elements, in that order.
     ///
     /// If there is only one element then first == last.
@@ -327,15 +325,15 @@ impl<T> NonEmpty<T> {
     /// # Example Use
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let mut non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
+    /// let mut non_empty = NEVec::from((1, vec![2, 3, 4, 5]));
     ///
     /// // Guaranteed to have the last element and the elements
     /// // preceding it.
     /// assert_eq!(non_empty.split(), (&1, &[2, 3, 4][..], &5));
     ///
-    /// let non_empty = NonEmpty::new(1);
+    /// let non_empty = NEVec::new(1);
     ///
     /// // Guaranteed to have the last element.
     /// assert_eq!(non_empty.split(), (&1, &[][..], &1));
@@ -347,18 +345,18 @@ impl<T> NonEmpty<T> {
         }
     }
 
-    /// Append a `Vec` to the tail of the `NonEmpty`.
+    /// Append a `Vec` to the tail of the `NEVec`.
     ///
     /// # Example Use
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let mut non_empty = NonEmpty::new(1);
+    /// let mut non_empty = NEVec::new(1);
     /// let mut vec = vec![2, 3, 4, 5];
     /// non_empty.append(&mut vec);
     ///
-    /// let mut expected = NonEmpty::from((1, vec![2, 3, 4, 5]));
+    /// let mut expected = NEVec::from((1, vec![2, 3, 4, 5]));
     ///
     /// assert_eq!(non_empty, expected);
     /// ```
@@ -367,57 +365,57 @@ impl<T> NonEmpty<T> {
     }
 
     /// A structure preserving `map`. This is useful for when
-    /// we wish to keep the `NonEmpty` structure guaranteeing
+    /// we wish to keep the `NEVec` structure guaranteeing
     /// that there is at least one element. Otherwise, we can
     /// use `nonempty.iter().map(f)`.
     ///
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
+    /// let non_empty = NEVec::from((1, vec![2, 3, 4, 5]));
     ///
     /// let squares = non_empty.map(|i| i * i);
     ///
-    /// let expected = NonEmpty::from((1, vec![4, 9, 16, 25]));
+    /// let expected = NEVec::from((1, vec![4, 9, 16, 25]));
     ///
     /// assert_eq!(squares, expected);
     /// ```
-    pub fn map<U, F>(self, mut f: F) -> NonEmpty<U>
+    pub fn map<U, F>(self, mut f: F) -> NEVec<U>
     where
         F: FnMut(T) -> U,
     {
-        NonEmpty {
+        NEVec {
             head: f(self.head),
             tail: self.tail.into_iter().map(f).collect(),
         }
     }
 
-    /// When we have a function that goes from some `T` to a `NonEmpty<U>`,
-    /// we may want to apply it to a `NonEmpty<T>` but keep the structure flat.
+    /// When we have a function that goes from some `T` to a `NEVec<U>`,
+    /// we may want to apply it to a `NEVec<T>` but keep the structure flat.
     /// This is where `flat_map` shines.
     ///
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
+    /// let non_empty = NEVec::from((1, vec![2, 3, 4, 5]));
     ///
     /// let windows = non_empty.flat_map(|i| {
-    ///     let mut next = NonEmpty::new(i + 5);
+    ///     let mut next = NEVec::new(i + 5);
     ///     next.push(i + 6);
     ///     next
     /// });
     ///
-    /// let expected = NonEmpty::from((6, vec![7, 7, 8, 8, 9, 9, 10, 10, 11]));
+    /// let expected = NEVec::from((6, vec![7, 7, 8, 8, 9, 9, 10, 10, 11]));
     ///
     /// assert_eq!(windows, expected);
     /// ```
-    pub fn flat_map<U, F>(self, mut f: F) -> NonEmpty<U>
+    pub fn flat_map<U, F>(self, mut f: F) -> NEVec<U>
     where
-        F: FnMut(T) -> NonEmpty<U>,
+        F: FnMut(T) -> NEVec<U>,
     {
         let mut heads = f(self.head);
         let mut tails = self
@@ -429,23 +427,23 @@ impl<T> NonEmpty<T> {
         heads
     }
 
-    /// Flatten nested `NonEmpty`s into a single one.
+    /// Flatten nested `NEVec`s into a single one.
     ///
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty = NonEmpty::from((
-    ///     NonEmpty::from((1, vec![2, 3])),
-    ///     vec![NonEmpty::from((4, vec![5]))],
+    /// let non_empty = NEVec::from((
+    ///     NEVec::from((1, vec![2, 3])),
+    ///     vec![NEVec::from((4, vec![5]))],
     /// ));
     ///
-    /// let expected = NonEmpty::from((1, vec![2, 3, 4, 5]));
+    /// let expected = NEVec::from((1, vec![2, 3, 4, 5]));
     ///
-    /// assert_eq!(NonEmpty::flatten(non_empty), expected);
+    /// assert_eq!(NEVec::flatten(non_empty), expected);
     /// ```
-    pub fn flatten(full: NonEmpty<NonEmpty<T>>) -> Self {
+    pub fn flatten(full: NEVec<NEVec<T>>) -> Self {
         full.flat_map(|n| n)
     }
 
@@ -460,9 +458,9 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty = NonEmpty::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
+    /// let non_empty = NEVec::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
     /// assert_eq!(non_empty.binary_search(&0),   Ok(0));
     /// assert_eq!(non_empty.binary_search(&13),  Ok(9));
     /// assert_eq!(non_empty.binary_search(&4),   Err(7));
@@ -474,13 +472,13 @@ impl<T> NonEmpty<T> {
     /// If you want to insert an item to a sorted non-empty vector, while maintaining sort order:
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let mut non_empty = NonEmpty::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
+    /// let mut non_empty = NEVec::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
     /// let num = 42;
     /// let idx = non_empty.binary_search(&num).unwrap_or_else(|x| x);
     /// non_empty.insert(idx, num);
-    /// assert_eq!(non_empty, NonEmpty::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 42, 55])));
+    /// assert_eq!(non_empty, NEVec::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 42, 55])));
     /// ```
     pub fn binary_search(&self, x: &T) -> Result<usize, usize>
     where
@@ -505,9 +503,9 @@ impl<T> NonEmpty<T> {
     /// position; the second and third are not found; the fourth could match any position in [1,4].
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty = NonEmpty::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
+    /// let non_empty = NEVec::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
     /// let seek = 0;
     /// assert_eq!(non_empty.binary_search_by(|probe| probe.cmp(&seek)), Ok(0));
     /// let seek = 13;
@@ -550,9 +548,9 @@ impl<T> NonEmpty<T> {
     /// the fourth could match any position in [1, 4].
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty = NonEmpty::from((
+    /// let non_empty = NEVec::from((
     ///     (0, 0),
     ///     vec![(2, 1), (4, 1), (5, 1), (3, 1),
     ///          (1, 2), (2, 3), (4, 5), (5, 8), (3, 13),
@@ -581,12 +579,12 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty = NonEmpty::new(42);
+    /// let non_empty = NEVec::new(42);
     /// assert_eq!(non_empty.maximum(), &42);
     ///
-    /// let non_empty = NonEmpty::from((1, vec![-34, 42, 76, 4, 5]));
+    /// let non_empty = NEVec::from((1, vec![-34, 42, 76, 4, 5]));
     /// assert_eq!(non_empty.maximum(), &76);
     /// ```
     pub fn maximum(&self) -> &T
@@ -603,12 +601,12 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty = NonEmpty::new(42);
+    /// let non_empty = NEVec::new(42);
     /// assert_eq!(non_empty.minimum(), &42);
     ///
-    /// let non_empty = NonEmpty::from((1, vec![-34, 42, 76, 4, 5]));
+    /// let non_empty = NEVec::from((1, vec![-34, 42, 76, 4, 5]));
     /// assert_eq!(non_empty.minimum(), &-34);
     /// ```
     pub fn minimum(&self) -> &T
@@ -625,12 +623,12 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty = NonEmpty::new((0, 42));
+    /// let non_empty = NEVec::new((0, 42));
     /// assert_eq!(non_empty.maximum_by(|(k, _), (l, _)| k.cmp(l)), &(0, 42));
     ///
-    /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
+    /// let non_empty = NEVec::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
     /// assert_eq!(non_empty.maximum_by(|(k, _), (l, _)| k.cmp(l)), &(4, 42));
     /// ```
     pub fn maximum_by<F>(&self, compare: F) -> &T
@@ -653,12 +651,12 @@ impl<T> NonEmpty<T> {
     /// This will return the first item in the vector if the tail is empty.
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty = NonEmpty::new((0, 42));
+    /// let non_empty = NEVec::new((0, 42));
     /// assert_eq!(non_empty.minimum_by(|(k, _), (l, _)| k.cmp(l)), &(0, 42));
     ///
-    /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
+    /// let non_empty = NEVec::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
     /// assert_eq!(non_empty.minimum_by(|(k, _), (l, _)| k.cmp(l)), &(0, 76));
     /// ```
     pub fn minimum_by<F>(&self, compare: F) -> &T
@@ -675,12 +673,12 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty = NonEmpty::new((0, 42));
+    /// let non_empty = NEVec::new((0, 42));
     /// assert_eq!(non_empty.maximum_by_key(|(k, _)| k), &(0, 42));
     ///
-    /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
+    /// let non_empty = NEVec::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
     /// assert_eq!(non_empty.maximum_by_key(|(k, _)| k), &(4, 42));
     /// ```
     pub fn maximum_by_key<U, F>(&self, f: F) -> &T
@@ -698,12 +696,12 @@ impl<T> NonEmpty<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty = NonEmpty::new((0, 42));
+    /// let non_empty = NEVec::new((0, 42));
     /// assert_eq!(non_empty.minimum_by_key(|(k, _)| k), &(0, 42));
     ///
-    /// let non_empty = NonEmpty::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
+    /// let non_empty = NEVec::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
     /// assert_eq!(non_empty.minimum_by_key(|(k, _)| k), &(0, 76));
     /// ```
     pub fn minimum_by_key<U, F>(&self, f: F) -> &T
@@ -715,29 +713,29 @@ impl<T> NonEmpty<T> {
     }
 }
 
-impl<T> From<NonEmpty<T>> for Vec<T> {
+impl<T> From<NEVec<T>> for Vec<T> {
     /// Turns a non-empty list into a Vec.
-    fn from(nonempty: NonEmpty<T>) -> Vec<T> {
+    fn from(nonempty: NEVec<T>) -> Vec<T> {
         iter::once(nonempty.head).chain(nonempty.tail).collect()
     }
 }
 
-impl<T> From<NonEmpty<T>> for (T, Vec<T>) {
+impl<T> From<NEVec<T>> for (T, Vec<T>) {
     /// Turns a non-empty list into a Vec.
-    fn from(nonempty: NonEmpty<T>) -> (T, Vec<T>) {
+    fn from(nonempty: NEVec<T>) -> (T, Vec<T>) {
         (nonempty.head, nonempty.tail)
     }
 }
 
-impl<T> From<(T, Vec<T>)> for NonEmpty<T> {
+impl<T> From<(T, Vec<T>)> for NEVec<T> {
     /// Turns a pair of an element and a Vec into
-    /// a NonEmpty.
+    /// a NEVec.
     fn from((head, tail): (T, Vec<T>)) -> Self {
-        NonEmpty { head, tail }
+        NEVec { head, tail }
     }
 }
 
-impl<T> IntoIterator for NonEmpty<T> {
+impl<T> IntoIterator for NEVec<T> {
     type Item = T;
     type IntoIter = iter::Chain<iter::Once<T>, vec::IntoIter<Self::Item>>;
 
@@ -746,7 +744,7 @@ impl<T> IntoIterator for NonEmpty<T> {
     }
 }
 
-impl<'a, T> IntoIterator for &'a NonEmpty<T> {
+impl<'a, T> IntoIterator for &'a NEVec<T> {
     type Item = &'a T;
     type IntoIter = iter::Chain<iter::Once<&'a T>, std::slice::Iter<'a, T>>;
 
@@ -755,13 +753,13 @@ impl<'a, T> IntoIterator for &'a NonEmpty<T> {
     }
 }
 
-impl<T> std::ops::Index<usize> for NonEmpty<T> {
+impl<T> std::ops::Index<usize> for NEVec<T> {
     type Output = T;
 
     /// ```
-    /// use nonempty_collections::NonEmpty;
+    /// use nonempty_collections::NEVec;
     ///
-    /// let non_empty = NonEmpty::from((1, vec![2, 3, 4, 5]));
+    /// let non_empty = NEVec::from((1, vec![2, 3, 4, 5]));
     ///
     /// assert_eq!(non_empty[0], 1);
     /// assert_eq!(non_empty[1], 2);
@@ -776,7 +774,7 @@ impl<T> std::ops::Index<usize> for NonEmpty<T> {
     }
 }
 
-impl<T> std::ops::IndexMut<usize> for NonEmpty<T> {
+impl<T> std::ops::IndexMut<usize> for NEVec<T> {
     fn index_mut(&mut self, index: usize) -> &mut T {
         if index > 0 {
             &mut self.tail[index - 1]
@@ -790,7 +788,7 @@ impl<T> std::ops::IndexMut<usize> for NonEmpty<T> {
 pub mod serialize {
     use std::{convert::TryFrom, fmt};
 
-    use super::NonEmpty;
+    use super::NEVec;
 
     #[derive(Debug)]
     pub enum Error {
@@ -800,30 +798,30 @@ pub mod serialize {
     impl fmt::Display for Error {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             match self {
-                Self::Empty => f.write_str(
-                    "the vector provided was empty, NonEmpty needs at least one element",
-                ),
+                Self::Empty => {
+                    f.write_str("the vector provided was empty, NEVec needs at least one element")
+                }
             }
         }
     }
 
-    impl<T> TryFrom<Vec<T>> for NonEmpty<T> {
+    impl<T> TryFrom<Vec<T>> for NEVec<T> {
         type Error = Error;
 
         fn try_from(vec: Vec<T>) -> Result<Self, Self::Error> {
-            NonEmpty::from_vec(vec).ok_or(Error::Empty)
+            NEVec::from_vec(vec).ok_or(Error::Empty)
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::NonEmpty;
+    use crate::NEVec;
 
     #[test]
     fn test_from_conversion() {
-        let result = NonEmpty::from((1, vec![2, 3, 4, 5]));
-        let expected = NonEmpty {
+        let result = NEVec::from((1, vec![2, 3, 4, 5]));
+        let expected = NEVec {
             head: 1,
             tail: vec![2, 3, 4, 5],
         };
@@ -832,7 +830,7 @@ mod tests {
 
     #[test]
     fn test_into_iter() {
-        let nonempty = NonEmpty::from((0, vec![1, 2, 3]));
+        let nonempty = NEVec::from((0, vec![1, 2, 3]));
         for (i, n) in nonempty.into_iter().enumerate() {
             assert_eq!(i as i32, n);
         }
@@ -840,7 +838,7 @@ mod tests {
 
     #[test]
     fn test_iter_syntax() {
-        let nonempty = NonEmpty::from((0, vec![1, 2, 3]));
+        let nonempty = NEVec::from((0, vec![1, 2, 3]));
         for n in &nonempty {
             assert_eq!(*n, *n); // Prove that we're dealing with references.
         }
@@ -849,18 +847,18 @@ mod tests {
 
     #[test]
     fn test_mutate_head() {
-        let mut non_empty = NonEmpty::new(42);
+        let mut non_empty = NEVec::new(42);
         non_empty.head += 1;
         assert_eq!(non_empty.head, 43);
 
-        let mut non_empty = NonEmpty::from((1, vec![4, 2, 3]));
+        let mut non_empty = NEVec::from((1, vec![4, 2, 3]));
         non_empty.head *= 42;
         assert_eq!(non_empty.head, 42);
     }
 
     #[cfg(feature = "serde")]
     mod serialize {
-        use crate::NonEmpty;
+        use crate::NEVec;
         use serde::{Deserialize, Serialize};
 
         #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -869,12 +867,12 @@ mod tests {
         #[test]
         fn test_simple_round_trip() -> Result<(), Box<dyn std::error::Error>> {
             // Given
-            let mut non_empty = NonEmpty::new(SimpleSerializable(42));
+            let mut non_empty = NEVec::new(SimpleSerializable(42));
             non_empty.push(SimpleSerializable(777));
             let expected_value = non_empty.clone();
 
             // When
-            let res = serde_json::from_str::<'_, NonEmpty<SimpleSerializable>>(
+            let res = serde_json::from_str::<'_, NEVec<SimpleSerializable>>(
                 &serde_json::to_string(&non_empty)?,
             )?;
 
