@@ -51,22 +51,12 @@ pub struct NEVec<T> {
 }
 
 impl<T> NEVec<T> {
-    /// Alias for [`NEVec::singleton`].
-    pub const fn new(e: T) -> Self {
-        Self::singleton(e)
-    }
-
     /// Create a new non-empty list with an initial element.
-    pub const fn singleton(head: T) -> Self {
+    pub const fn new(head: T) -> Self {
         NEVec {
             head,
             tail: Vec::new(),
         }
-    }
-
-    /// Always returns false.
-    pub const fn is_empty(&self) -> bool {
-        false
     }
 
     /// Get the first element. Never fails.
@@ -79,9 +69,9 @@ impl<T> NEVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::{nev, NEVec};
+    /// use nonempty_collections::nev;
     ///
-    /// let mut non_empty = NEVec::new(42);
+    /// let mut non_empty = nev![42];
     /// let head = non_empty.first_mut();
     /// *head += 1;
     /// assert_eq!(non_empty.first(), &43);
@@ -98,9 +88,9 @@ impl<T> NEVec<T> {
     /// Get the possibly-empty tail of the list.
     ///
     /// ```
-    /// use nonempty_collections::{nev, NEVec};
+    /// use nonempty_collections::nev;
     ///
-    /// let non_empty = NEVec::new(42);
+    /// let non_empty = nev![42];
     /// assert_eq!(non_empty.tail(), &[]);
     ///
     /// let non_empty = nev![1, 4, 2, 3];
@@ -115,7 +105,15 @@ impl<T> NEVec<T> {
         self.tail.push(e)
     }
 
-    /// Pop an element from the end of the list.
+    /// Pop an element from the end of the list. Will never pop the head value.
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    ///
+    /// let mut v = nev![1, 2];
+    /// assert_eq!(Some(2), v.pop());
+    /// assert_eq!(None, v.pop());
+    /// ```
     pub fn pop(&mut self) -> Option<T> {
         self.tail.pop()
     }
@@ -130,7 +128,7 @@ impl<T> NEVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::{nev, NEVec};
+    /// use nonempty_collections::nev;
     ///
     /// let mut non_empty = nev![1, 2, 3];
     /// non_empty.insert(1, 4);
@@ -236,11 +234,9 @@ impl<T> NEVec<T> {
     }
 
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let mut l = NEVec::new(42);
-    /// l.push(36);
-    /// l.push(58);
+    /// let mut l = nev![42, 36, 58];
     ///
     /// for i in l.iter_mut() {
     ///     *i *= 10;
@@ -317,14 +313,14 @@ impl<T> NEVec<T> {
     /// # Example Use
     ///
     /// ```
-    /// use nonempty_collections::{nev, NEVec};
+    /// use nonempty_collections::nev;
     ///
     /// let mut non_empty = nev![1, 2, 3, 4, 5];
     ///
     /// // Guaranteed to have the head and we also get the tail.
     /// assert_eq!(non_empty.split_first(), (&1, &[2, 3, 4, 5][..]));
     ///
-    /// let non_empty = NEVec::new(1);
+    /// let non_empty = nev![1];
     ///
     /// // Guaranteed to have the head element.
     /// assert_eq!(non_empty.split_first(), (&1, &[][..]));
@@ -415,11 +411,7 @@ impl<T> NEVec<T> {
     ///
     /// let non_empty = nev![1, 2, 3, 4, 5];
     ///
-    /// let windows = non_empty.flat_map(|i| {
-    ///     let mut next = nev![i + 5];
-    ///     next.push(i + 6);
-    ///     next
-    /// });
+    /// let windows = non_empty.flat_map(|i| nev![i + 5, i + 6]);
     ///
     /// let expected = nev![6, 7, 7, 8, 8, 9, 9, 10, 10, 11];
     /// assert_eq!(windows, expected);
