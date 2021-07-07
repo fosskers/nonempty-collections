@@ -43,7 +43,10 @@ macro_rules! nev {
 )]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NEVec<T> {
+    /// The element of the non-empty Vector. Always exists.
     pub head: T,
+
+    /// The remaining elements of the non-empty Vector, perhaps empty.
     pub tail: Vec<T>,
 }
 

@@ -72,6 +72,8 @@
 //!
 //! * `serde`: `serde` support.
 
+#![warn(missing_docs)]
+
 mod vector;
 
 pub use vector::NEVec;
