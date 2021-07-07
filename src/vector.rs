@@ -76,14 +76,14 @@ impl<T> NEVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::{nev, NEVec};
     ///
     /// let mut non_empty = NEVec::new(42);
     /// let head = non_empty.first_mut();
     /// *head += 1;
     /// assert_eq!(non_empty.first(), &43);
     ///
-    /// let mut non_empty = NEVec::from((1, vec![4, 2, 3]));
+    /// let mut non_empty = nev![1, 4, 2, 3];
     /// let head = non_empty.first_mut();
     /// *head *= 42;
     /// assert_eq!(non_empty.first(), &42);
@@ -95,12 +95,12 @@ impl<T> NEVec<T> {
     /// Get the possibly-empty tail of the list.
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::{nev, NEVec};
     ///
     /// let non_empty = NEVec::new(42);
     /// assert_eq!(non_empty.tail(), &[]);
     ///
-    /// let non_empty = NEVec::from((1, vec![4, 2, 3]));
+    /// let non_empty = nev![1, 4, 2, 3];
     /// assert_eq!(non_empty.tail(), &[4, 2, 3]);
     /// ```
     pub fn tail(&self) -> &[T] {
@@ -126,15 +126,15 @@ impl<T> NEVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::{nev, NEVec};
     ///
-    /// let mut non_empty = NEVec::from((1, vec![2, 3]));
+    /// let mut non_empty = nev![1, 2, 3];
     /// non_empty.insert(1, 4);
-    /// assert_eq!(non_empty, NEVec::from((1, vec![4, 2, 3])));
+    /// assert_eq!(non_empty, nev![1, 4, 2, 3]);
     /// non_empty.insert(4, 5);
-    /// assert_eq!(non_empty, NEVec::from((1, vec![4, 2, 3, 5])));
+    /// assert_eq!(non_empty, nev![1, 4, 2, 3, 5]);
     /// non_empty.insert(0, 42);
-    /// assert_eq!(non_empty, NEVec::from((42, vec![1, 4, 2, 3, 5])));
+    /// assert_eq!(non_empty, nev![42, 1, 4, 2, 3, 5]);
     /// ```
     pub fn insert(&mut self, index: usize, element: T) {
         let len = self.len();
@@ -177,9 +177,9 @@ impl<T> NEVec<T> {
     /// Check whether an element is contained in the list.
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let mut l = NEVec::from((42, vec![36, 58]));
+    /// let mut l = nev![42, 36, 58];
     ///
     /// assert!(l.contains(&42));
     /// assert!(!l.contains(&101));
@@ -216,9 +216,9 @@ impl<T> NEVec<T> {
     }
 
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let mut l = NEVec::from((42, vec![36, 58]));
+    /// let mut l = nev![42, 36, 58];
     ///
     /// let mut l_iter = l.iter();
     ///
@@ -261,10 +261,10 @@ impl<T> NEVec<T> {
     /// # Example Use
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::{nev, NEVec};
     ///
     /// let non_empty_vec = NEVec::from_slice(&[1, 2, 3, 4, 5]);
-    /// assert_eq!(non_empty_vec, Some(NEVec::from((1, vec![2, 3, 4, 5]))));
+    /// assert_eq!(non_empty_vec, Some(nev![1, 2, 3, 4, 5]));
     ///
     /// let empty_vec: Option<NEVec<&u32>> = NEVec::from_slice(&[]);
     /// assert!(empty_vec.is_none());
@@ -290,10 +290,10 @@ impl<T> NEVec<T> {
     /// # Example Use
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::{nev, NEVec};
     ///
     /// let non_empty_vec = NEVec::from_vec(vec![1, 2, 3, 4, 5]);
-    /// assert_eq!(non_empty_vec, Some(NEVec::from((1, vec![2, 3, 4, 5]))));
+    /// assert_eq!(non_empty_vec, Some(nev![1, 2, 3, 4, 5]));
     ///
     /// let empty_vec: Option<NEVec<&u32>> = NEVec::from_vec(vec![]);
     /// assert!(empty_vec.is_none());
@@ -314,9 +314,9 @@ impl<T> NEVec<T> {
     /// # Example Use
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::{nev, NEVec};
     ///
-    /// let mut non_empty = NEVec::from((1, vec![2, 3, 4, 5]));
+    /// let mut non_empty = nev![1, 2, 3, 4, 5];
     ///
     /// // Guaranteed to have the head and we also get the tail.
     /// assert_eq!(non_empty.split_first(), (&1, &[2, 3, 4, 5][..]));
@@ -338,15 +338,15 @@ impl<T> NEVec<T> {
     /// # Example Use
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let mut non_empty = NEVec::from((1, vec![2, 3, 4, 5]));
+    /// let mut non_empty = nev![1, 2, 3, 4, 5];
     ///
     /// // Guaranteed to have the last element and the elements
     /// // preceding it.
     /// assert_eq!(non_empty.split(), (&1, &[2, 3, 4][..], &5));
     ///
-    /// let non_empty = NEVec::new(1);
+    /// let non_empty = nev![1];
     ///
     /// // Guaranteed to have the last element.
     /// assert_eq!(non_empty.split(), (&1, &[][..], &1));
@@ -363,14 +363,13 @@ impl<T> NEVec<T> {
     /// # Example Use
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let mut non_empty = NEVec::new(1);
+    /// let mut non_empty = nev![1];
     /// let mut vec = vec![2, 3, 4, 5];
     /// non_empty.append(&mut vec);
     ///
-    /// let mut expected = NEVec::from((1, vec![2, 3, 4, 5]));
-    ///
+    /// let mut expected = nev![1, 2, 3, 4, 5];
     /// assert_eq!(non_empty, expected);
     /// ```
     pub fn append(&mut self, other: &mut Vec<T>) {
@@ -385,13 +384,11 @@ impl<T> NEVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let non_empty = NEVec::from((1, vec![2, 3, 4, 5]));
-    ///
+    /// let non_empty = nev![1, 2, 3, 4, 5];
     /// let squares = non_empty.map(|i| i * i);
-    ///
-    /// let expected = NEVec::from((1, vec![4, 9, 16, 25]));
+    /// let expected = nev![1, 4, 9, 16, 25];
     ///
     /// assert_eq!(squares, expected);
     /// ```
@@ -412,18 +409,17 @@ impl<T> NEVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let non_empty = NEVec::from((1, vec![2, 3, 4, 5]));
+    /// let non_empty = nev![1, 2, 3, 4, 5];
     ///
     /// let windows = non_empty.flat_map(|i| {
-    ///     let mut next = NEVec::new(i + 5);
+    ///     let mut next = nev![i + 5];
     ///     next.push(i + 6);
     ///     next
     /// });
     ///
-    /// let expected = NEVec::from((6, vec![7, 7, 8, 8, 9, 9, 10, 10, 11]));
-    ///
+    /// let expected = nev![6, 7, 7, 8, 8, 9, 9, 10, 10, 11];
     /// assert_eq!(windows, expected);
     /// ```
     pub fn flat_map<U, F>(self, mut f: F) -> NEVec<U>
@@ -445,15 +441,13 @@ impl<T> NEVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::{nev, NEVec};
     ///
-    /// let non_empty = NEVec::from((
-    ///     NEVec::from((1, vec![2, 3])),
-    ///     vec![NEVec::from((4, vec![5]))],
-    /// ));
+    /// let a = nev![1, 2, 3];
+    /// let b = nev![4, 5];
+    /// let non_empty = nev![a, b];
     ///
-    /// let expected = NEVec::from((1, vec![2, 3, 4, 5]));
-    ///
+    /// let expected = nev![1, 2, 3, 4, 5];
     /// assert_eq!(NEVec::flatten(non_empty), expected);
     /// ```
     pub fn flatten(full: NEVec<NEVec<T>>) -> Self {
@@ -471,9 +465,9 @@ impl<T> NEVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let non_empty = NEVec::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
+    /// let non_empty = nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
     /// assert_eq!(non_empty.binary_search(&0),   Ok(0));
     /// assert_eq!(non_empty.binary_search(&13),  Ok(9));
     /// assert_eq!(non_empty.binary_search(&4),   Err(7));
@@ -485,13 +479,13 @@ impl<T> NEVec<T> {
     /// If you want to insert an item to a sorted non-empty vector, while maintaining sort order:
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let mut non_empty = NEVec::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
+    /// let mut non_empty = nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
     /// let num = 42;
     /// let idx = non_empty.binary_search(&num).unwrap_or_else(|x| x);
     /// non_empty.insert(idx, num);
-    /// assert_eq!(non_empty, NEVec::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 42, 55])));
+    /// assert_eq!(non_empty, nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 42, 55]);
     /// ```
     pub fn binary_search(&self, x: &T) -> Result<usize, usize>
     where
@@ -520,9 +514,9 @@ impl<T> NEVec<T> {
     /// could match any position from 1 to 4.
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let non_empty = NEVec::from((0, vec![1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]));
+    /// let non_empty = nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
     /// let seek = 0;
     /// assert_eq!(non_empty.binary_search_by(|probe| probe.cmp(&seek)), Ok(0));
     /// let seek = 13;
@@ -565,14 +559,13 @@ impl<T> NEVec<T> {
     /// the fourth could match any position in [1, 4].
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let non_empty = NEVec::from((
-    ///     (0, 0),
-    ///     vec![(2, 1), (4, 1), (5, 1), (3, 1),
-    ///          (1, 2), (2, 3), (4, 5), (5, 8), (3, 13),
-    ///          (1, 21), (2, 34), (4, 55)]
-    /// ));
+    /// let non_empty = nev![
+    ///     (0, 0), (2, 1), (4, 1), (5, 1), (3, 1),
+    ///     (1, 2), (2, 3), (4, 5), (5, 8), (3, 13),
+    ///     (1, 21), (2, 34), (4, 55)
+    /// ];
     ///
     /// assert_eq!(non_empty.binary_search_by_key(&0, |&(a,b)| b),  Ok(0));
     /// assert_eq!(non_empty.binary_search_by_key(&13, |&(a,b)| b),  Ok(9));
@@ -596,12 +589,12 @@ impl<T> NEVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let non_empty = NEVec::new(42);
+    /// let non_empty = nev![42];
     /// assert_eq!(non_empty.maximum(), &42);
     ///
-    /// let non_empty = NEVec::from((1, vec![-34, 42, 76, 4, 5]));
+    /// let non_empty = nev![1, -34, 42, 76, 4, 5];
     /// assert_eq!(non_empty.maximum(), &76);
     /// ```
     pub fn maximum(&self) -> &T
@@ -618,12 +611,12 @@ impl<T> NEVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let non_empty = NEVec::new(42);
+    /// let non_empty = nev![42];
     /// assert_eq!(non_empty.minimum(), &42);
     ///
-    /// let non_empty = NEVec::from((1, vec![-34, 42, 76, 4, 5]));
+    /// let non_empty = nev![1, -34, 42, 76, 4, 5];
     /// assert_eq!(non_empty.minimum(), &-34);
     /// ```
     pub fn minimum(&self) -> &T
@@ -640,12 +633,12 @@ impl<T> NEVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let non_empty = NEVec::new((0, 42));
+    /// let non_empty = nev![(0, 42)];
     /// assert_eq!(non_empty.maximum_by(|(k, _), (l, _)| k.cmp(l)), &(0, 42));
     ///
-    /// let non_empty = NEVec::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
+    /// let non_empty = nev![(2, 1), (2, -34), (4, 42), (0, 76), (1, 4), (3, 5)];
     /// assert_eq!(non_empty.maximum_by(|(k, _), (l, _)| k.cmp(l)), &(4, 42));
     /// ```
     pub fn maximum_by<F>(&self, compare: F) -> &T
@@ -668,12 +661,12 @@ impl<T> NEVec<T> {
     /// This will return the first item in the vector if the tail is empty.
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let non_empty = NEVec::new((0, 42));
+    /// let non_empty = nev![(0, 42)];
     /// assert_eq!(non_empty.minimum_by(|(k, _), (l, _)| k.cmp(l)), &(0, 42));
     ///
-    /// let non_empty = NEVec::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
+    /// let non_empty = nev![(2, 1), (2, -34), (4, 42), (0, 76), (1, 4), (3, 5)];
     /// assert_eq!(non_empty.minimum_by(|(k, _), (l, _)| k.cmp(l)), &(0, 76));
     /// ```
     pub fn minimum_by<F>(&self, compare: F) -> &T
@@ -690,12 +683,12 @@ impl<T> NEVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let non_empty = NEVec::new((0, 42));
+    /// let non_empty = nev![(0, 42)];
     /// assert_eq!(non_empty.maximum_by_key(|(k, _)| k), &(0, 42));
     ///
-    /// let non_empty = NEVec::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
+    /// let non_empty = nev![(2, 1), (2, -34), (4, 42), (0, 76), (1, 4), (3, 5)];
     /// assert_eq!(non_empty.maximum_by_key(|(k, _)| k), &(4, 42));
     /// ```
     pub fn maximum_by_key<U, F>(&self, f: F) -> &T
@@ -713,12 +706,12 @@ impl<T> NEVec<T> {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let non_empty = NEVec::new((0, 42));
+    /// let non_empty = nev![(0, 42)];
     /// assert_eq!(non_empty.minimum_by_key(|(k, _)| k), &(0, 42));
     ///
-    /// let non_empty = NEVec::from(((2, 1), vec![(2, -34), (4, 42), (0, 76), (1, 4), (3, 5)]));
+    /// let non_empty = nev![(2, 1), (2, -34), (4, 42), (0, 76), (1, 4), (3, 5)];
     /// assert_eq!(non_empty.minimum_by_key(|(k, _)| k), &(0, 76));
     /// ```
     pub fn minimum_by_key<U, F>(&self, f: F) -> &T
@@ -774,9 +767,9 @@ impl<T> std::ops::Index<usize> for NEVec<T> {
     type Output = T;
 
     /// ```
-    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
-    /// let non_empty = NEVec::from((1, vec![2, 3, 4, 5]));
+    /// let non_empty = nev![1, 2, 3, 4, 5];
     ///
     /// assert_eq!(non_empty[0], 1);
     /// assert_eq!(non_empty[1], 2);
