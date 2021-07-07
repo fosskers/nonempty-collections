@@ -74,6 +74,8 @@
 
 #![warn(missing_docs)]
 
+mod set;
 mod vector;
 
+pub use set::NESet;
 pub use vector::NEVec;
