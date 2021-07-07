@@ -117,7 +117,8 @@ impl<T> NEVec<T> {
         self.tail.pop()
     }
 
-    /// Inserts an element at position index within the vector, shifting all elements after it to the right.
+    /// Inserts an element at position index within the vector, shifting all
+    /// elements after it to the right.
     ///
     /// # Panics
     ///
@@ -253,10 +254,10 @@ impl<T> NEVec<T> {
         iter::once(&mut self.head).chain(self.tail.iter_mut())
     }
 
-    /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is `NEVec` before
-    /// proceeding with a computation. Using `from_slice` will give us a proof
-    /// that we have a `NEVec` in the `Some` branch, otherwise it allows
-    /// the caller to handle the `None` case.
+    /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is
+    /// `NEVec` before proceeding with a computation. Using `from_slice` will
+    /// give us a proof that we have a `NEVec` in the `Some` branch, otherwise
+    /// it allows the caller to handle the `None` case.
     ///
     /// # Example Use
     ///
@@ -279,13 +280,13 @@ impl<T> NEVec<T> {
         })
     }
 
-    /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is `NEVec` before
-    /// proceeding with a computation. Using `from_vec` will give us a proof
-    /// that we have a `NEVec` in the `Some` branch, otherwise it allows
-    /// the caller to handle the `None` case.
+    /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is
+    /// `NEVec` before proceeding with a computation. Using `from_vec` will give
+    /// us a proof that we have a `NEVec` in the `Some` branch, otherwise it
+    /// allows the caller to handle the `None` case.
     ///
-    /// This version will consume the `Vec` you pass in. If you would rather pass the data as a
-    /// slice then use `NEVec::from_slice`.
+    /// This version will consume the `Vec` you pass in. If you would rather
+    /// pass the data as a slice then use `NEVec::from_slice`.
     ///
     /// # Example Use
     ///
@@ -307,9 +308,8 @@ impl<T> NEVec<T> {
         }
     }
 
-    /// Deconstruct a `NEVec` into its head and tail.
-    /// This operation never fails since we are guranteed
-    /// to have a head element.
+    /// Deconstruct a `NEVec` into its head and tail. This operation never fails
+    /// since we are guranteed to have a head element.
     ///
     /// # Example Use
     ///
@@ -376,10 +376,9 @@ impl<T> NEVec<T> {
         self.tail.append(other)
     }
 
-    /// A structure preserving `map`. This is useful for when
-    /// we wish to keep the `NEVec` structure guaranteeing
-    /// that there is at least one element. Otherwise, we can
-    /// use `nonempty.iter().map(f)`.
+    /// A structure preserving `map`. This is useful for when we wish to keep
+    /// the `NEVec` structure guaranteeing that there is at least one element.
+    /// Otherwise, we can use `nonempty.iter().map(f)`.
     ///
     /// # Examples
     ///
@@ -402,9 +401,9 @@ impl<T> NEVec<T> {
         }
     }
 
-    /// When we have a function that goes from some `T` to a `NEVec<U>`,
-    /// we may want to apply it to a `NEVec<T>` but keep the structure flat.
-    /// This is where `flat_map` shines.
+    /// When we have a function that goes from some `T` to a `NEVec<U>`, we may
+    /// want to apply it to a `NEVec<T>` but keep the structure flat. This is
+    /// where `flat_map` shines.
     ///
     /// # Examples
     ///
@@ -456,11 +455,13 @@ impl<T> NEVec<T> {
 
     /// Binary searches this sorted non-empty vector for a given element.
     ///
-    /// If the value is found then Result::Ok is returned, containing the index of the matching element.
-    /// If there are multiple matches, then any one of the matches could be returned.
+    /// If the value is found then Result::Ok is returned, containing the index
+    /// of the matching element. If there are multiple matches, then any one of
+    /// the matches could be returned.
     ///
-    /// If the value is not found then Result::Err is returned, containing the index where a
-    /// matching element could be inserted while maintaining sorted order.
+    /// If the value is not found then Result::Err is returned, containing the
+    /// index where a matching element could be inserted while maintaining
+    /// sorted order.
     ///
     /// # Examples
     ///
@@ -476,7 +477,8 @@ impl<T> NEVec<T> {
     /// assert!(match r { Ok(1..=4) => true, _ => false, });
     /// ```
     ///
-    /// If you want to insert an item to a sorted non-empty vector, while maintaining sort order:
+    /// If you want to insert an item to a sorted non-empty vector, while
+    /// maintaining sort order:
     ///
     /// ```
     /// use nonempty_collections::nev;
@@ -544,19 +546,23 @@ impl<T> NEVec<T> {
         }
     }
 
-    /// Binary searches this sorted non-empty vector with a key extraction function.
+    /// Binary searches this sorted non-empty vector with a key extraction
+    /// function.
     ///
     /// Assumes that the vector is sorted by the key.
     ///
-    /// If the value is found then Result::Ok is returned, containing the index of the matching element. If there are multiple matches,
-    /// then any one of the matches could be returned. If the value is not found then Result::Err is returned,
-    /// containing the index where a matching element could be inserted while maintaining sorted order.
+    /// If the value is found then Result::Ok is returned, containing the index
+    /// of the matching element. If there are multiple matches, then any one of
+    /// the matches could be returned. If the value is not found then
+    /// Result::Err is returned, containing the index where a matching element
+    /// could be inserted while maintaining sorted order.
     ///
     /// # Examples
     ///
-    /// Looks up a series of four elements in a non-empty vector of pairs sorted by their second elements.
-    /// The first is found, with a uniquely determined position; the second and third are not found;
-    /// the fourth could match any position in [1, 4].
+    /// Looks up a series of four elements in a non-empty vector of pairs sorted
+    /// by their second elements. The first is found, with a uniquely determined
+    /// position; the second and third are not found; the fourth could match any
+    /// position in [1, 4].
     ///
     /// ```
     /// use nonempty_collections::nev;
@@ -626,7 +632,8 @@ impl<T> NEVec<T> {
         self.minimum_by(|i, j| i.cmp(j))
     }
 
-    /// Returns the element that gives the maximum value with respect to the specified comparison function.
+    /// Returns the element that gives the maximum value with respect to the
+    /// specified comparison function.
     ///
     /// This will return the first item in the vector if the tail is empty.
     ///
@@ -656,7 +663,8 @@ impl<T> NEVec<T> {
         max
     }
 
-    /// Returns the element that gives the minimum value with respect to the specified comparison function.
+    /// Returns the element that gives the minimum value with respect to the
+    /// specified comparison function.
     ///
     /// This will return the first item in the vector if the tail is empty.
     ///
@@ -676,7 +684,8 @@ impl<T> NEVec<T> {
         self.maximum_by(|a, b| compare(a, b).reverse())
     }
 
-    /// Returns the element that gives the maximum value with respect to the specified function.
+    /// Returns the element that gives the maximum value with respect to the
+    /// specified function.
     ///
     /// This will return the first item in the vector if the tail is empty.
     ///
@@ -699,7 +708,8 @@ impl<T> NEVec<T> {
         self.maximum_by(|i, j| f(i).cmp(f(j)))
     }
 
-    /// Returns the element that gives the minimum value with respect to the specified function.
+    /// Returns the element that gives the minimum value with respect to the
+    /// specified function.
     ///
     /// This will return the first item in the vector if the tail is empty.
     ///
