@@ -58,8 +58,8 @@ impl<'a, T> Iterator for Iter<'a, T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.head {
-            Some(_) => self.head.take(),
             None => self.tail.next(),
+            Some(_) => self.head.take(),
         }
     }
 }
@@ -84,8 +84,8 @@ impl<T> Iterator for IntoIter<T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.head {
-            Some(_) => self.head.take(),
             None => self.tail.next(),
+            Some(_) => self.head.take(),
         }
     }
 }
