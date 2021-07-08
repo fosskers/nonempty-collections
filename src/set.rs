@@ -64,40 +64,22 @@ impl<'a, T> Iterator for Iter<'a, T> {
     }
 }
 
-impl<'a, T> IntoIterator for &'a NESet<T> {
-    type Item = &'a T;
-    type IntoIter = Iter<'a, T>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
-    }
-}
-
-pub struct IntoIter<T> {
-    head: Option<T>,
-    tail: std::collections::hash_set::IntoIter<T>,
-}
-
-impl<T> Iterator for IntoIter<T> {
-    type Item = T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.head {
-            None => self.tail.next(),
-            Some(_) => self.head.take(),
-        }
-    }
-}
-
 impl<T> IntoIterator for NESet<T> {
     type Item = T;
-    type IntoIter = IntoIter<T>;
+    type IntoIter =
+        std::iter::Chain<std::iter::Once<T>, std::collections::hash_set::IntoIter<Self::Item>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        IntoIter {
-            head: Some(self.head),
-            tail: self.tail.into_iter(),
-        }
+        std::iter::once(self.head).chain(self.tail)
+    }
+}
+
+impl<'a, T> IntoIterator for &'a NESet<T> {
+    type Item = &'a T;
+    type IntoIter =
+        std::iter::Chain<std::iter::Once<&'a T>, std::collections::hash_set::Iter<'a, T>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        std::iter::once(&self.head).chain(self.tail.iter())
     }
 }
