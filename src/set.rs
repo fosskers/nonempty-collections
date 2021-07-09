@@ -37,6 +37,8 @@ macro_rules! nes {
 ///
 /// Note that the following methods aren't implemented for `NESet`:
 ///
+/// - `clear`
+/// - `drain` and `drain_filter`
 /// - `remove`
 /// - `retain`
 /// - `take`
@@ -87,7 +89,6 @@ where
     S: BuildHasher,
 {
     // TODO
-    // difference
     // intersection
     // union
 
@@ -106,6 +107,25 @@ where
         Q: Eq + Hash + ?Sized,
     {
         self.tail.contains(value) || value == self.head.borrow()
+    }
+
+    /// Visits the values representing the difference, i.e., the values that are
+    /// in `self` but not in `other`.
+    ///
+    /// ```
+    /// use nonempty_collections::nes;
+    ///
+    /// let s0 = nes![1,2,3];
+    /// let s1 = nes![3,4,5];
+    /// let mut r = s0.difference(&s1).collect::<Vec<_>>();
+    /// r.sort();
+    /// assert_eq!(vec![&1, &2], r);
+    /// ```
+    pub fn difference<'a>(&'a self, other: &'a NESet<T, S>) -> Difference<'a, T, S> {
+        Difference {
+            iter: self.iter(),
+            other,
+        }
     }
 
     /// Returns a reference to the value in the set, if any, that is equal to
@@ -152,12 +172,72 @@ where
         }
     }
 
+    /// Returns `true` if the set is a subset of another, i.e., `other` contains
+    /// at least all the values in `self`.
+    ///
+    /// ```
+    /// use nonempty_collections::nes;
+    ///
+    /// let sub = nes![1,2,3];
+    /// let sup = nes![1,2,3,4];
+    ///
+    /// assert!(sub.is_subset(&sup));
+    /// assert!(!sup.is_subset(&sub));
+    /// ```
+    pub fn is_subset(&self, other: &NESet<T>) -> bool {
+        self.iter().all(|t| other.contains(t))
+    }
+
+    /// Returns `true` if the set is a superset of another, i.e., `self`
+    /// contains at least all the values in `other`.
+    ///
+    /// ```
+    /// use nonempty_collections::nes;
+    ///
+    /// let sub = nes![1,2,3];
+    /// let sup = nes![1,2,3,4];
+    ///
+    /// assert!(sup.is_superset(&sub));
+    /// assert!(!sub.is_superset(&sup));
+    /// ```
+    pub fn is_superset(&self, other: &NESet<T>) -> bool {
+        other.iter().all(|t| self.contains(t))
+    }
+
     /// Creates a new `NESet` with a single element.
     pub fn new(value: T) -> NESet<T> {
         NESet {
             head: value,
             tail: HashSet::new(),
         }
+    }
+
+    /// Adds a value to the set, replacing the existing value, if any, that is
+    /// equal to the given one. Returns the replaced value.
+    pub fn replace(&mut self, value: T) -> Option<T> {
+        if value == self.head {
+            Some(std::mem::replace(&mut self.head, value))
+        } else {
+            self.tail.replace(value)
+        }
+    }
+
+    /// Reserves capacity for at least `additional` more elements to be inserted
+    /// in the `NESet`. The collection may reserve more space to avoid frequent
+    /// reallocations.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the new allocation size overflows `usize`.
+    pub fn reserve(&mut self, additional: usize) {
+        self.tail.reserve(additional)
+    }
+
+    /// Shrinks the capacity of the set as much as possible. It will drop down
+    /// as much as possible while maintaining the internal rules and possibly
+    /// leaving some space in accordance with the resize policy.
+    pub fn shrink_to_fit(&mut self) {
+        self.tail.shrink_to_fit()
     }
 
     /// Creates a new `NESet` with a single element and specified capacity.
@@ -219,5 +299,27 @@ impl<'a, T> IntoIterator for &'a NESet<T> {
 
     fn into_iter(self) -> Self::IntoIter {
         std::iter::once(&self.head).chain(self.tail.iter())
+    }
+}
+
+pub struct Difference<'a, T: 'a, S: 'a> {
+    iter: Iter<'a, T>,
+    other: &'a NESet<T, S>,
+}
+
+impl<'a, T, S> Iterator for Difference<'a, T, S>
+where
+    T: Eq + Hash,
+    S: BuildHasher,
+{
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let elt = self.iter.next()?;
+            if !self.other.contains(elt) {
+                return Some(elt);
+            }
+        }
     }
 }
