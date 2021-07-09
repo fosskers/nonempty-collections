@@ -93,10 +93,6 @@ where
     T: Eq + Hash,
     S: BuildHasher,
 {
-    // TODO
-    // intersection
-    // union
-
     /// Returns true if the set contains a value.
     ///
     /// ```
@@ -122,9 +118,9 @@ where
     ///
     /// let s0 = nes![1,2,3];
     /// let s1 = nes![3,4,5];
-    /// let mut r = s0.difference(&s1).collect::<Vec<_>>();
-    /// r.sort();
-    /// assert_eq!(vec![&1, &2], r);
+    /// let mut v: Vec<_> = s0.difference(&s1).collect();
+    /// v.sort();
+    /// assert_eq!(vec![&1, &2], v);
     /// ```
     pub fn difference<'a>(&'a self, other: &'a NESet<T, S>) -> Difference<'a, T, S> {
         Difference {
@@ -174,6 +170,25 @@ where
             false
         } else {
             self.tail.insert(value)
+        }
+    }
+
+    /// Visits the values representing the interesection, i.e., the values that
+    /// are both in `self` and `other`.
+    ///
+    /// ```
+    /// use nonempty_collections::nes;
+    ///
+    /// let s0 = nes![1,2,3];
+    /// let s1 = nes![3,4,5];
+    /// let mut v: Vec<_> = s0.intersection(&s1).collect();
+    /// v.sort();
+    /// assert_eq!(vec![&3], v);
+    /// ```
+    pub fn intersection<'a>(&'a self, other: &'a NESet<T, S>) -> Intersection<'a, T, S> {
+        Intersection {
+            iter: self.iter(),
+            other,
         }
     }
 
@@ -372,5 +387,27 @@ where
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.iter.size_hint()
+    }
+}
+
+pub struct Intersection<'a, T: 'a, S: 'a> {
+    iter: Iter<'a, T>,
+    other: &'a NESet<T, S>,
+}
+
+impl<'a, T, S> Iterator for Intersection<'a, T, S>
+where
+    T: Eq + Hash,
+    S: BuildHasher,
+{
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let elt = self.iter.next()?;
+            if self.other.contains(elt) {
+                return Some(elt);
+            }
+        }
     }
 }
