@@ -20,7 +20,7 @@ macro_rules! nes {
     }
 }
 
-/// A non-empty, growable Set.
+/// A non-empty, growable `HashSet`.
 ///
 /// # Examples
 ///
@@ -42,12 +42,15 @@ macro_rules! nes {
 /// - `remove`
 /// - `retain`
 /// - `take`
+///
+/// As these methods are all "mutate-in-place" style and are difficult to
+/// reconcile with the fixed [`NESet::head`] value.
 #[derive(Debug, Clone)]
 pub struct NESet<T, S = std::collections::hash_map::RandomState> {
-    /// The element of the non-empty Vector. Always exists.
+    /// An element of the non-empty `HashSet`. Always exists.
     pub head: T,
 
-    /// The remaining elements of the non-empty Vector, perhaps empty.
+    /// The remaining elements of the non-empty `HashSet`, perhaps empty.
     pub tail: HashSet<T, S>,
 }
 
