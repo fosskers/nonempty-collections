@@ -34,6 +34,15 @@ macro_rules! nes {
 /// assert_eq!(vec![1,2,3,4], v);
 /// ```
 ///
+/// The first element can always be accessed in constant time.
+///
+/// ```
+/// use nonempty_collections::nes;
+///
+/// let s = nes!["Fëanor", "Fingolfin", "Finarfin"];
+/// assert_eq!("Fëanor", s.head);
+/// ```
+///
 /// # API Differences with [`HashSet`]
 ///
 /// Note that the following methods aren't implemented for `NESet`:

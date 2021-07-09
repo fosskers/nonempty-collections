@@ -35,6 +35,17 @@ macro_rules! nev {
 }
 
 /// A non-empty, growable Vector.
+///
+/// The first element can always be accessed in constant time. Similarly,
+/// certain functions like [`NEVec::first`] and [`NEVec::last`] always succeed:
+///
+/// ```
+/// use nonempty_collections::nev;
+///
+/// let s = nev!["Fëanor", "Fingolfin", "Finarfin"];
+/// assert_eq!("Fëanor", s.head);      // There is always a first element.
+/// assert_eq!(&"Finarfin", s.last()); // There is always a last element.
+/// ```
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[cfg_attr(
     feature = "serde",
