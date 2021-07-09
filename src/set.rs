@@ -3,6 +3,7 @@
 use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::hash::{BuildHasher, Hash};
+use std::iter::Chain;
 
 /// Like the [`nev`] macro, but for Sets. A nice short-hand for constructing
 /// [`NESet`] values.
@@ -38,13 +39,14 @@ macro_rules! nes {
 /// Note that the following methods aren't implemented for `NESet`:
 ///
 /// - `clear`
-/// - `drain` and `drain_filter`
+/// - `drain`
+/// - `drain_filter`
 /// - `remove`
 /// - `retain`
 /// - `take`
 ///
 /// As these methods are all "mutate-in-place" style and are difficult to
-/// reconcile with the fixed [`NESet::head`] value.
+/// reconcile with the non-emptiness guarantee.
 #[derive(Debug, Clone)]
 pub struct NESet<T, S = std::collections::hash_map::RandomState> {
     /// An element of the non-empty `HashSet`. Always exists.
@@ -243,6 +245,30 @@ where
         self.tail.shrink_to_fit()
     }
 
+    /// Visits the values representing the union, i.e., all the values in `self`
+    /// or `other`, without duplicates.
+    ///
+    /// ```
+    /// use nonempty_collections::nes;
+    ///
+    /// let s0 = nes![1,2,3];
+    /// let s1 = nes![3,4,5];
+    /// let mut v: Vec<_> = s0.union(&s1).collect();
+    /// v.sort();
+    /// assert_eq!(vec![&1, &2, &3, &4, &5], v);
+    /// ```
+    pub fn union<'a>(&'a self, other: &'a NESet<T, S>) -> Union<'a, T, S> {
+        if self.len() >= other.len() {
+            Union {
+                iter: self.iter().chain(other.difference(self)),
+            }
+        } else {
+            Union {
+                iter: other.iter().chain(self.difference(other)),
+            }
+        }
+    }
+
     /// Creates a new `NESet` with a single element and specified capacity.
     pub fn with_capacity(capacity: usize, value: T) -> NESet<T> {
         NESet {
@@ -324,5 +350,27 @@ where
                 return Some(elt);
             }
         }
+    }
+}
+
+pub struct Union<'a, T: 'a, S: 'a> {
+    iter: Chain<Iter<'a, T>, Difference<'a, T, S>>,
+}
+
+impl<'a, T, S> Iterator for Union<'a, T, S>
+where
+    T: Eq + Hash,
+    S: BuildHasher,
+{
+    type Item = &'a T;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
     }
 }
