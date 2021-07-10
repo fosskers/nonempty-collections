@@ -240,8 +240,11 @@ impl<T> NEVec<T> {
     /// assert_eq!(l_iter.next(), Some(&58));
     /// assert_eq!(l_iter.next(), None);
     /// ```
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &T> + 'a {
-        iter::once(&self.head).chain(self.tail.iter())
+    pub fn iter<'a>(&'a self) -> Iter<'a, T> {
+        Iter {
+            head: Some(&self.head),
+            tail: self.tail.iter(),
+        }
     }
 
     /// ```
@@ -260,8 +263,11 @@ impl<T> NEVec<T> {
     /// assert_eq!(l_iter.next(), Some(&580));
     /// assert_eq!(l_iter.next(), None);
     /// ```
-    pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &mut T> + 'a {
-        iter::once(&mut self.head).chain(self.tail.iter_mut())
+    pub fn iter_mut<'a>(&'a mut self) -> IterMut<'a, T> {
+        IterMut {
+            head: Some(&mut self.head),
+            tail: self.tail.iter_mut(),
+        }
     }
 
     /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is
@@ -758,6 +764,40 @@ impl<T> From<(T, Vec<T>)> for NEVec<T> {
     /// a NEVec.
     fn from((head, tail): (T, Vec<T>)) -> Self {
         NEVec { head, tail }
+    }
+}
+
+#[derive(Debug)]
+pub struct Iter<'a, T: 'a> {
+    head: Option<&'a T>,
+    tail: std::slice::Iter<'a, T>,
+}
+
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.head {
+            None => self.tail.next(),
+            Some(_) => self.head.take(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct IterMut<'a, T: 'a> {
+    head: Option<&'a mut T>,
+    tail: std::slice::IterMut<'a, T>,
+}
+
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.head {
+            None => self.tail.next(),
+            Some(_) => self.head.take(),
+        }
     }
 }
 
