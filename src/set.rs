@@ -23,24 +23,46 @@ macro_rules! nes {
 
 /// A non-empty, growable `HashSet`.
 ///
-/// # Examples
+/// # Construction and Access
+///
+/// The [`nes`] macro is the simplest way to construct an `NESet`:
 ///
 /// ```
 /// use nonempty_collections::nes;
 ///
 /// let s = nes![1,1,2,2,3,3,4,4];
-/// let mut v = s.into_iter().collect::<Vec<_>>();
+/// let mut v: Vec<_> = s.into_iter().collect();
 /// v.sort();
 /// assert_eq!(vec![1,2,3,4], v);
 /// ```
 ///
-/// The first element can always be accessed in constant time.
+/// With `NESet`, the first element can always be accessed in constant time.
 ///
 /// ```
 /// use nonempty_collections::nes;
 ///
 /// let s = nes!["Fëanor", "Fingolfin", "Finarfin"];
 /// assert_eq!("Fëanor", s.head);
+/// ```
+///
+/// # Conversion
+///
+/// If you have a [`HashSet`] but want an `NESet`, try [`NESet::from_set`].
+/// Naturally, this might not succeed.
+///
+/// If you have an `NESet` but want a `HashSet`, try their corresponding
+/// [`From`] instance. This will always succeed.
+///
+/// ```
+/// use nonempty_collections::nes;
+/// use std::collections::HashSet;
+///
+/// let n0 = nes![1,2,3];
+/// let s0 = HashSet::from(n0);
+///
+/// // Or just use `Into`.
+/// let n1 = nes![1,2,3];
+/// let s1: HashSet<_> = n1.into();
 /// ```
 ///
 /// # API Differences with [`HashSet`]
@@ -496,5 +518,26 @@ where
                 return Some(elt);
             }
         }
+    }
+}
+
+impl<T, S> From<NESet<T, S>> for HashSet<T, S>
+where
+    T: Eq + Hash,
+    S: BuildHasher,
+{
+    /// ```
+    /// use nonempty_collections::nes;
+    /// use std::collections::HashSet;
+    ///
+    /// let s: HashSet<_> = nes![1,2,3].into();
+    /// let mut v: Vec<_> = s.into_iter().collect();
+    /// v.sort();
+    /// assert_eq!(vec![1,2,3], v);
+    /// ```
+    fn from(s: NESet<T, S>) -> Self {
+        let mut set = s.tail;
+        set.insert(s.head);
+        set
     }
 }
