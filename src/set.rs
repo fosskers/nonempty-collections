@@ -318,6 +318,35 @@ where
     }
 }
 
+impl<T, S> PartialEq for NESet<T, S>
+where
+    T: Eq + Hash,
+    S: BuildHasher,
+{
+    /// ```
+    /// use nonempty_collections::nes;
+    ///
+    /// let s0 = nes![1,2,3];
+    /// let s1 = nes![1,2,3];
+    /// let s2 = nes![1,2];
+    /// let s3 = nes![1,2,3,4];
+    ///
+    /// assert!(s0 == s1);
+    /// assert!(s0 != s2);
+    /// assert!(s0 != s3);
+    /// ```
+    fn eq(&self, other: &Self) -> bool {
+        self.len() == other.len() && self.intersection(other).count() == self.len()
+    }
+}
+
+impl<T, S> Eq for NESet<T, S>
+where
+    T: Eq + Hash,
+    S: BuildHasher,
+{
+}
+
 #[derive(Debug)]
 pub struct Iter<'a, T: 'a> {
     head: Option<&'a T>,

@@ -46,9 +46,9 @@ macro_rules! nev {
 /// assert_eq!("Fëanor", s.head);      // There is always a first element.
 /// assert_eq!(&"Finarfin", s.last()); // There is always a last element.
 /// ```
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[cfg_attr(
     feature = "serde",
+    derive(Deserialize, Serialize),
     serde(bound(serialize = "T: Clone + Serialize")),
     serde(into = "Vec<T>", try_from = "Vec<T>")
 )]
