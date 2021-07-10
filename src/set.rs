@@ -97,6 +97,37 @@ impl<T, S> NESet<T, S> {
     }
 }
 
+impl<T> NESet<T>
+where
+    T: Eq + Hash,
+{
+    /// Attempt a conversion from a [`HashSet`], consuming the given `HashSet`.
+    /// Will fail if the `HashSet` is empty.
+    ///
+    /// Slightly inefficient, as it requires a reallocation of the "tail"
+    /// `HashSet` after the initial `head` has been extracted.
+    ///
+    /// ```
+    /// use nonempty_collections::{nes, NESet};
+    /// use std::collections::HashSet;
+    ///
+    /// let mut s = HashSet::new();
+    /// s.insert(1);
+    /// s.insert(2);
+    /// s.insert(3);
+    ///
+    /// let n = NESet::from_set(s);
+    /// assert_eq!(Some(nes![1,2,3]), n);
+    /// ```
+    pub fn from_set(set: HashSet<T>) -> Option<NESet<T>> {
+        let mut iter = set.into_iter();
+        iter.next().and_then(|head| {
+            let tail: HashSet<_> = iter.collect();
+            Some(NESet { head, tail })
+        })
+    }
+}
+
 impl<T, S> NESet<T, S>
 where
     T: Eq + Hash,
