@@ -232,6 +232,24 @@ where
         }
     }
 
+    /// Returns `true` if `self` has no elements in common with `other`.
+    /// This is equivalent to checking for an empty intersection.
+    ///
+    /// ```
+    /// use nonempty_collections::nes;
+    ///
+    /// let s0 = nes![1,2,3];
+    /// let s1 = nes![4,5,6];
+    /// assert!(s0.is_disjoint(&s1));
+    /// ```
+    pub fn is_disjoint(&self, other: &NESet<T, S>) -> bool {
+        if self.len() <= other.len() {
+            self.iter().all(|v| !other.contains(v))
+        } else {
+            other.iter().all(|v| !self.contains(v))
+        }
+    }
+
     /// Returns `true` if the set is a subset of another, i.e., `other` contains
     /// at least all the values in `self`.
     ///
