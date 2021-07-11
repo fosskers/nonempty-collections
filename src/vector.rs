@@ -7,7 +7,7 @@ use std::cmp::Ordering;
 use std::mem;
 use std::{iter, vec};
 
-/// Like the `vec!` macro, but enforces at least one argument. A nice short-hand
+/// Like the [`vec!`] macro, but enforces at least one argument. A nice short-hand
 /// for constructing [`NEVec`] values.
 ///
 /// ```

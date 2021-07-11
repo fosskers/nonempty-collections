@@ -74,8 +74,12 @@
 
 #![warn(missing_docs)]
 
+mod iter;
+mod map;
 mod set;
 mod vector;
 
+pub use iter::NonEmptyIterator;
+pub use map::NEMap;
 pub use set::NESet;
 pub use vector::NEVec;
