@@ -3,6 +3,7 @@
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::hash::{BuildHasher, Hash};
+use std::iter::{Chain, Once};
 
 /// Like the [`nev`] macro, but for Maps. A nice short-hand for constructing
 /// [`NEMap`] values.
@@ -49,6 +50,22 @@ impl<K, V, S> NEMap<K, V, S> {
         self.tail.hasher()
     }
 
+    /// An iterator visiting all elements in arbitrary order. The iterator
+    /// element type is `(&'a K, &'a V)`.
+    pub fn iter(&self) -> Iter<'_, K, V> {
+        Iter {
+            iter: std::iter::once((&self.head_key, &self.head_val)).chain(self.tail.iter()),
+        }
+    }
+
+    /// An iterator visiting all elements in arbitrary order. The iterator
+    /// element type is `(&'a K, &'a mut V)`.
+    pub fn iter_mut(&mut self) -> IterMut<'_, K, V> {
+        IterMut {
+            iter: std::iter::once((&self.head_key, &mut self.head_val)).chain(self.tail.iter_mut()),
+        }
+    }
+
     /// Returns the number of elements in the map. Always 1 or more.
     ///
     /// ```
@@ -67,7 +84,7 @@ where
     K: Eq + Hash,
     S: BuildHasher,
 {
-    /// Returns true if the set contains a value.
+    /// Returns true if the map contains a value.
     ///
     /// ```
     /// use nonempty_collections::nem;
@@ -184,12 +201,46 @@ where
         }
     }
 
-    /// Creates a new `NESet` with a single element.
+    /// Creates a new `NEMap` with a single element.
     pub fn new(k: K, v: V) -> NEMap<K, V> {
         NEMap {
             head_key: k,
             head_val: v,
             tail: HashMap::new(),
+        }
+    }
+
+    /// Shrinks the capacity of the map as much as possible. It will drop down
+    /// as much as possible while maintaining the internal rules and possibly
+    /// leaving some space in accordance with the resize policy.
+    pub fn shrink_to_fit(&mut self) {
+        self.tail.shrink_to_fit()
+    }
+
+    /// Creates a new `NEMap` with a single element and specified capacity.
+    pub fn with_capacity(capacity: usize, k: K, v: V) -> NEMap<K, V> {
+        NEMap {
+            head_key: k,
+            head_val: v,
+            tail: HashMap::with_capacity(capacity),
+        }
+    }
+
+    /// See [`HashMap::with_capacity_and_hasher`].
+    pub fn with_capacity_and_hasher(capacity: usize, hasher: S, k: K, v: V) -> NEMap<K, V, S> {
+        NEMap {
+            head_key: k,
+            head_val: v,
+            tail: HashMap::with_capacity_and_hasher(capacity, hasher),
+        }
+    }
+
+    /// See [`HashMap::with_hasher`].
+    pub fn with_hasher(hasher: S, k: K, v: V) -> NEMap<K, V, S> {
+        NEMap {
+            head_key: k,
+            head_val: v,
+            tail: HashMap::with_hasher(hasher),
         }
     }
 }
@@ -210,5 +261,29 @@ where
         let mut map = m.tail;
         map.insert(m.head_key, m.head_val);
         map
+    }
+}
+
+pub struct Iter<'a, K: 'a, V: 'a> {
+    iter: Chain<Once<(&'a K, &'a V)>, std::collections::hash_map::Iter<'a, K, V>>,
+}
+
+impl<'a, K, V> Iterator for Iter<'a, K, V> {
+    type Item = (&'a K, &'a V);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+}
+
+pub struct IterMut<'a, K: 'a, V: 'a> {
+    iter: Chain<Once<(&'a K, &'a mut V)>, std::collections::hash_map::IterMut<'a, K, V>>,
+}
+
+impl<'a, K, V> Iterator for IterMut<'a, K, V> {
+    type Item = (&'a K, &'a mut V);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
     }
 }
