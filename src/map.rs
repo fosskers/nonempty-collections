@@ -66,6 +66,21 @@ impl<K, V, S> NEMap<K, V, S> {
         }
     }
 
+    /// An iterator visiting all keys in arbitrary order. The iterator element
+    /// type is `&'a K`.
+    ///
+    /// ```
+    /// use nonempty_collections::nem;
+    ///
+    /// let m = nem!["Valmar" => "Vanyar", "Tirion" => "Noldor", "Alqualondë" => "Teleri"];
+    /// let mut v: Vec<_> = m.keys().collect();
+    /// v.sort();
+    /// assert_eq!(vec![&"Alqualondë", &"Tirion", &"Valmar"], v);
+    /// ```
+    pub fn keys(&self) -> Keys<'_, K, V> {
+        Keys { inner: self.iter() }
+    }
+
     /// Returns the number of elements in the map. Always 1 or more.
     ///
     /// ```
@@ -76,6 +91,39 @@ impl<K, V, S> NEMap<K, V, S> {
     /// ```
     pub fn len(&self) -> usize {
         self.tail.len() + 1
+    }
+
+    /// An iterator visiting all values in arbitrary order. The iterator element
+    /// type is `&'a V`.
+    ///
+    /// ```
+    /// use nonempty_collections::nem;
+    ///
+    /// let m = nem!["Valmar" => "Vanyar", "Tirion" => "Noldor", "Alqualondë" => "Teleri"];
+    /// let mut v: Vec<_> = m.values().collect();
+    /// v.sort();
+    /// assert_eq!(vec![&"Noldor", &"Teleri", &"Vanyar"], v);
+    /// ```
+    pub fn values(&self) -> Values<'_, K, V> {
+        Values { inner: self.iter() }
+    }
+
+    /// An iterator visiting all values mutably in arbitrary order. The iterator
+    /// element type is `&'a mut V`.
+    ///
+    /// ```
+    /// use nonempty_collections::nem;
+    ///
+    /// let mut m = nem!["Valmar" => 10000, "Tirion" => 10000, "Alqualondë" => 10000];
+    ///
+    /// for v in m.values_mut() {
+    ///     *v += 1000;
+    /// }
+    /// ```
+    pub fn values_mut(&mut self) -> ValuesMut<'_, K, V> {
+        ValuesMut {
+            inner: self.iter_mut(),
+        }
     }
 }
 
@@ -271,6 +319,7 @@ pub struct Iter<'a, K: 'a, V: 'a> {
 impl<'a, K, V> Iterator for Iter<'a, K, V> {
     type Item = (&'a K, &'a V);
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
     }
@@ -283,7 +332,47 @@ pub struct IterMut<'a, K: 'a, V: 'a> {
 impl<'a, K, V> Iterator for IterMut<'a, K, V> {
     type Item = (&'a K, &'a mut V);
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
+    }
+}
+
+pub struct Keys<'a, K: 'a, V: 'a> {
+    inner: Iter<'a, K, V>,
+}
+
+impl<'a, K, V> Iterator for Keys<'a, K, V> {
+    type Item = &'a K;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next().map(|(k, _)| k)
+    }
+}
+
+pub struct Values<'a, K: 'a, V: 'a> {
+    inner: Iter<'a, K, V>,
+}
+
+impl<'a, K, V> Iterator for Values<'a, K, V> {
+    type Item = &'a V;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next().map(|(_, v)| v)
+    }
+}
+
+pub struct ValuesMut<'a, K: 'a, V: 'a> {
+    inner: IterMut<'a, K, V>,
+}
+
+impl<'a, K, V> Iterator for ValuesMut<'a, K, V> {
+    type Item = &'a mut V;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next().map(|(_, v)| v)
     }
 }
