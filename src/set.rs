@@ -3,7 +3,9 @@
 use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::hash::{BuildHasher, Hash};
-use std::iter::Chain;
+use std::iter::{Chain, Once, Skip};
+
+use crate::NonEmptyIterator;
 
 /// Like the [`nev`] macro, but for Sets. A nice short-hand for constructing
 /// [`NESet`] values.
@@ -83,7 +85,7 @@ pub struct NESet<T, S = std::collections::hash_map::RandomState> {
     /// An element of the non-empty `HashSet`. Always exists.
     pub head: T,
 
-    /// The remaining elements of the non-empty `HashSet`, perhaps empty.
+    /// The remaining elements, perhaps empty.
     pub tail: HashSet<T, S>,
 }
 
@@ -101,8 +103,8 @@ impl<T, S> NESet<T, S> {
     /// An iterator visiting all elements in arbitrary order.
     pub fn iter(&self) -> Iter<'_, T> {
         Iter {
-            head: Some(&self.head),
-            tail: self.tail.iter(),
+            head: &self.head,
+            iter: std::iter::once(&self.head).chain(self.tail.iter()),
         }
     }
 
@@ -420,25 +422,21 @@ where
 
 #[derive(Debug)]
 pub struct Iter<'a, T: 'a> {
-    head: Option<&'a T>,
-    tail: std::collections::hash_set::Iter<'a, T>,
+    head: &'a T,
+    iter: Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>,
 }
 
 impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.head {
-            None => self.tail.next(),
-            Some(_) => self.head.take(),
-        }
+        self.iter.next()
     }
 }
 
 impl<T> IntoIterator for NESet<T> {
     type Item = T;
-    type IntoIter =
-        std::iter::Chain<std::iter::Once<T>, std::collections::hash_set::IntoIter<Self::Item>>;
+    type IntoIter = Chain<Once<T>, std::collections::hash_set::IntoIter<Self::Item>>;
 
     fn into_iter(self) -> Self::IntoIter {
         std::iter::once(self.head).chain(self.tail)
@@ -447,11 +445,20 @@ impl<T> IntoIterator for NESet<T> {
 
 impl<'a, T> IntoIterator for &'a NESet<T> {
     type Item = &'a T;
-    type IntoIter =
-        std::iter::Chain<std::iter::Once<&'a T>, std::collections::hash_set::Iter<'a, T>>;
+    type IntoIter = Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>;
 
     fn into_iter(self) -> Self::IntoIter {
         std::iter::once(&self.head).chain(self.tail.iter())
+    }
+}
+
+impl<'a, T> NonEmptyIterator for Iter<'a, T> {
+    type Item = &'a T;
+
+    type Iter = Skip<Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>>;
+
+    fn first(self) -> (Self::Item, Self::Iter) {
+        (self.head, self.iter.skip(1))
     }
 }
 
