@@ -24,6 +24,21 @@ pub trait NonEmptyIterator {
 
     /// Convert to the possibly-empty variant.
     fn into_std(self) -> Self::Iter;
+
+    /// Takes a closure and creates an iterator which calls that closure on each
+    /// element.
+    ///
+    /// If `self` is a `NonEmptyIterator`, then so is [`Map`].
+    ///
+    /// See also [`Iterator::map`].
+    #[inline]
+    fn map<U, F>(self, f: F) -> Map<Self, F>
+    where
+        Self: Sized,
+        F: FnMut(Self::Item) -> U,
+    {
+        Map { iter: self, f }
+    }
 }
 
 /// Similar to [`std::iter::Map`], but with additional non-emptiness guarantees.
