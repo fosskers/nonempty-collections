@@ -14,16 +14,13 @@ pub trait NonEmptyIterator {
     /// The value produced by this iterator.
     type Item;
 
-    /// Each `NonEmptyIterator` knows about its possibly-empty variant from
-    /// `std`. Critically, they share an `Item`.
+    /// Each `NonEmptyIterator` knows about a possibly-empty variant of itself,
+    /// likely from `std`. Critically, they share an `Item`.
     type Iter: Iterator<Item = Self::Item>;
 
     /// A `NonEmptyIterator` can, by consuming itself, reliably produce its
-    /// first element, alongside its possibly-empty variant from `std`.
+    /// first element, alongside its possibly-empty variant.
     fn first(self) -> (Self::Item, Self::Iter);
-
-    /// Convert to the possibly-empty variant.
-    fn into_std(self) -> Self::Iter;
 
     /// Takes a closure and creates an iterator which calls that closure on each
     /// element.
@@ -63,9 +60,19 @@ where
         // Reconstruct the `Map` we broke open.
         (fun(i), iter.map(fun))
     }
+}
 
-    fn into_std(self) -> Self::Iter {
-        self.iter.into_std().map(self.f)
+impl<U, I, F> IntoIterator for Map<I, F>
+where
+    I: IntoIterator,
+    F: FnMut(I::Item) -> U,
+{
+    type Item = U;
+
+    type IntoIter = std::iter::Map<I::IntoIter, F>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter.into_iter().map(self.f)
     }
 }
 
