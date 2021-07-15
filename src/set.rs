@@ -3,9 +3,7 @@
 use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::hash::{BuildHasher, Hash};
-use std::iter::{Chain, Once, Skip};
-
-use crate::NonEmptyIterator;
+use std::iter::{Chain, Once};
 
 /// Like the [`nev`] macro, but for Sets. A nice short-hand for constructing
 /// [`NESet`] values.
@@ -452,15 +450,15 @@ impl<'a, T> IntoIterator for &'a NESet<T> {
     }
 }
 
-impl<'a, T> NonEmptyIterator for Iter<'a, T> {
-    type Item = &'a T;
+// impl<'a, T> NonEmptyIterator for Iter<'a, T> {
+//     type Item = &'a T;
 
-    type Iter = Skip<Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>>;
+//     type Iter = Skip<Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>>;
 
-    fn first(self) -> (Self::Item, Self::Iter) {
-        (self.head, self.iter.skip(1))
-    }
-}
+//     fn first(self) -> (Self::Item, Self::Iter) {
+//         (self.head, self.iter.skip(1))
+//     }
+// }
 
 pub struct Difference<'a, T: 'a, S: 'a> {
     iter: Iter<'a, T>,
