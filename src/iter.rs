@@ -22,12 +22,51 @@ pub trait NonEmptyIterator {
     /// first element, alongside its possibly-empty variant.
     fn first(self) -> (Self::Item, Self::Iter);
 
+    /// Advances the iterator and returns the next value.
+    ///
+    /// See also [`Iterator::next`].
+    fn next(&mut self) -> Option<Self::Item>;
+
+    /// Tests if every element of the iterator matches a predicate.
+    ///
+    /// See also [`Iterator::all`].
+    fn all<F>(&mut self, f: F) -> bool
+    where
+        Self: Sized,
+        F: FnMut(Self::Item) -> bool,
+    {
+        let mut fun = f;
+
+        loop {
+            match self.next() {
+                Some(i) => {
+                    if !fun(i) {
+                        return false;
+                    }
+                }
+                None => {
+                    return true;
+                }
+            }
+        }
+    }
+
     /// Takes a closure and creates an iterator which calls that closure on each
     /// element.
     ///
     /// If `self` is a `NonEmptyIterator`, then so is [`Map`].
     ///
     /// See also [`Iterator::map`].
+    ///
+    /// ```
+    /// use nonempty_collections::nes;
+    /// use nonempty_collections::iter::NonEmptyIterator;
+    ///
+    /// let s = nes![1,2,3];
+    /// let mut v: Vec<_> = s.iter().map(|n| n * 2).into_iter().collect();
+    /// v.sort();
+    /// assert_eq!(vec![2,4,6], v);
+    /// ```
     #[inline]
     fn map<U, F>(self, f: F) -> Map<Self, F>
     where
@@ -59,6 +98,10 @@ where
 
         // Reconstruct the `Map` we broke open.
         (fun(i), iter.map(fun))
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().map(&mut self.f)
     }
 }
 
