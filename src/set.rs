@@ -1,9 +1,10 @@
 //! Non-empty Sets.
 
+use crate::iter::NonEmptyIterator;
 use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::hash::{BuildHasher, Hash};
-use std::iter::{Chain, Once};
+use std::iter::{Chain, Once, Skip};
 
 /// Like the [`nev`] macro, but for Sets. A nice short-hand for constructing
 /// [`NESet`] values.
@@ -355,11 +356,15 @@ where
     pub fn union<'a>(&'a self, other: &'a NESet<T, S>) -> Union<'a, T, S> {
         if self.len() >= other.len() {
             Union {
-                iter: self.iter().chain(other.difference(self)),
+                iter: self.iter(),
+                orig: self,
+                other: other.iter(),
             }
         } else {
             Union {
-                iter: other.iter().chain(self.difference(other)),
+                iter: other.iter(),
+                orig: other,
+                other: self.iter(),
             }
         }
     }
@@ -424,13 +429,13 @@ pub struct Iter<'a, T: 'a> {
     iter: Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>,
 }
 
-impl<'a, T> Iterator for Iter<'a, T> {
-    type Item = &'a T;
+// impl<'a, T> Iterator for Iter<'a, T> {
+//     type Item = &'a T;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
-}
+//     fn next(&mut self) -> Option<Self::Item> {
+//         self.iter.next()
+//     }
+// }
 
 impl<T> IntoIterator for NESet<T> {
     type Item = T;
@@ -450,15 +455,19 @@ impl<'a, T> IntoIterator for &'a NESet<T> {
     }
 }
 
-// impl<'a, T> NonEmptyIterator for Iter<'a, T> {
-//     type Item = &'a T;
+impl<'a, T> NonEmptyIterator for Iter<'a, T> {
+    type Item = &'a T;
 
-//     type Iter = Skip<Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>>;
+    type Iter = Skip<Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>>;
 
-//     fn first(self) -> (Self::Item, Self::Iter) {
-//         (self.head, self.iter.skip(1))
-//     }
-// }
+    fn first(self) -> (Self::Item, Self::Iter) {
+        (self.head, self.iter.skip(1))
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+}
 
 pub struct Difference<'a, T: 'a, S: 'a> {
     iter: Iter<'a, T>,
@@ -483,25 +492,40 @@ where
 }
 
 pub struct Union<'a, T: 'a, S: 'a> {
-    iter: Chain<Iter<'a, T>, Difference<'a, T, S>>,
+    iter: Iter<'a, T>,
+    orig: &'a NESet<T, S>,
+    other: Iter<'a, T>,
 }
 
-impl<'a, T, S> Iterator for Union<'a, T, S>
+impl<'a, T, S> NonEmptyIterator for Union<'a, T, S>
 where
     T: Eq + Hash,
     S: BuildHasher,
 {
     type Item = &'a T;
 
-    #[inline]
+    type Iter = std::collections::hash_set::Union<'a, T, S>;
+
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
+        match self.iter.next() {
+            Some(i) => Some(i),
+            None => loop {
+                let i = self.other.next()?;
+                if !self.orig.contains(i) {
+                    return Some(i);
+                }
+            },
+        }
     }
 
-    #[inline]
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.iter.size_hint()
+    fn first(self) -> (Self::Item, Self::Iter) {
+        todo!()
     }
+
+    // #[inline]
+    // fn size_hint(&self) -> (usize, Option<usize>) {
+    //     self.iter.size_hint()
+    // }
 }
 
 pub struct Intersection<'a, T: 'a, S: 'a> {
