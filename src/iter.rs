@@ -51,6 +51,17 @@ pub trait NonEmptyIterator {
         }
     }
 
+    /// Transforms an iterator into a collection, or some other concrete value.
+    ///
+    /// See also [`Iterator::collect`].
+    fn collect<B>(self) -> B
+    where
+        Self: Sized,
+        B: FromNonEmptyIterator<Self::Item>,
+    {
+        FromNonEmptyIterator::from_nonempty_iter(self)
+    }
+
     /// Takes a closure and creates an iterator which calls that closure on each
     /// element.
     ///
@@ -75,6 +86,36 @@ pub trait NonEmptyIterator {
     {
         Map { iter: self, f }
     }
+}
+
+/// Conversion from a [`NonEmptyIterator`].
+pub trait FromNonEmptyIterator<A>: Sized {
+    /// Creates a value from a [`NonEmptyIterator`].
+    fn from_nonempty_iter<T>(iter: T) -> Self
+    where
+        T: IntoNonEmptyIterator<Item = A>;
+}
+
+impl<I: NonEmptyIterator> IntoNonEmptyIterator for I {
+    type Item = I::Item;
+
+    type IntoIter = I;
+
+    fn into_nonempty_iter(self) -> Self::IntoIter {
+        self
+    }
+}
+
+/// Conversion into a [`NonEmptyIterator`].
+pub trait IntoNonEmptyIterator {
+    /// The type of the elements being iterated over.
+    type Item;
+
+    /// Which kind of [`NonEmptyIterator`] are we turning this into?
+    type IntoIter: NonEmptyIterator<Item = Self::Item>;
+
+    /// Creates a [`NonEmptyIterator`] from a value.
+    fn into_nonempty_iter(self) -> Self::IntoIter;
 }
 
 /// Similar to [`std::iter::Map`], but with additional non-emptiness guarantees.
