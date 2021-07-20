@@ -341,17 +341,19 @@ where
         self.tail.shrink_to_fit()
     }
 
+    // TODO Fix example so that explicit import isn't necessary.
     /// Visits the values representing the union, i.e., all the values in `self`
     /// or `other`, without duplicates.
     ///
     /// ```
-    /// use nonempty_collections::nes;
+    /// use nonempty_collections::{NEVec, nev, nes};
+    /// use nonempty_collections::iter::NonEmptyIterator;
     ///
     /// let s0 = nes![1,2,3];
     /// let s1 = nes![3,4,5];
-    /// let mut v: Vec<_> = s0.union(&s1).collect();
+    /// let mut v: NEVec<_> = s0.union(&s1).collect();
     /// v.sort();
-    /// assert_eq!(vec![&1, &2, &3, &4, &5], v);
+    /// assert_eq!(nev![&1, &2, &3, &4, &5], v);
     /// ```
     pub fn union<'a>(&'a self, other: &'a NESet<T, S>) -> Union<'a, T, S> {
         if self.len() >= other.len() {

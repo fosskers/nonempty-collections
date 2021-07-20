@@ -4,10 +4,15 @@
 use serde::{Deserialize, Serialize};
 
 use std::cmp::Ordering;
+use std::iter::Chain;
+use std::iter::Once;
+use std::iter::Skip;
 use std::mem;
 use std::ops::IndexMut;
 use std::ops::Not;
 use std::{iter, vec};
+
+use crate::iter::NonEmptyIterator;
 
 /// Like the [`vec!`] macro, but enforces at least one argument. A nice short-hand
 /// for constructing [`NEVec`] values.
@@ -231,7 +236,7 @@ impl<T> NEVec<T> {
     }
 
     /// ```
-    /// use nonempty_collections::nev;
+    /// use nonempty_collections::prelude::*;
     ///
     /// let mut l = nev![42, 36, 58];
     ///
@@ -244,13 +249,13 @@ impl<T> NEVec<T> {
     /// ```
     pub fn iter<'a>(&'a self) -> Iter<'a, T> {
         Iter {
-            head: Some(&self.head),
-            tail: self.tail.iter(),
+            head: &self.head,
+            iter: std::iter::once(&self.head).chain(self.tail.iter()),
         }
     }
 
     /// ```
-    /// use nonempty_collections::nev;
+    /// use nonempty_collections::prelude::*;
     ///
     /// let mut l = nev![42, 36, 58];
     ///
@@ -793,18 +798,20 @@ impl<T> From<(T, Vec<T>)> for NEVec<T> {
 
 #[derive(Debug)]
 pub struct Iter<'a, T: 'a> {
-    head: Option<&'a T>,
-    tail: std::slice::Iter<'a, T>,
+    head: &'a T,
+    iter: Chain<Once<&'a T>, std::slice::Iter<'a, T>>,
 }
 
-impl<'a, T> Iterator for Iter<'a, T> {
+impl<'a, T> NonEmptyIterator for Iter<'a, T> {
     type Item = &'a T;
+    type Iter = Skip<Chain<Once<&'a T>, std::slice::Iter<'a, T>>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.head {
-            None => self.tail.next(),
-            Some(_) => self.head.take(),
-        }
+        self.iter.next()
+    }
+
+    fn first(self) -> (Self::Item, Self::Iter) {
+        todo!()
     }
 }
 

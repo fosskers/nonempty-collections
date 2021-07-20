@@ -75,9 +75,10 @@
 #![warn(missing_docs)]
 
 pub mod iter;
-mod map;
-mod set;
-mod vector;
+pub mod map;
+pub mod prelude;
+pub mod set;
+pub mod vector;
 
 pub use map::NEMap;
 pub use set::NESet;
