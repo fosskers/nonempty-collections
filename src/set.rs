@@ -341,13 +341,12 @@ where
         self.tail.shrink_to_fit()
     }
 
-    // TODO Fix example so that explicit import isn't necessary.
     /// Visits the values representing the union, i.e., all the values in `self`
     /// or `other`, without duplicates.
     ///
     /// ```
-    /// use nonempty_collections::{NEVec, nev, nes};
-    /// use nonempty_collections::iter::NonEmptyIterator;
+    /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::prelude::*;
     ///
     /// let s0 = nes![1,2,3];
     /// let s1 = nes![3,4,5];
