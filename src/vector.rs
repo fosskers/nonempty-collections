@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 
 use std::cmp::Ordering;
 use std::mem;
+use std::ops::IndexMut;
+use std::ops::Not;
 use std::{iter, vec};
 
 /// Like the [`vec!`] macro, but enforces at least one argument. A nice short-hand
@@ -742,6 +744,28 @@ impl<T> NEVec<T> {
         F: Fn(&T) -> &U,
     {
         self.minimum_by(|i, j| f(i).cmp(f(j)))
+    }
+
+    /// Sorts the `NEVec` in place.
+    ///
+    /// See also [`slice::sort`].
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    ///
+    /// let mut n = nev![5,4,3,2,1];
+    /// n.sort();
+    /// assert_eq!(nev![1,2,3,4,5], n);
+    /// ```
+    pub fn sort(&mut self)
+    where
+        T: Ord,
+    {
+        if self.tail.is_empty().not() {
+            self.tail.sort();
+            std::mem::swap(&mut self.head, self.tail.index_mut(0));
+            self.tail.sort(); // FIXME Unfortunate second sort, as there is no ordered insert.
+        }
     }
 }
 
