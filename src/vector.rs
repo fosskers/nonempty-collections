@@ -796,6 +796,7 @@ impl<T> From<(T, Vec<T>)> for NEVec<T> {
     }
 }
 
+/// A non-empty iterator over the values of an [`NEVec`].
 #[derive(Debug)]
 pub struct Iter<'a, T: 'a> {
     head: &'a T,
@@ -815,6 +816,7 @@ impl<'a, T> NonEmptyIterator for Iter<'a, T> {
     }
 }
 
+/// A non-empty iterator over mutable values from an [`NEVec`].
 #[derive(Debug)]
 pub struct IterMut<'a, T: 'a> {
     head: Option<&'a mut T>,

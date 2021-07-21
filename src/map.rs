@@ -312,6 +312,7 @@ where
     }
 }
 
+/// A non-empty iterator over the entries of an [`NEMap`].
 pub struct Iter<'a, K: 'a, V: 'a> {
     iter: Chain<Once<(&'a K, &'a V)>, std::collections::hash_map::Iter<'a, K, V>>,
 }
@@ -325,6 +326,7 @@ impl<'a, K, V> Iterator for Iter<'a, K, V> {
     }
 }
 
+/// A non-empty iterator over mutable values of an [`NEMap`].
 pub struct IterMut<'a, K: 'a, V: 'a> {
     iter: Chain<Once<(&'a K, &'a mut V)>, std::collections::hash_map::IterMut<'a, K, V>>,
 }
@@ -338,6 +340,7 @@ impl<'a, K, V> Iterator for IterMut<'a, K, V> {
     }
 }
 
+/// A non-empty iterator over the keys of an [`NEMap`].
 pub struct Keys<'a, K: 'a, V: 'a> {
     inner: Iter<'a, K, V>,
 }
@@ -351,10 +354,12 @@ impl<'a, K, V> Iterator for Keys<'a, K, V> {
     }
 }
 
+/// A non-empty iterator over the values of an [`NEMap`].
 pub struct Values<'a, K: 'a, V: 'a> {
     inner: Iter<'a, K, V>,
 }
 
+// FIXME Should be `NonEmptyIterator`.
 impl<'a, K, V> Iterator for Values<'a, K, V> {
     type Item = &'a V;
 
@@ -364,10 +369,12 @@ impl<'a, K, V> Iterator for Values<'a, K, V> {
     }
 }
 
+/// A non-empty iterator over mutable values of an [`NEMap`].
 pub struct ValuesMut<'a, K: 'a, V: 'a> {
     inner: IterMut<'a, K, V>,
 }
 
+// FIXME Should be `NonEmptyIterator`.
 impl<'a, K, V> Iterator for ValuesMut<'a, K, V> {
     type Item = &'a mut V;
 

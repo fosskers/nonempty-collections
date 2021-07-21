@@ -424,6 +424,7 @@ where
 {
 }
 
+/// A non-empty iterator over the values of an [`NESet`].
 #[derive(Debug)]
 pub struct Iter<'a, T: 'a> {
     head: &'a T,
@@ -470,6 +471,7 @@ impl<'a, T> NonEmptyIterator for Iter<'a, T> {
     }
 }
 
+/// A iterator producing elements in the difference of two [`NESet`]s.
 pub struct Difference<'a, T: 'a, S: 'a> {
     iter: Iter<'a, T>,
     other: &'a NESet<T, S>,
@@ -492,6 +494,7 @@ where
     }
 }
 
+/// A non-empty iterator producing elements in the union of two [`NESet`]s.
 pub struct Union<'a, T: 'a, S: 'a> {
     iter: Iter<'a, T>,
     orig: &'a NESet<T, S>,
@@ -529,6 +532,7 @@ where
     // }
 }
 
+/// A iterator producing elements in the intersection of two [`NESet`]s.
 pub struct Intersection<'a, T: 'a, S: 'a> {
     iter: Iter<'a, T>,
     other: &'a NESet<T, S>,
