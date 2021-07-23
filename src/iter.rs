@@ -2,12 +2,13 @@
 
 // Iterator structs which _always_ have something if the source iterator is non-empty:
 //
-// - Chain (if one, the other, or both are nonempty)
-// - Enumerate
-// - Map
-// - Scan
-// - Take
-// - Zip (if both are nonempty)
+// - [ ] Chain (if one, the other, or both are nonempty)
+// - [x] Cloned
+// - [ ] Enumerate
+// - [x] Map
+// - [ ] Scan
+// - [ ] Take
+// - [ ] Zip (if both are nonempty)
 
 /// An [`Iterator`] that is guaranteed to have at least one item.
 pub trait NonEmptyIterator {
@@ -73,6 +74,39 @@ pub trait NonEmptyIterator {
                 }
             }
         }
+    }
+
+    /// Creates a non-empty iterator which clones all of its elements.
+    ///
+    /// This is useful when you have an iterator over `&T`, but you need an
+    /// iterator over `T`.
+    ///
+    /// See also [`Iterator::cloned`].
+    ///
+    /// ```
+    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::NEVec;
+    ///
+    /// #[derive(Debug, Clone, PartialEq, Eq)]
+    /// enum Foo {
+    ///     A,
+    ///     B,
+    ///     C,
+    /// }
+    ///
+    /// let v0 = nev![Foo::A, Foo::B, Foo::C];
+    /// let v1: NEVec<_> = v0.iter().collect();
+    /// let v2: NEVec<_> = v0.iter().cloned().collect();
+    ///
+    /// assert_eq!(nev![&Foo::A, &Foo::B, &Foo::C], v1);
+    /// assert_eq!(nev![Foo::A, Foo::B, Foo::C], v2);
+    /// ```
+    fn cloned<'a, T: 'a>(self) -> Cloned<Self>
+    where
+        Self: Sized + NonEmptyIterator<Item = &'a T>,
+        T: Clone,
+    {
+        Cloned { iter: self }
     }
 
     /// Transforms an iterator into a collection, or some other concrete value.
@@ -182,6 +216,47 @@ where
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter.into_iter().map(self.f)
+    }
+}
+
+/// An iterator that clones the elements of an underlying iterator.
+///
+/// See also [`std::iter::Cloned`].
+pub struct Cloned<I> {
+    iter: I,
+}
+
+impl<'a, I, T: 'a> NonEmptyIterator for Cloned<I>
+where
+    I: NonEmptyIterator<Item = &'a T>,
+    T: Clone,
+{
+    type Item = T;
+
+    type Iter = std::iter::Cloned<I::Iter>;
+
+    fn first(self) -> (Self::Item, Self::Iter) {
+        let (i, iter) = self.iter.first();
+
+        (i.clone(), iter.cloned())
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().cloned()
+    }
+}
+
+impl<'a, I, T: 'a> IntoIterator for Cloned<I>
+where
+    I: IntoIterator<Item = &'a T>,
+    T: Clone,
+{
+    type Item = T;
+
+    type IntoIter = std::iter::Cloned<I::IntoIter>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter.into_iter().cloned()
     }
 }
 

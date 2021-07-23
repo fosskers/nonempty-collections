@@ -832,7 +832,7 @@ impl<'a, T> NonEmptyIterator for Iter<'a, T> {
     }
 
     fn first(self) -> (Self::Item, Self::Iter) {
-        todo!()
+        (self.head, self.iter.skip(1))
     }
 }
 
