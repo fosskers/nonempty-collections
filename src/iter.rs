@@ -116,9 +116,9 @@ pub trait NonEmptyIterator {
 /// Conversion from a [`NonEmptyIterator`].
 pub trait FromNonEmptyIterator<A>: Sized {
     /// Creates a value from a [`NonEmptyIterator`].
-    fn from_nonempty_iter<T>(iter: T) -> Self
+    fn from_nonempty_iter<I>(iter: I) -> Self
     where
-        T: IntoNonEmptyIterator<Item = A>;
+        I: IntoNonEmptyIterator<Item = A>;
 }
 
 impl<I: NonEmptyIterator> IntoNonEmptyIterator for I {

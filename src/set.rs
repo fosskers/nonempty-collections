@@ -357,15 +357,17 @@ where
     pub fn union<'a>(&'a self, other: &'a NESet<T, S>) -> Union<'a, T, S> {
         if self.len() >= other.len() {
             Union {
-                iter: self.iter(),
                 orig: self,
-                other: other.iter(),
+                orig_iter: self.iter(),
+                other,
+                other_iter: other.iter(),
             }
         } else {
             Union {
-                iter: other.iter(),
                 orig: other,
-                other: self.iter(),
+                orig_iter: other.iter(),
+                other: self,
+                other_iter: self.iter(),
             }
         }
     }
@@ -496,9 +498,10 @@ where
 
 /// A non-empty iterator producing elements in the union of two [`NESet`]s.
 pub struct Union<'a, T: 'a, S: 'a> {
-    iter: Iter<'a, T>,
     orig: &'a NESet<T, S>,
-    other: Iter<'a, T>,
+    orig_iter: Iter<'a, T>,
+    other: &'a NESet<T, S>,
+    other_iter: Iter<'a, T>,
 }
 
 impl<'a, T, S> NonEmptyIterator for Union<'a, T, S>
@@ -511,10 +514,10 @@ where
     type Iter = std::collections::hash_set::Union<'a, T, S>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.iter.next() {
+        match self.orig_iter.next() {
             Some(i) => Some(i),
             None => loop {
-                let i = self.other.next()?;
+                let i = self.other_iter.next()?;
                 if !self.orig.contains(i) {
                     return Some(i);
                 }
@@ -523,7 +526,7 @@ where
     }
 
     fn first(self) -> (Self::Item, Self::Iter) {
-        todo!()
+        (&self.orig.head, self.orig.tail.union(&self.other.tail))
     }
 
     // #[inline]

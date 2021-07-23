@@ -3,6 +3,7 @@
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use crate::iter::{FromNonEmptyIterator, IntoNonEmptyIterator, NonEmptyIterator};
 use std::cmp::Ordering;
 use std::iter::Chain;
 use std::iter::Once;
@@ -11,8 +12,6 @@ use std::mem;
 use std::ops::IndexMut;
 use std::ops::Not;
 use std::{iter, vec};
-
-use crate::iter::NonEmptyIterator;
 
 /// Like the [`vec!`] macro, but enforces at least one argument. A nice short-hand
 /// for constructing [`NEVec`] values.
@@ -761,6 +760,10 @@ impl<T> NEVec<T> {
     /// let mut n = nev![5,4,3,2,1];
     /// n.sort();
     /// assert_eq!(nev![1,2,3,4,5], n);
+    ///
+    /// // Naturally, sorting a sorted result should be the same.
+    /// n.sort();
+    /// assert_eq!(nev![1,2,3,4,5], n);
     /// ```
     pub fn sort(&mut self)
     where
@@ -768,8 +771,11 @@ impl<T> NEVec<T> {
     {
         if self.tail.is_empty().not() {
             self.tail.sort();
-            std::mem::swap(&mut self.head, self.tail.index_mut(0));
-            self.tail.sort(); // FIXME Unfortunate second sort, as there is no ordered insert.
+
+            if self.head > self.tail[0] {
+                std::mem::swap(&mut self.head, self.tail.index_mut(0));
+                self.tail.sort(); // FIXME Unfortunate second sort, as there is no ordered insert.
+            }
         }
     }
 }
@@ -793,6 +799,20 @@ impl<T> From<(T, Vec<T>)> for NEVec<T> {
     /// a NEVec.
     fn from((head, tail): (T, Vec<T>)) -> Self {
         NEVec { head, tail }
+    }
+}
+
+impl<T> FromNonEmptyIterator<T> for NEVec<T> {
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = T>,
+    {
+        let (head, rest) = iter.into_nonempty_iter().first();
+
+        NEVec {
+            head,
+            tail: rest.into_iter().collect(),
+        }
     }
 }
 
