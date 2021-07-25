@@ -2,6 +2,7 @@
 
 use std::collections::HashSet;
 use std::hash::Hash;
+use std::iter::Sum;
 
 // Iterator structs which _always_ have something if the source iterator is non-empty:
 //
@@ -211,6 +212,24 @@ pub trait NonEmptyIterator {
         F: FnMut(Self::Item) -> U,
     {
         Map { iter: self, f }
+    }
+
+    /// Sums the elements of a non-empty iterator.
+    ///
+    /// See also [`Iterator::sum`].
+    ///
+    /// ```
+    /// use nonempty_collections::prelude::*;
+    ///
+    /// let sum: u32 = nev![1,2,3,4].iter().sum();
+    /// assert_eq!(10, sum);
+    /// ```
+    fn sum<S>(self) -> S
+    where
+        Self: Sized + IntoIterator,
+        S: Sum<<Self as IntoIterator>::Item>,
+    {
+        Sum::sum(self.into_iter())
     }
 }
 
