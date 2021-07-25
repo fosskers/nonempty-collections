@@ -123,6 +123,30 @@ pub trait NonEmptyIterator {
         FromNonEmptyIterator::from_nonempty_iter(self)
     }
 
+    /// Consumes the non-empty iterator, counting the number of iterations and
+    /// returning it.
+    ///
+    /// See also [`Iterator::count`].
+    ///
+    /// ```
+    /// use nonempty_collections::prelude::*;
+    ///
+    /// let n = nev![1];
+    /// assert_eq!(1, n.iter().count());
+    ///
+    /// let n = nev![1,2,3,4,5,6];
+    /// assert_eq!(6, n.iter().count());
+    /// ````
+    fn count(self) -> usize
+    where
+        Self: Sized,
+    {
+        // Differs from the implementation of `Iterator::count` to absolutely
+        // ensure that `count` returns at least 1.
+        let (_, rest) = self.first();
+        1 + rest.count()
+    }
+
     /// Creates an iterator which uses a closure to determine if an element
     /// should be yielded.
     ///
@@ -145,6 +169,22 @@ pub trait NonEmptyIterator {
         P: FnMut(&<Self as IntoIterator>::Item) -> bool,
     {
         self.into_iter().filter(predicate)
+    }
+
+    /// Folds every element into an accumulator by applying an operation,
+    /// returning the final result.
+    ///
+    /// See also [`Iterator::fold`].
+    fn fold<B, F>(mut self, init: B, mut f: F) -> B
+    where
+        Self: Sized,
+        F: FnMut(B, Self::Item) -> B,
+    {
+        let mut accum = init;
+        while let Some(x) = self.next() {
+            accum = f(accum, x);
+        }
+        accum
     }
 
     // TODO Fix example
