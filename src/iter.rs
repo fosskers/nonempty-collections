@@ -188,7 +188,6 @@ pub trait NonEmptyIterator {
         accum
     }
 
-    // TODO Fix example
     /// Takes a closure and creates an iterator which calls that closure on each
     /// element.
     ///
@@ -197,13 +196,13 @@ pub trait NonEmptyIterator {
     /// See also [`Iterator::map`].
     ///
     /// ```
-    /// use nonempty_collections::nes;
-    /// use nonempty_collections::iter::NonEmptyIterator;
+    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::NEVec;
     ///
     /// let s = nes![1,2,3];
-    /// // let mut v: Vec<_> = s.iter().map(|n| n * 2).into_iter().collect();
-    /// // v.sort();
-    /// // assert_eq!(vec![2,4,6], v);
+    /// let mut v: NEVec<_> = s.iter().map(|n| n * 2).collect();
+    /// v.sort();
+    /// assert_eq!(nev![2,4,6], v);
     /// ```
     #[inline]
     fn map<U, F>(self, f: F) -> Map<Self, F>
