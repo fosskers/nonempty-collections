@@ -1,5 +1,8 @@
 //! Non-empty iterators.
 
+use std::collections::HashSet;
+use std::hash::Hash;
+
 // Iterator structs which _always_ have something if the source iterator is non-empty:
 //
 // - [ ] Chain (if one, the other, or both are nonempty)
@@ -120,6 +123,30 @@ pub trait NonEmptyIterator {
         FromNonEmptyIterator::from_nonempty_iter(self)
     }
 
+    /// Creates an iterator which uses a closure to determine if an element
+    /// should be yielded.
+    ///
+    /// **Note:** The iterator returned by this method is **not** a
+    /// `NonEmptyIterator`, since there is never a guarantee that any element
+    /// will pass the predicate.
+    ///
+    /// See also [`Iterator::filter`].
+    ///
+    /// ```
+    /// use nonempty_collections::prelude::*;
+    ///
+    /// let n = nev![1,2,3,4,5,6];
+    /// let v: Vec<_> = n.iter().map(|x| x * 2).filter(|&x| x % 3 == 0).collect();
+    /// assert_eq!(vec![6, 12], v);
+    /// ```
+    fn filter<P>(self, predicate: P) -> std::iter::Filter<<Self as IntoIterator>::IntoIter, P>
+    where
+        Self: Sized + IntoIterator<Item = <Self as NonEmptyIterator>::Item>,
+        P: FnMut(&<Self as IntoIterator>::Item) -> bool,
+    {
+        self.into_iter().filter(predicate)
+    }
+
     // TODO Fix example
     /// Takes a closure and creates an iterator which calls that closure on each
     /// element.
@@ -148,11 +175,38 @@ pub trait NonEmptyIterator {
 }
 
 /// Conversion from a [`NonEmptyIterator`].
-pub trait FromNonEmptyIterator<A>: Sized {
+pub trait FromNonEmptyIterator<T>: Sized {
     /// Creates a value from a [`NonEmptyIterator`].
     fn from_nonempty_iter<I>(iter: I) -> Self
     where
-        I: IntoNonEmptyIterator<Item = A>;
+        I: IntoNonEmptyIterator<Item = T>;
+}
+
+impl<T> FromNonEmptyIterator<T> for Vec<T> {
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = T>,
+    {
+        let (head, rest) = iter.into_nonempty_iter().first();
+
+        let mut v = vec![head];
+        v.extend(rest);
+        v
+    }
+}
+
+impl<T: Eq + Hash> FromNonEmptyIterator<T> for HashSet<T> {
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = T>,
+    {
+        let (head, rest) = iter.into_nonempty_iter().first();
+
+        let mut s = HashSet::new();
+        s.insert(head);
+        s.extend(rest);
+        s
+    }
 }
 
 impl<I: NonEmptyIterator> IntoNonEmptyIterator for I {
@@ -205,6 +259,11 @@ where
     }
 }
 
+/// ```
+/// use nonempty_collections::prelude::*;
+///
+/// let v: Vec<_> = nev![1,2,3].iter().map(|n| n * 2).collect();
+/// ```
 impl<U, I, F> IntoIterator for Map<I, F>
 where
     I: IntoIterator,
@@ -259,56 +318,3 @@ where
         self.iter.into_iter().cloned()
     }
 }
-
-// pub trait NonIterator {
-//     type Iter: Iterator;
-
-//     fn first(self) -> (<<Self as NonIterator>::Iter as Iterator>::Item, Self::Iter);
-// }
-
-// pub trait NEIterator: Iterator {
-//     fn first(self) -> (Self::Item, Self);
-// }
-
-// impl<U, I, F> Iterator for Map<I, F>
-// where
-//     I: Iterator,
-//     F: FnMut(I::Item) -> U,
-// {
-//     type Item = U;
-
-//     fn next(&mut self) -> Option<Self::Item> {
-//         self.iter.next().map(&mut self.f)
-//     }
-// }
-
-// impl<U, I, F> NonIterator for Map<I, F>
-// where
-//     I: Iterator + NonIterator,
-//     F: FnMut(I::Item) -> U,
-// {
-//     type IterTo = U;
-//     type Iter = std::iter::Map<I, F>;
-
-//     fn first(self) -> (Self::IterTo, Self::Iter) {
-//         let (i, iter) = self.iter.first();
-//         let fun = self.f;
-
-//         // Reconstruct the `Map` we broke open.
-//         (fun(i), iter.map(fun))
-//     }
-// }
-
-// impl<U, I, F> NEIterator for Map<I, F>
-// where
-//     I: NEIterator,
-//     F: FnMut(I::Item) -> U,
-// {
-//     fn first(self) -> (Self::Item, Self) {
-//         let (i, iter) = self.iter.first();
-//         let mut fun = self.f;
-
-//         // Reconstruct the `Map` we broke open.
-//         (fun(i), Map { iter, f: fun })
-//     }
-// }

@@ -836,6 +836,16 @@ impl<'a, T> NonEmptyIterator for Iter<'a, T> {
     }
 }
 
+impl<'a, T> IntoIterator for Iter<'a, T> {
+    type Item = &'a T;
+
+    type IntoIter = Chain<Once<&'a T>, std::slice::Iter<'a, T>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter
+    }
+}
+
 /// A non-empty iterator over mutable values from an [`NEVec`].
 #[derive(Debug)]
 pub struct IterMut<'a, T: 'a> {
