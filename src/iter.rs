@@ -2,7 +2,7 @@
 
 use std::collections::HashSet;
 use std::hash::Hash;
-use std::iter::Sum;
+use std::iter::{Product, Sum};
 
 // Iterator structs which _always_ have something if the source iterator is non-empty:
 //
@@ -188,8 +188,8 @@ pub trait NonEmptyIterator {
         accum
     }
 
-    /// Takes a closure and creates an iterator which calls that closure on each
-    /// element.
+    /// Takes a closure and creates a non-empty iterator which calls that
+    /// closure on each element.
     ///
     /// If `self` is a `NonEmptyIterator`, then so is [`Map`].
     ///
@@ -229,6 +229,25 @@ pub trait NonEmptyIterator {
         S: Sum<<Self as IntoIterator>::Item>,
     {
         Sum::sum(self.into_iter())
+    }
+
+    /// Iterates over the entire non-empty iterator, multiplying all the
+    /// elements.
+    ///
+    /// See also [`Iterator::product`].
+    ///
+    /// ```
+    /// use nonempty_collections::prelude::*;
+    ///
+    /// let prod: u32 = nev![1,2,3,4].iter().product();
+    /// assert_eq!(24, prod);
+    /// ```
+    fn product<P>(self) -> P
+    where
+        Self: Sized + IntoIterator,
+        P: Product<<Self as IntoIterator>::Item>,
+    {
+        Product::product(self.into_iter())
     }
 }
 
