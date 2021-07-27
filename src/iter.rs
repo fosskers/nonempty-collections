@@ -8,7 +8,7 @@ use std::iter::{Product, Sum};
 //
 // - [ ] Chain (if one, the other, or both are nonempty)
 // - [x] Cloned
-// - [ ] Enumerate
+// - [x] Enumerate
 // - [x] Map
 // - [ ] Scan
 // - [ ] Take
@@ -146,6 +146,28 @@ pub trait NonEmptyIterator {
         // ensure that `count` returns at least 1.
         let (_, rest) = self.first();
         1 + rest.count()
+    }
+
+    /// Creates a non-empty iterator which gives the current iteration count as
+    /// well as the next value.
+    ///
+    /// See also [`Iterator::enumerate`].
+    ///
+    /// ```
+    /// use nonempty_collections::prelude::*;
+    ///
+    /// let s = nes!["Doriath", "Gondolin", "Nargothrond"];
+    /// let total: usize = s.iter().enumerate().map(|(c, _)| c).sum();
+    /// assert_eq!(3, total);
+    /// ```
+    fn enumerate(self) -> Enumerate<Self>
+    where
+        Self: Sized,
+    {
+        Enumerate {
+            iter: self,
+            count: 0,
+        }
     }
 
     /// Creates an iterator which uses a closure to determine if an element
@@ -393,5 +415,48 @@ where
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter.into_iter().cloned()
+    }
+}
+
+/// An iterator that yields the current count and the element during iteration.
+///
+/// See also [`std::iter::Enumerate`].
+pub struct Enumerate<I> {
+    iter: I,
+    count: usize,
+}
+
+impl<I> NonEmptyIterator for Enumerate<I>
+where
+    I: NonEmptyIterator,
+{
+    type Item = (usize, I::Item);
+
+    type Iter = std::iter::Enumerate<I::Iter>;
+
+    fn first(self) -> (Self::Item, Self::Iter) {
+        let (head, rest) = self.iter.first();
+
+        ((0, head), rest.enumerate())
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let a = self.iter.next()?;
+        let i = self.count;
+        self.count += 1;
+        Some((i, a))
+    }
+}
+
+impl<I> IntoIterator for Enumerate<I>
+where
+    I: IntoIterator,
+{
+    type Item = (usize, I::Item);
+
+    type IntoIter = std::iter::Enumerate<I::IntoIter>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter.into_iter().enumerate()
     }
 }

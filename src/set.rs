@@ -433,13 +433,15 @@ pub struct Iter<'a, T: 'a> {
     iter: Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>,
 }
 
-// impl<'a, T> Iterator for Iter<'a, T> {
-//     type Item = &'a T;
+impl<'a, T: 'a> IntoIterator for Iter<'a, T> {
+    type Item = &'a T;
 
-//     fn next(&mut self) -> Option<Self::Item> {
-//         self.iter.next()
-//     }
-// }
+    type IntoIter = Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter
+    }
+}
 
 impl<T> IntoIterator for NESet<T> {
     type Item = T;
