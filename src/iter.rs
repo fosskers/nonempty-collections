@@ -237,6 +237,29 @@ pub trait NonEmptyIterator {
         Map { iter: self, f }
     }
 
+    /// Returns the `n`th element of the iterator.
+    ///
+    /// See also [`Iterator::nth`].
+    ///
+    /// ```
+    /// use nonempty_collections::prelude::*;
+    ///
+    /// let n = nev![0,1,2,3,4,5,6];
+    /// assert_eq!(Some(&0), n.iter().nth(0));
+    ///
+    /// let n = nev![0,1,2,3,4,5,6];
+    /// assert_eq!(Some(&6), n.iter().nth(6));
+    ///
+    /// let n = nev![0,1,2,3,4,5,6];
+    /// assert_eq!(None, n.iter().nth(100));
+    /// ```
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        for _ in 0..n {
+            self.next()?;
+        }
+        self.next()
+    }
+
     /// Sums the elements of a non-empty iterator.
     ///
     /// See also [`Iterator::sum`].
@@ -525,8 +548,6 @@ where
             None
         }
     }
-
-    // TODO Add `nth` once there's something to override.
 }
 
 impl<I> IntoIterator for Take<I>
