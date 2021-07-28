@@ -8,10 +8,12 @@ use std::iter::{Product, Sum};
 //
 // - [ ] Chain (if one, the other, or both are nonempty)
 // - [x] Cloned
+// - [ ] Copied
+// - [ ] Cycle
 // - [x] Enumerate
 // - [x] Map
 // - [ ] Scan
-// - [ ] Take
+// - [x] Take
 // - [ ] Zip (if both are nonempty)
 
 /// An [`Iterator`] that is guaranteed to have at least one item.
@@ -253,6 +255,34 @@ pub trait NonEmptyIterator {
         Sum::sum(self.into_iter())
     }
 
+    /// Iterates over the first `n` elements, or fewer if the underlying iterator ends sooner.
+    ///
+    /// See also [`Iterator::take`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if `n == 0`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::NEVec;
+    ///
+    /// let n: NEVec<_> = nev![1,2,3].iter().map(|n| n * 2).take(2).collect();
+    /// assert_eq!(nev![2,4], n);
+    /// ```
+    fn take(self, n: usize) -> Take<Self>
+    where
+        Self: Sized,
+    {
+        if n == 0 {
+            panic!("Cannot take 0 elements from a non-empty iterator!");
+        }
+
+        Take { iter: self, n }
+    }
+
     /// Iterates over the entire non-empty iterator, multiplying all the
     /// elements.
     ///
@@ -458,5 +488,56 @@ where
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter.into_iter().enumerate()
+    }
+}
+
+/// A non-empty iterator that only iterates over the first `n` iterations.
+///
+/// See also [`Iterator::take`].
+pub struct Take<I> {
+    iter: I,
+    n: usize,
+}
+
+impl<I> NonEmptyIterator for Take<I>
+where
+    I: NonEmptyIterator,
+{
+    type Item = I::Item;
+
+    type Iter = std::iter::Take<I::Iter>;
+
+    fn first(self) -> (Self::Item, Self::Iter) {
+        let (head, rest) = self.iter.first();
+
+        if self.n < 2 {
+            (head, rest.take(0))
+        } else {
+            (head, rest.take(self.n - 1))
+        }
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.n != 0 {
+            self.n -= 1;
+            self.iter.next()
+        } else {
+            None
+        }
+    }
+
+    // TODO Add `nth` once there's something to override.
+}
+
+impl<I> IntoIterator for Take<I>
+where
+    I: IntoIterator,
+{
+    type Item = I::Item;
+
+    type IntoIter = I::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter.into_iter()
     }
 }
