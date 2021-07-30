@@ -6,15 +6,23 @@ use std::iter::{Product, Sum};
 
 // Iterator structs which _always_ have something if the source iterator is non-empty:
 //
-// - [ ] Chain (if one, the other, or both are nonempty)
+// - [x] Chain (if one, the other, or both are nonempty)
 // - [x] Cloned
 // - [ ] Copied
 // - [ ] Cycle
 // - [x] Enumerate
 // - [x] Map
+// - [x] Once
 // - [ ] Scan
 // - [x] Take
 // - [ ] Zip (if both are nonempty)
+
+/// Creates an iterator that yields an element exactly once.
+///
+/// See also [`std::iter::once`].
+pub fn once<T>(value: T) -> Once<T> {
+    Once::new(value)
+}
 
 /// An [`Iterator`] that is guaranteed to have at least one item.
 pub trait NonEmptyIterator {
@@ -79,6 +87,33 @@ pub trait NonEmptyIterator {
                     }
                 }
             }
+        }
+    }
+
+    /// Takes two iterators and creates a new non-empty iterator over both in sequence.
+    ///
+    /// Note that the second iterator need not be empty.
+    ///
+    /// See also [`Iterator::chain`].
+    ///
+    /// ```
+    /// use nonempty_collections::prelude::*;
+    ///
+    /// let v = nev![1,2,3];
+    /// let s = nes![4,5,6];
+    /// let mut r: Vec<_> = v.into_nonempty_iter().chain(s).collect();
+    /// r.sort();
+    ///
+    /// assert_eq!(vec![1,2,3,4,5,6], r);
+    /// ```
+    fn chain<U>(self, other: U) -> Chain<Self, U::IntoIter>
+    where
+        Self: Sized,
+        U: IntoIterator<Item = Self::Item>,
+    {
+        Chain {
+            a: self,
+            b: other.into_iter(),
         }
     }
 
@@ -560,5 +595,91 @@ where
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter.into_iter()
+    }
+}
+
+/// A non-empty iterator that links two iterators together, in a chain.
+pub struct Chain<A, B> {
+    a: A,
+    b: B,
+}
+
+impl<A, B> NonEmptyIterator for Chain<A, B>
+where
+    A: NonEmptyIterator,
+    B: Iterator<Item = A::Item>,
+{
+    type Item = A::Item;
+
+    type Iter = std::iter::Chain<A::Iter, B>;
+
+    fn first(self) -> (Self::Item, Self::Iter) {
+        let (head, a_rest) = self.a.first();
+
+        (head, a_rest.chain(self.b))
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.a.next().or_else(|| self.b.next())
+    }
+}
+
+impl<A, B> IntoIterator for Chain<A, B>
+where
+    A: IntoIterator,
+    B: IntoIterator<Item = A::Item>,
+{
+    type Item = A::Item;
+
+    type IntoIter = std::iter::Chain<A::IntoIter, B::IntoIter>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.a.into_iter().chain(self.b)
+    }
+}
+
+/// A non-empty iterator that yields an element exactly once.
+pub struct Once<T> {
+    once: T,
+    used: bool,
+}
+
+impl<T> Once<T> {
+    pub(crate) fn new(once: T) -> Once<T> {
+        Once { once, used: false }
+    }
+}
+
+// FIXME Get rid of this `T: Default`.
+impl<T> NonEmptyIterator for Once<T>
+where
+    T: Default,
+{
+    type Item = T;
+
+    type Iter = std::option::IntoIter<T>;
+
+    fn first(self) -> (Self::Item, Self::Iter) {
+        (self.once, None.into_iter())
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.used {
+            None
+        } else {
+            self.used = true;
+            let item = std::mem::take(&mut self.once);
+            Some(item)
+        }
+    }
+}
+
+impl<T> IntoIterator for Once<T> {
+    type Item = T;
+
+    type IntoIter = std::option::IntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Some(self.once).into_iter()
     }
 }

@@ -5,13 +5,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::iter::{FromNonEmptyIterator, IntoNonEmptyIterator, NonEmptyIterator};
 use std::cmp::Ordering;
-use std::iter::Chain;
-use std::iter::Once;
-use std::iter::Skip;
-use std::mem;
-use std::ops::IndexMut;
-use std::ops::Not;
-use std::{iter, vec};
+use std::iter::{Chain, Once, Skip};
+use std::ops::{IndexMut, Not};
 
 /// Like the [`vec!`] macro, but enforces at least one argument. A nice short-hand
 /// for constructing [`NEVec`] values.
@@ -160,7 +155,7 @@ impl<T> NEVec<T> {
         assert!(index <= len);
 
         if index == 0 {
-            let head = mem::replace(&mut self.head, element);
+            let head = std::mem::replace(&mut self.head, element);
             self.tail.insert(0, head);
         } else {
             self.tail.insert(index - 1, element);
@@ -783,7 +778,9 @@ impl<T> NEVec<T> {
 impl<T> From<NEVec<T>> for Vec<T> {
     /// Turns a non-empty list into a Vec.
     fn from(nonempty: NEVec<T>) -> Vec<T> {
-        iter::once(nonempty.head).chain(nonempty.tail).collect()
+        std::iter::once(nonempty.head)
+            .chain(nonempty.tail)
+            .collect()
     }
 }
 
@@ -864,21 +861,34 @@ impl<'a, T> Iterator for IterMut<'a, T> {
     }
 }
 
+impl<T> IntoNonEmptyIterator for NEVec<T>
+where
+    T: Default,
+{
+    type Item = T;
+
+    type IntoIter = crate::iter::Chain<crate::iter::Once<T>, std::vec::IntoIter<Self::Item>>;
+
+    fn into_nonempty_iter(self) -> Self::IntoIter {
+        crate::iter::once(self.head).chain(self.tail)
+    }
+}
+
 impl<T> IntoIterator for NEVec<T> {
     type Item = T;
-    type IntoIter = iter::Chain<iter::Once<T>, vec::IntoIter<Self::Item>>;
+    type IntoIter = std::iter::Chain<std::iter::Once<T>, std::vec::IntoIter<Self::Item>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        iter::once(self.head).chain(self.tail)
+        std::iter::once(self.head).chain(self.tail)
     }
 }
 
 impl<'a, T> IntoIterator for &'a NEVec<T> {
     type Item = &'a T;
-    type IntoIter = iter::Chain<iter::Once<&'a T>, std::slice::Iter<'a, T>>;
+    type IntoIter = std::iter::Chain<std::iter::Once<&'a T>, std::slice::Iter<'a, T>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        iter::once(&self.head).chain(self.tail.iter())
+        std::iter::once(&self.head).chain(self.tail.iter())
     }
 }
 
