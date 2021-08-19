@@ -8,7 +8,7 @@ use std::iter::{Product, Sum};
 //
 // - [x] Chain (if one, the other, or both are nonempty)
 // - [x] Cloned
-// - [ ] Copied
+// - [x] Copied
 // - [ ] Cycle
 // - [x] Enumerate
 // - [x] Map
@@ -159,6 +159,25 @@ pub trait NonEmptyIterator {
         B: FromNonEmptyIterator<Self::Item>,
     {
         FromNonEmptyIterator::from_nonempty_iter(self)
+    }
+
+    /// Creates a non-empty iterator which copies all of its elements.
+    ///
+    /// See also [`Iterator::copied`].
+    ///
+    /// ```
+    /// use nonempty_collections::prelude::*;
+    ///
+    /// let n0 = nev![1,2,3,4];
+    /// let n1 = n0.iter().copied().collect();
+    /// assert_eq!(n0, n1);
+    /// ```
+    fn copied<'a, T: 'a>(self) -> Copied<Self>
+    where
+        Self: Sized + NonEmptyIterator<Item = &'a T>,
+        T: Copy,
+    {
+        Copied { iter: self }
     }
 
     /// Consumes the non-empty iterator, counting the number of iterations and
@@ -681,5 +700,47 @@ impl<T> IntoIterator for Once<T> {
 
     fn into_iter(self) -> Self::IntoIter {
         Some(self.once).into_iter()
+    }
+}
+
+/// A non-empty iterator that copies the elements of an underlying non-empty
+/// iterator.
+///
+/// See also [`std::iter::Copied`].
+pub struct Copied<I> {
+    iter: I,
+}
+
+impl<'a, I, T: 'a> NonEmptyIterator for Copied<I>
+where
+    I: NonEmptyIterator<Item = &'a T>,
+    T: Copy,
+{
+    type Item = T;
+
+    type Iter = std::iter::Copied<I::Iter>;
+
+    fn first(self) -> (Self::Item, Self::Iter) {
+        let (head, rest) = self.iter.first();
+
+        (head.clone(), rest.copied())
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next().copied()
+    }
+}
+
+impl<'a, I, T: 'a> IntoIterator for Copied<I>
+where
+    I: IntoIterator<Item = &'a T>,
+    T: Copy,
+{
+    type Item = T;
+
+    type IntoIter = std::iter::Copied<I::IntoIter>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter.into_iter().copied()
     }
 }
