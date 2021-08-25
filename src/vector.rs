@@ -822,13 +822,13 @@ pub struct Iter<'a, T: 'a> {
 
 impl<'a, T> NonEmptyIterator for Iter<'a, T> {
     type Item = &'a T;
-    type Iter = Skip<Chain<Once<&'a T>, std::slice::Iter<'a, T>>>;
+    type IntoIter = Skip<Chain<Once<&'a T>, std::slice::Iter<'a, T>>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
     }
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         (self.head, self.iter.skip(1))
     }
 }
