@@ -204,6 +204,16 @@ pub trait NonEmptyIterator {
         1 + rest.count()
     }
 
+    /// Repeats a non-empty iterator endlessly.
+    ///
+    /// See also [`Iterator::cycle`].
+    fn cycle(self) -> Cycle<Self>
+    where
+        Self: Sized + Clone,
+    {
+        Cycle::new(self)
+    }
+
     /// Creates a non-empty iterator which gives the current iteration count as
     /// well as the next value.
     ///
@@ -744,3 +754,37 @@ where
         self.iter.into_iter().copied()
     }
 }
+
+/// An iterator that repeats endlessly.
+///
+/// See also [`std::iter::Cycle`].
+pub struct Cycle<I> {
+    orig: I,
+    iter: I,
+}
+
+impl<I: Clone> Cycle<I> {
+    pub fn new(iter: I) -> Self {
+        Self {
+            orig: iter.clone(),
+            iter,
+        }
+    }
+}
+
+// impl<I, T> NonEmptyIterator for Cycle<I>
+// where
+//     I: Clone + NonEmptyIterator<Item = T>,
+// {
+//     type Item = T;
+
+//     type Iter = std::iter::Cycle<I::Iter>;
+
+//     fn first(self) -> (Self::Item, Self::Iter) {
+//         todo!()
+//     }
+
+//     fn next(&mut self) -> Option<Self::Item> {
+//         todo!()
+//     }
+// }
