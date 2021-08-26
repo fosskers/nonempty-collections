@@ -764,7 +764,7 @@ pub struct Cycle<I> {
 }
 
 impl<I: Clone> Cycle<I> {
-    pub fn new(iter: I) -> Self {
+    fn new(iter: I) -> Self {
         Self {
             orig: iter.clone(),
             iter,
@@ -772,19 +772,34 @@ impl<I: Clone> Cycle<I> {
     }
 }
 
-// impl<I, T> NonEmptyIterator for Cycle<I>
-// where
-//     I: Clone + NonEmptyIterator<Item = T>,
-// {
-//     type Item = T;
+impl<I, T> NonEmptyIterator for Cycle<I>
+where
+    I: NonEmptyIterator<Item = T>,
+    Self: IntoIterator<Item = T>,
+{
+    type Item = T;
 
-//     type Iter = std::iter::Cycle<I::Iter>;
+    type IntoIter = Self;
 
-//     fn first(self) -> (Self::Item, Self::Iter) {
-//         todo!()
-//     }
+    fn first(self) -> (Self::Item, Self::IntoIter) {
+        todo!()
+    }
 
-//     fn next(&mut self) -> Option<Self::Item> {
-//         todo!()
-//     }
-// }
+    fn next(&mut self) -> Option<Self::Item> {
+        todo!()
+    }
+}
+
+impl<I, J, T> IntoIterator for Cycle<I>
+where
+    I: IntoIterator<Item = T, IntoIter = J>,
+    J: Clone + Iterator<Item = T>,
+{
+    type Item = T;
+
+    type IntoIter = std::iter::Cycle<I::IntoIter>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        todo!()
+    }
+}
