@@ -5,8 +5,15 @@ use std::collections::HashMap;
 use std::hash::{BuildHasher, Hash};
 use std::iter::{Chain, Once};
 
-/// Like the [`nev`] macro, but for Maps. A nice short-hand for constructing
-/// [`NEMap`] values.
+/// Like the [`crate::nev`] macro, but for Maps. A nice short-hand for
+/// constructing [`NEMap`] values.
+///
+/// ```
+/// use nonempty_collections::nem;
+///
+/// let m = nem!["elves" => 3000, "orcs" => 10000];
+/// assert_eq!(2, m.len());
+/// ```
 #[macro_export]
 macro_rules! nem {
     ($hk:expr => $hv:expr, $( $xk:expr => $xv:expr ),*) => {{
@@ -27,6 +34,7 @@ macro_rules! nem {
 /// use nonempty_collections::nem;
 ///
 /// let m = nem!["elves" => 3000, "orcs" => 10000];
+/// assert_eq!(2, m.len());
 /// ```
 pub struct NEMap<K, V, S = std::collections::hash_map::RandomState> {
     /// The key of the ever-present element of the non-empty `HashMap`.

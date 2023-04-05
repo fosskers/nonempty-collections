@@ -6,8 +6,15 @@ use std::collections::HashSet;
 use std::hash::{BuildHasher, Hash};
 use std::iter::{Chain, Once, Skip};
 
-/// Like the [`nev`] macro, but for Sets. A nice short-hand for constructing
-/// [`NESet`] values.
+/// Like the [`crate::nev`] macro, but for Sets. A nice short-hand for
+/// constructing [`NESet`] values.
+///
+/// ```
+/// use nonempty_collections::nes;
+///
+/// let s = nes![1, 2, 2, 3];
+/// assert_eq!(3, s.len());
+/// ```
 #[macro_export]
 macro_rules! nes {
     ($h:expr, $( $x:expr ),*) => {{

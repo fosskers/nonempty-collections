@@ -14,6 +14,9 @@
 //! Consider that unlike `Vec`, [`NEVec::first`] and [`NEVec::last`] don't
 //! return in `Option`, they always succeed.
 //!
+//! Alongside [`NEVec`] are its cousins [`NEMap`] and [`NESet`]; Hash Maps and
+//! Hash Sets which are guaranteed to contain at least one item.
+//!
 //! # Examples
 //!
 //! The simplest way to construct a [`NEVec`] is via the [`nev`] macro:
@@ -62,11 +65,15 @@
 //! assert_eq!(Some(nev![42, 36, 58, 9001]), u);
 //! ```
 //!
+//! For [`NEMap`] and [`NESet`], the macros [`nem`] and [`nes`] are also
+//! provided. It's a surprise that such macros are missing from Rust's standard
+//! library!
+//!
 //! # Caveats
 //!
-//! Since `NEVec` must have a least one element, it is not possible to
-//! implement the `FromInterator` trait for it. We can't know, in general, if
-//! any given `Iterator` actually contains something.
+//! Since `NEVec` must have a least one element, it is not possible to implement
+//! the [`FromIterator`] trait for it. We can't know, in general, if any given
+//! [`Iterator`] actually contains something.
 //!
 //! # Features
 //!
