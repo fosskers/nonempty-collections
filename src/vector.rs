@@ -230,7 +230,7 @@ impl<T> NEVec<T> {
     }
 
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     ///
     /// let mut l = nev![42, 36, 58];
     ///
@@ -249,7 +249,7 @@ impl<T> NEVec<T> {
     }
 
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     ///
     /// let mut l = nev![42, 36, 58];
     ///

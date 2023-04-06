@@ -351,9 +351,10 @@ where
     /// Visits the values representing the union, i.e., all the values in `self`
     /// or `other`, without duplicates.
     ///
+    /// Note that a Union is always non-empty.
+    ///
     /// ```
-    /// use nonempty_collections::NEVec;
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     ///
     /// let s0 = nes![1,2,3];
     /// let s1 = nes![3,4,5];

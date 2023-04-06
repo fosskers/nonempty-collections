@@ -47,7 +47,7 @@ pub trait NonEmptyIterator {
     /// See also [`Iterator::all`].
     ///
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     ///
     /// let n = nev![2,2,2];
     /// assert!(n.iter().all(|n| n % 2 == 0));
@@ -78,7 +78,7 @@ pub trait NonEmptyIterator {
     /// See also [`Iterator::any`].
     ///
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     ///
     /// let n = nev![1,1,1,2,1,1];
     /// assert!(n.iter().any(|n| n % 2 == 0));
@@ -112,7 +112,7 @@ pub trait NonEmptyIterator {
     /// See also [`Iterator::chain`].
     ///
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     ///
     /// let v = nev![1,2,3];
     /// let s = nes![4,5,6];
@@ -140,7 +140,7 @@ pub trait NonEmptyIterator {
     /// See also [`Iterator::cloned`].
     ///
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     /// use nonempty_collections::NEVec;
     ///
     /// #[derive(Debug, Clone, PartialEq, Eq)]
@@ -170,7 +170,7 @@ pub trait NonEmptyIterator {
     /// See also [`Iterator::collect`].
     ///
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     ///
     /// let n0 = nev![1,2,3,4];
     /// let n1 = n0.into_nonempty_iter().collect();
@@ -189,7 +189,7 @@ pub trait NonEmptyIterator {
     /// See also [`Iterator::copied`].
     ///
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     ///
     /// let n0 = nev![1,2,3,4];
     /// let n1 = n0.iter().copied().collect();
@@ -209,7 +209,7 @@ pub trait NonEmptyIterator {
     /// See also [`Iterator::count`].
     ///
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     ///
     /// let n = nev![1];
     /// assert_eq!(1, n.iter().count());
@@ -233,7 +233,7 @@ pub trait NonEmptyIterator {
     /// See also [`Iterator::enumerate`].
     ///
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     ///
     /// let s = nes!["Doriath", "Gondolin", "Nargothrond"];
     /// let total: usize = s.iter().enumerate().map(|(c, _)| c).sum();
@@ -259,7 +259,7 @@ pub trait NonEmptyIterator {
     /// See also [`Iterator::filter`].
     ///
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     ///
     /// let n = nev![1,2,3,4,5,6];
     /// let v: Vec<_> = n.iter().map(|x| x * 2).filter(|&x| x % 3 == 0).collect();
@@ -279,7 +279,7 @@ pub trait NonEmptyIterator {
     /// See also [`Iterator::fold`].
     ///
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     ///
     /// let n = nev![1,2,3,4];
     /// let r = n.into_nonempty_iter().fold(0, |acc, x| acc + x);
@@ -305,7 +305,7 @@ pub trait NonEmptyIterator {
     /// See also [`Iterator::map`].
     ///
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     /// use nonempty_collections::NEVec;
     ///
     /// let s = nes![1,2,3];
@@ -327,7 +327,7 @@ pub trait NonEmptyIterator {
     /// See also [`Iterator::nth`].
     ///
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     ///
     /// let n = nev![0,1,2,3,4,5,6];
     /// assert_eq!(Some(&0), n.iter().nth(0));
@@ -350,7 +350,7 @@ pub trait NonEmptyIterator {
     /// See also [`Iterator::sum`].
     ///
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     ///
     /// let sum: u32 = nev![1,2,3,4].iter().sum();
     /// assert_eq!(10, sum);
@@ -374,7 +374,7 @@ pub trait NonEmptyIterator {
     /// # Examples
     ///
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     /// use nonempty_collections::NEVec;
     ///
     /// let n: NEVec<_> = nev![1,2,3].iter().map(|n| n * 2).take(2).collect();
@@ -397,7 +397,7 @@ pub trait NonEmptyIterator {
     /// See also [`Iterator::product`].
     ///
     /// ```
-    /// use nonempty_collections::prelude::*;
+    /// use nonempty_collections::*;
     ///
     /// let prod: u32 = nev![1,2,3,4].iter().product();
     /// assert_eq!(24, prod);
@@ -497,7 +497,7 @@ where
 }
 
 /// ```
-/// use nonempty_collections::prelude::*;
+/// use nonempty_collections::*;
 ///
 /// let v: Vec<_> = nev![1,2,3].iter().map(|n| n * 2).collect();
 /// ```
