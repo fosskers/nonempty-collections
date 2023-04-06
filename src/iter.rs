@@ -566,6 +566,30 @@ pub trait NonEmptyIterator {
     {
         Product::product(self.into_iter())
     }
+
+    /// "Zips up" two non-empty iterators into a single one, while preserving
+    /// non-emptiness.
+    ///
+    /// See also [`Iterator::zip`].
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let a = nev![1, 2, 3];
+    /// let b = nev![4, 5, 6, 7];
+    /// let r = a.into_nonempty_iter().zip(b).map(|(av, bv)| av + bv).collect();
+    /// assert_eq!(nev![5, 7, 9], r);
+    /// ```
+    fn zip<U>(self, other: U) -> Zip<Self, U::IntoIter>
+    where
+        Self: Sized,
+        U: IntoNonEmptyIterator,
+    {
+        Zip {
+            a: self,
+            b: other.into_nonempty_iter(),
+        }
+    }
 }
 
 /// Conversion from a [`NonEmptyIterator`].
@@ -930,5 +954,37 @@ where
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter.into_iter().copied()
+    }
+}
+
+/// A non-empty iterator that "zips up" its sources.
+///
+/// See also [`std::iter::Zip`].
+pub struct Zip<A, B> {
+    a: A,
+    b: B,
+}
+
+impl<A, B> NonEmptyIterator for Zip<A, B>
+where
+    A: NonEmptyIterator,
+    B: NonEmptyIterator,
+{
+    type Item = (<A as NonEmptyIterator>::Item, <B as NonEmptyIterator>::Item);
+
+    type Iter = std::iter::Zip<A::Iter, B::Iter>;
+
+    fn first(self) -> (Self::Item, Self::Iter) {
+        let (a_first, a_iter) = self.a.first();
+        let (b_first, b_iter) = self.b.first();
+
+        ((a_first, b_first), a_iter.zip(b_iter))
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match (self.a.next(), self.b.next()) {
+            (Some(av), Some(bv)) => Some((av, bv)),
+            _ => None,
+        }
     }
 }
