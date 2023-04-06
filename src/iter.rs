@@ -297,6 +297,33 @@ pub trait NonEmptyIterator {
         self.into_iter().filter_map(f)
     }
 
+    /// Creates an iterator that works like `map`, but flattens nested,
+    /// non-empty structure.
+    ///
+    /// See also [`Iterator::flat_map`].
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let v = nev![1, 2, 3];
+    /// let r = v.into_nonempty_iter().flat_map(|n| nev![n]).collect();
+    /// assert_eq!(nev![1, 2, 3], r);
+    /// ```
+    #[inline]
+    fn flat_map<U, V, F>(self, f: F) -> FlatMap<Self, V, F>
+    where
+        Self: Sized,
+        F: FnMut(Self::Item) -> U,
+        U: IntoNonEmptyIterator<IntoIter = V, Item = V::Item>,
+        V: NonEmptyIterator,
+    {
+        FlatMap {
+            iter: self.into_nonempty_iter(),
+            f,
+            curr: None,
+        }
+    }
+
     /// Folds every element into an accumulator by applying an operation,
     /// returning the final result.
     ///
@@ -985,6 +1012,70 @@ where
         match (self.a.next(), self.b.next()) {
             (Some(av), Some(bv)) => Some((av, bv)),
             _ => None,
+        }
+    }
+}
+
+impl<A, B> IntoIterator for Zip<A, B>
+where
+    A: IntoIterator,
+    B: IntoIterator,
+{
+    type Item = (<A as IntoIterator>::Item, <B as IntoIterator>::Item);
+
+    type IntoIter = std::iter::Zip<<A as IntoIterator>::IntoIter, <B as IntoIterator>::IntoIter>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.a.into_iter().zip(self.b)
+    }
+}
+
+/// Flatten nested, non-empty structures.
+///
+/// See also [`std::iter::FlatMap`].
+pub struct FlatMap<I, U, F> {
+    iter: I,
+    f: F,
+    curr: Option<U>,
+}
+
+impl<I, U, V, F> NonEmptyIterator for FlatMap<I, V, F>
+where
+    I: NonEmptyIterator,
+    F: FnMut(I::Item) -> U,
+    U: IntoNonEmptyIterator<IntoIter = V, Item = V::Item> + IntoIterator<Item = V::Item>,
+    V: NonEmptyIterator,
+{
+    type Item = <U as IntoNonEmptyIterator>::Item;
+
+    type Iter = std::iter::Chain<V::Iter, std::iter::FlatMap<I::Iter, U, F>>;
+
+    fn first(self) -> (Self::Item, Self::Iter) {
+        let (i, iter) = self.iter.first();
+        let mut fun = self.f;
+        let (j, oter) = fun(i).into_nonempty_iter().first();
+
+        (j, oter.chain(iter.flat_map(fun)))
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match &mut self.curr {
+            None => match self.iter.next() {
+                None => None,
+                Some(new) => {
+                    let fun = &mut self.f;
+                    let res = fun(new).into_nonempty_iter();
+                    self.curr = Some(res);
+                    self.next()
+                }
+            },
+            Some(u) => match u.next() {
+                Some(x) => Some(x),
+                None => {
+                    self.curr = None;
+                    self.next()
+                }
+            },
         }
     }
 }
