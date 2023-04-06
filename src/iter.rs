@@ -45,6 +45,13 @@ pub trait NonEmptyIterator {
     /// Tests if every element of the iterator matches a predicate.
     ///
     /// See also [`Iterator::all`].
+    ///
+    /// ```
+    /// use nonempty_collections::prelude::*;
+    ///
+    /// let n = nev![2,2,2];
+    /// assert!(n.iter().all(|n| n % 2 == 0));
+    /// ```
     fn all<F>(&mut self, f: F) -> bool
     where
         Self: Sized,
@@ -69,6 +76,14 @@ pub trait NonEmptyIterator {
     /// Tests if any element of the iterator matches a predicate.
     ///
     /// See also [`Iterator::any`].
+    ///
+    /// ```
+    /// use nonempty_collections::prelude::*;
+    ///
+    /// let n = nev![1,1,1,2,1,1];
+    /// assert!(n.iter().any(|n| n % 2 == 0));
+    /// assert!(!n.iter().any(|n| n % 3 == 0));
+    /// ```
     fn any<F>(&mut self, f: F) -> bool
     where
         Self: Sized,
@@ -153,6 +168,14 @@ pub trait NonEmptyIterator {
     /// Transforms an iterator into a collection, or some other concrete value.
     ///
     /// See also [`Iterator::collect`].
+    ///
+    /// ```
+    /// use nonempty_collections::prelude::*;
+    ///
+    /// let n0 = nev![1,2,3,4];
+    /// let n1 = n0.into_nonempty_iter().collect();
+    /// assert_eq!(nev![1,2,3,4], n1);
+    /// ```
     fn collect<B>(self) -> B
     where
         Self: Sized,
@@ -254,6 +277,14 @@ pub trait NonEmptyIterator {
     /// returning the final result.
     ///
     /// See also [`Iterator::fold`].
+    ///
+    /// ```
+    /// use nonempty_collections::prelude::*;
+    ///
+    /// let n = nev![1,2,3,4];
+    /// let r = n.into_nonempty_iter().fold(0, |acc, x| acc + x);
+    /// assert_eq!(10, r);
+    /// ```
     fn fold<B, F>(mut self, init: B, mut f: F) -> B
     where
         Self: Sized,

@@ -468,11 +468,11 @@ impl<T> NEVec<T> {
 
     /// Binary searches this sorted non-empty vector for a given element.
     ///
-    /// If the value is found then Result::Ok is returned, containing the index
-    /// of the matching element. If there are multiple matches, then any one of
-    /// the matches could be returned.
+    /// If the value is found then `Result::Ok` is returned, containing the
+    /// index of the matching element. If there are multiple matches, then any
+    /// one of the matches could be returned.
     ///
-    /// If the value is not found then Result::Err is returned, containing the
+    /// If the value is not found then `Result::Err` is returned, containing the
     /// index where a matching element could be inserted while maintaining
     /// sorted order.
     ///
@@ -516,10 +516,10 @@ impl<T> NEVec<T> {
     /// indicates whether its argument is Less, Equal or Greater the desired
     /// target.
     ///
-    /// If the value is found then Result::Ok is returned, containing the index
-    /// of the matching element. If there are multiple matches, then any one of
-    /// the matches could be returned. If the value is not found then
-    /// Result::Err is returned, containing the index where a matching element
+    /// If the value is found then `Result::Ok` is returned, containing the
+    /// index of the matching element. If there are multiple matches, then any
+    /// one of the matches could be returned. If the value is not found then
+    /// `Result::Err` is returned, containing the index where a matching element
     /// could be inserted while maintaining sorted order.
     ///
     /// # Examples
@@ -564,10 +564,10 @@ impl<T> NEVec<T> {
     ///
     /// Assumes that the vector is sorted by the key.
     ///
-    /// If the value is found then Result::Ok is returned, containing the index
-    /// of the matching element. If there are multiple matches, then any one of
-    /// the matches could be returned. If the value is not found then
-    /// Result::Err is returned, containing the index where a matching element
+    /// If the value is found then `Result::Ok` is returned, containing the
+    /// index of the matching element. If there are multiple matches, then any
+    /// one of the matches could be returned. If the value is not found then
+    /// `Result::Err` is returned, containing the index where a matching element
     /// could be inserted while maintaining sorted order.
     ///
     /// # Examples
@@ -799,6 +799,11 @@ impl<T> From<(T, Vec<T>)> for NEVec<T> {
     }
 }
 
+/// ```
+/// use nonempty_collections::nev;
+///
+/// let v = nev![1, 2, 3];
+/// ```
 impl<T> FromNonEmptyIterator<T> for NEVec<T> {
     fn from_nonempty_iter<I>(iter: I) -> Self
     where
