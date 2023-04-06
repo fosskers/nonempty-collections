@@ -2,7 +2,7 @@
 //!
 //! Non-emptiness can be a powerful guarantee. If your main use of `Vec` is as
 //! an `Iterator`, then you may not need to distinguish on emptiness. But there
-//! are indeed times when the `Vec` you receive as as function argument needs to
+//! are indeed times when the `Vec` you receive as a function argument needs to
 //! be non-empty or your function can't proceed. Similarly, there are times when
 //! the `Vec` you return to a calling user needs to promise it actually contains
 //! something.
