@@ -274,6 +274,29 @@ pub trait NonEmptyIterator {
         self.into_iter().filter(predicate)
     }
 
+    /// Creates an iterator that both filters and maps.
+    ///
+    /// **Note:** The iterator returned by this method is **not** a
+    /// `NonEmptyIterator`, since there is never a guarantee that any element
+    /// will yield `Some` from the given function.
+    ///
+    /// See also [`Iterator::filter_map`].
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let v = nev!["Frodo", "Sam", "", "Peregrin", "Meriadoc"];
+    /// let firsts: Vec<char> = v.into_nonempty_iter().filter_map(|s| s.chars().next()).collect();
+    /// assert_eq!(vec!['F', 'S', 'P', 'M'], firsts);
+    /// ```
+    fn filter_map<B, F>(self, f: F) -> std::iter::FilterMap<<Self as IntoIterator>::IntoIter, F>
+    where
+        Self: Sized + IntoIterator<Item = <Self as NonEmptyIterator>::Item>,
+        F: FnMut(<Self as IntoIterator>::Item) -> Option<B>,
+    {
+        self.into_iter().filter_map(f)
+    }
+
     /// Folds every element into an accumulator by applying an operation,
     /// returning the final result.
     ///
