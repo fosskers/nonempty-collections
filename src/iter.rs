@@ -1,5 +1,6 @@
 //! Non-empty iterators.
 
+use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::iter::{Product, Sum};
@@ -320,6 +321,76 @@ pub trait NonEmptyIterator {
         F: FnMut(Self::Item) -> U,
     {
         Map { iter: self, f }
+    }
+
+    /// Returns the maximum element of a non-empty iterator.
+    ///
+    /// Unlike [`Iterator::max`], this always yields a value.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let v = nev![1, 1000, 2, 3];
+    /// assert_eq!(1000, v.into_nonempty_iter().max());
+    /// ```
+    fn max(self) -> Self::Item
+    where
+        Self: Sized,
+        Self::Item: Ord,
+    {
+        self.max_by(Ord::cmp)
+    }
+
+    /// Returns the element that gives the maximum value with respect to the
+    /// given comparison function.
+    ///
+    /// Unlike [`Iterator::max_by`], this always yields a value.
+    fn max_by<F>(self, compare: F) -> Self::Item
+    where
+        Self: Sized,
+        F: Fn(&Self::Item, &Self::Item) -> Ordering,
+    {
+        let (first, iter) = self.first();
+
+        iter.fold(first, |acc, item| match compare(&acc, &item) {
+            Ordering::Less => item,
+            _ => acc,
+        })
+    }
+
+    /// Returns the minimum element of a non-empty iterator.
+    ///
+    /// Unlike [`Iterator::min`], this always yields a value.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let v = nev![1000, 1, 2000, 3000];
+    /// assert_eq!(1, v.into_nonempty_iter().min());
+    /// ```
+    fn min(self) -> Self::Item
+    where
+        Self: Sized,
+        Self::Item: Ord,
+    {
+        self.min_by(Ord::cmp)
+    }
+
+    /// Returns the element that gives the minimum value with respect to the
+    /// given comparison function.
+    ///
+    /// Unlike [`Iterator::min_by`], this always yields a value.
+    fn min_by<F>(self, compare: F) -> Self::Item
+    where
+        Self: Sized,
+        F: Fn(&Self::Item, &Self::Item) -> Ordering,
+    {
+        let (first, iter) = self.first();
+
+        iter.fold(first, |acc, item| match compare(&acc, &item) {
+            Ordering::Greater => item,
+            _ => acc,
+        })
     }
 
     /// Returns the `n`th element of the iterator.
