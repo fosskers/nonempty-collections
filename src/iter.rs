@@ -416,6 +416,25 @@ pub trait NonEmptyIterator {
         self.next()
     }
 
+    /// Skip the first `n` elements.
+    ///
+    /// Note that the result will not be non-empty.
+    ///
+    /// See also [`Iterator::skip`].
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let v = nev![1, 2, 3];
+    /// assert_eq!(Some(&3), v.iter().skip(2).next());
+    /// ```
+    fn skip(self, n: usize) -> std::iter::Skip<<Self as IntoIterator>::IntoIter>
+    where
+        Self: Sized + IntoIterator<Item = <Self as NonEmptyIterator>::Item>,
+    {
+        self.into_iter().skip(n)
+    }
+
     /// Sums the elements of a non-empty iterator.
     ///
     /// See also [`Iterator::sum`].
