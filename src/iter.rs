@@ -458,6 +458,28 @@ pub trait NonEmptyIterator {
         self.into_iter().skip(n)
     }
 
+    /// Skips over all initial elements that pass a given predicate.
+    ///
+    /// **Note**: This does not yield a non-empty iterator, since there is no
+    /// guarantee that anything will fail the predicate.
+    ///
+    /// See also [`Iterator::skip_while`].
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let v = nev![2, 4, 6, 7, 8];
+    /// let r: Vec<_> = v.into_nonempty_iter().skip_while(|n| n % 2 == 0).collect();
+    /// assert_eq!(vec![7, 8], r);
+    /// ```
+    fn skip_while<P>(self, pred: P) -> std::iter::SkipWhile<<Self as IntoIterator>::IntoIter, P>
+    where
+        Self: Sized + IntoIterator<Item = <Self as NonEmptyIterator>::Item>,
+        P: FnMut(&<Self as IntoIterator>::Item) -> bool,
+    {
+        self.into_iter().skip_while(pred)
+    }
+
     /// Sums the elements of a non-empty iterator.
     ///
     /// See also [`Iterator::sum`].
