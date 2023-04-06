@@ -504,6 +504,28 @@ pub trait NonEmptyIterator {
         Take { iter: self, n }
     }
 
+    /// Iterates over all initial elements that pass a given predicate.
+    ///
+    /// **Note**: This does not yield a non-empty iterator, since there is no
+    /// guarantee that anything will pass the predicate.
+    ///
+    /// See also [`Iterator::take_while`].
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let v = nev![2, 4, 6, 7, 8];
+    /// let r: Vec<_> = v.into_nonempty_iter().take_while(|n| n % 2 == 0).collect();
+    /// assert_eq!(vec![2, 4, 6], r);
+    /// ```
+    fn take_while<P>(self, pred: P) -> std::iter::TakeWhile<<Self as IntoIterator>::IntoIter, P>
+    where
+        Self: Sized + IntoIterator<Item = <Self as NonEmptyIterator>::Item>,
+        P: FnMut(&<Self as IntoIterator>::Item) -> bool,
+    {
+        self.into_iter().take_while(pred)
+    }
+
     /// Iterates over the entire non-empty iterator, multiplying all the
     /// elements.
     ///
