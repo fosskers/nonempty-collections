@@ -16,7 +16,7 @@ use std::iter::{Product, Sum};
 // - [x] Once
 // - [ ] Scan
 // - [x] Take
-// - [ ] Zip (if both are nonempty)
+// - [x] Zip (if both are nonempty)
 
 /// Creates an iterator that yields an element exactly once.
 ///
@@ -323,6 +323,15 @@ pub trait NonEmptyIterator {
             curr: None,
         }
     }
+
+    // fn flatten<F, V>(self) -> FlatMap<Self, V, F>
+    // where
+    //     Self: Sized,
+    //     Self::Item: IntoNonEmptyIterator<IntoIter = V, Item = V::Item>,
+    //     V: NonEmptyIterator,
+    // {
+    //     self.flat_map(|ne| ne)
+    // }
 
     /// Folds every element into an accumulator by applying an operation,
     /// returning the final result.
