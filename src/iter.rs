@@ -852,16 +852,23 @@ where
     }
 }
 
+/// ```
+/// use nonempty_collections::*;
+///
+/// let v = nev![1,2,3];
+/// let r = v.iter().take(1).into_iter().count();
+/// assert_eq!(1, r);
+/// ```
 impl<I> IntoIterator for Take<I>
 where
     I: IntoIterator,
 {
     type Item = I::Item;
 
-    type IntoIter = I::IntoIter;
+    type IntoIter = std::iter::Take<I::IntoIter>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.iter.into_iter()
+        self.iter.into_iter().take(self.n)
     }
 }
 
