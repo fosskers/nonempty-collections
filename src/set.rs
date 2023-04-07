@@ -1,6 +1,7 @@
 //! Non-empty Sets.
 
 use crate::iter::NonEmptyIterator;
+use crate::IntoNonEmptyIterator;
 use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::hash::{BuildHasher, Hash};
@@ -36,12 +37,12 @@ macro_rules! nes {
 /// The [`nes`] macro is the simplest way to construct an `NESet`:
 ///
 /// ```
-/// use nonempty_collections::nes;
+/// use nonempty_collections::*;
 ///
 /// let s = nes![1,1,2,2,3,3,4,4];
-/// let mut v: Vec<_> = s.into_iter().collect();
+/// let mut v: NEVec<_> = s.iter().collect();
 /// v.sort();
-/// assert_eq!(vec![1,2,3,4], v);
+/// assert_eq!(nev![&1,&2,&3,&4], v);
 /// ```
 ///
 /// With `NESet`, the first element can always be accessed in constant time.
@@ -438,6 +439,17 @@ where
     T: Eq + Hash,
     S: BuildHasher,
 {
+}
+
+impl<T, S> IntoNonEmptyIterator for NESet<T, S> {
+    type Item = T;
+
+    type IntoIter =
+        crate::iter::Chain<crate::iter::Once<T>, std::collections::hash_set::IntoIter<Self::Item>>;
+
+    fn into_nonempty_iter(self) -> Self::IntoIter {
+        crate::iter::once(self.head).chain(self.tail)
+    }
 }
 
 /// A non-empty iterator over the values of an [`NESet`].
