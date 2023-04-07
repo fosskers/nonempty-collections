@@ -1,9 +1,10 @@
 //! Non-empty [`HashMap`]s.
 
+use crate::NonEmptyIterator;
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::hash::{BuildHasher, Hash};
-use std::iter::{Chain, Once};
+use std::iter::{Chain, Once, Skip};
 
 /// Like the [`crate::nev`] macro, but for Maps. A nice short-hand for
 /// constructing [`NEMap`] values.
@@ -62,12 +63,19 @@ impl<K, V, S> NEMap<K, V, S> {
     /// element type is `(&'a K, &'a V)`.
     pub fn iter(&self) -> Iter<'_, K, V> {
         Iter {
+            head_key: &self.head_key,
+            head_val: &self.head_val,
             iter: std::iter::once((&self.head_key, &self.head_val)).chain(self.tail.iter()),
         }
     }
 
     /// An iterator visiting all elements in arbitrary order. The iterator
     /// element type is `(&'a K, &'a mut V)`.
+    ///
+    /// # Panics
+    ///
+    /// If you manually advance this iterator until empty and then call `first`,
+    /// you're in for a surprise.
     pub fn iter_mut(&mut self) -> IterMut<'_, K, V> {
         IterMut {
             iter: std::iter::once((&self.head_key, &mut self.head_val)).chain(self.tail.iter_mut()),
@@ -78,15 +86,18 @@ impl<K, V, S> NEMap<K, V, S> {
     /// type is `&'a K`.
     ///
     /// ```
-    /// use nonempty_collections::nem;
+    /// use nonempty_collections::*;
     ///
     /// let m = nem!["Valmar" => "Vanyar", "Tirion" => "Noldor", "Alqualondë" => "Teleri"];
-    /// let mut v: Vec<_> = m.keys().collect();
+    /// let mut v: NEVec<_> = m.keys().collect();
     /// v.sort();
-    /// assert_eq!(vec![&"Alqualondë", &"Tirion", &"Valmar"], v);
+    /// assert_eq!(nev![&"Alqualondë", &"Tirion", &"Valmar"], v);
     /// ```
     pub fn keys(&self) -> Keys<'_, K, V> {
-        Keys { inner: self.iter() }
+        Keys {
+            head_key: &self.head_key,
+            inner: std::iter::once(&self.head_key).chain(self.tail.keys()),
+        }
     }
 
     /// Returns the number of elements in the map. Always 1 or more.
@@ -105,34 +116,38 @@ impl<K, V, S> NEMap<K, V, S> {
     /// type is `&'a V`.
     ///
     /// ```
-    /// use nonempty_collections::nem;
+    /// use nonempty_collections::*;
     ///
     /// let m = nem!["Valmar" => "Vanyar", "Tirion" => "Noldor", "Alqualondë" => "Teleri"];
-    /// let mut v: Vec<_> = m.values().collect();
+    /// let mut v: NEVec<_> = m.values().collect();
     /// v.sort();
-    /// assert_eq!(vec![&"Noldor", &"Teleri", &"Vanyar"], v);
+    /// assert_eq!(nev![&"Noldor", &"Teleri", &"Vanyar"], v);
     /// ```
     pub fn values(&self) -> Values<'_, K, V> {
-        Values { inner: self.iter() }
-    }
-
-    /// An iterator visiting all values mutably in arbitrary order. The iterator
-    /// element type is `&'a mut V`.
-    ///
-    /// ```
-    /// use nonempty_collections::nem;
-    ///
-    /// let mut m = nem!["Valmar" => 10000, "Tirion" => 10000, "Alqualondë" => 10000];
-    ///
-    /// for v in m.values_mut() {
-    ///     *v += 1000;
-    /// }
-    /// ```
-    pub fn values_mut(&mut self) -> ValuesMut<'_, K, V> {
-        ValuesMut {
-            inner: self.iter_mut(),
+        Values {
+            head_val: &self.head_val,
+            inner: std::iter::once(&self.head_val).chain(self.tail.values()),
         }
     }
+
+    // /// An iterator visiting all values mutably in arbitrary order. The iterator
+    // /// element type is `&'a mut V`.
+    // ///
+    // /// ```
+    // /// use nonempty_collections::nem;
+    // ///
+    // /// let mut m = nem!["Valmar" => 10000, "Tirion" => 10000, "Alqualondë" => 10000];
+    // ///
+    // /// for v in m.values_mut() {
+    // ///     *v += 1000;
+    // /// }
+    // /// ```
+    // pub fn values_mut(&mut self) -> ValuesMut<'_, K, V> {
+    //     ValuesMut {
+    //         inner: self.iter_mut(),
+    //         head_val: todo!(),
+    //     }
+    // }
 }
 
 impl<K, V, S> NEMap<K, V, S>
@@ -322,13 +337,20 @@ where
 
 /// A non-empty iterator over the entries of an [`NEMap`].
 pub struct Iter<'a, K: 'a, V: 'a> {
+    head_key: &'a K,
+    head_val: &'a V,
     iter: Chain<Once<(&'a K, &'a V)>, std::collections::hash_map::Iter<'a, K, V>>,
 }
 
-impl<'a, K, V> Iterator for Iter<'a, K, V> {
+impl<'a, K, V> NonEmptyIterator for Iter<'a, K, V> {
     type Item = (&'a K, &'a V);
 
-    #[inline]
+    type Iter = Skip<Chain<Once<(&'a K, &'a V)>, std::collections::hash_map::Iter<'a, K, V>>>;
+
+    fn first(self) -> (Self::Item, Self::Iter) {
+        ((self.head_key, self.head_val), self.iter.skip(1))
+    }
+
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
     }
@@ -339,10 +361,16 @@ pub struct IterMut<'a, K: 'a, V: 'a> {
     iter: Chain<Once<(&'a K, &'a mut V)>, std::collections::hash_map::IterMut<'a, K, V>>,
 }
 
-impl<'a, K, V> Iterator for IterMut<'a, K, V> {
+impl<'a, K, V> NonEmptyIterator for IterMut<'a, K, V> {
     type Item = (&'a K, &'a mut V);
 
-    #[inline]
+    type Iter = Chain<Once<(&'a K, &'a mut V)>, std::collections::hash_map::IterMut<'a, K, V>>;
+
+    fn first(mut self) -> (Self::Item, Self::Iter) {
+        let (key, head) = self.iter.next().unwrap();
+        ((key, head), self.iter)
+    }
+
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
     }
@@ -350,44 +378,59 @@ impl<'a, K, V> Iterator for IterMut<'a, K, V> {
 
 /// A non-empty iterator over the keys of an [`NEMap`].
 pub struct Keys<'a, K: 'a, V: 'a> {
-    inner: Iter<'a, K, V>,
+    head_key: &'a K,
+    inner: Chain<Once<&'a K>, std::collections::hash_map::Keys<'a, K, V>>,
 }
 
-impl<'a, K, V> Iterator for Keys<'a, K, V> {
+impl<'a, K, V> NonEmptyIterator for Keys<'a, K, V> {
     type Item = &'a K;
 
-    #[inline]
+    type Iter = Skip<Chain<Once<&'a K>, std::collections::hash_map::Keys<'a, K, V>>>;
+
+    fn first(self) -> (Self::Item, Self::Iter) {
+        (self.head_key, self.inner.skip(1))
+    }
+
     fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next().map(|(k, _)| k)
+        self.inner.next()
     }
 }
 
 /// A non-empty iterator over the values of an [`NEMap`].
 pub struct Values<'a, K: 'a, V: 'a> {
-    inner: Iter<'a, K, V>,
+    head_val: &'a V,
+    inner: Chain<Once<&'a V>, std::collections::hash_map::Values<'a, K, V>>,
 }
 
-// FIXME Should be `NonEmptyIterator`.
-impl<'a, K, V> Iterator for Values<'a, K, V> {
+impl<'a, K, V> NonEmptyIterator for Values<'a, K, V> {
     type Item = &'a V;
 
-    #[inline]
+    type Iter = Skip<Chain<Once<&'a V>, std::collections::hash_map::Values<'a, K, V>>>;
+
+    fn first(self) -> (Self::Item, Self::Iter) {
+        (self.head_val, self.inner.skip(1))
+    }
+
     fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next().map(|(_, v)| v)
+        self.inner.next()
     }
 }
 
-/// A non-empty iterator over mutable values of an [`NEMap`].
-pub struct ValuesMut<'a, K: 'a, V: 'a> {
-    inner: IterMut<'a, K, V>,
-}
+// /// A non-empty iterator over mutable values of an [`NEMap`].
+// pub struct ValuesMut<'a, K: 'a, V: 'a> {
+//     inner: IterMut<'a, K, V>,
+// }
 
-// FIXME Should be `NonEmptyIterator`.
-impl<'a, K, V> Iterator for ValuesMut<'a, K, V> {
-    type Item = &'a mut V;
+// impl<'a, K, V> NonEmptyIterator for ValuesMut<'a, K, V> {
+//     type Item = &'a mut V;
 
-    #[inline]
-    fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next().map(|(_, v)| v)
-    }
-}
+//     type Iter = Skip<Chain<Once<&'a mut V>, std::collections::hash_map::IterMut<'a, K, V>>>;
+
+//     fn first(self) -> (Self::Item, Self::Iter) {
+//         (self.head_val, self.inner.skip(1))
+//     }
+
+//     fn next(&mut self) -> Option<Self::Item> {
+//         self.inner.next().map(|(_, v)| v)
+//     }
+// }
