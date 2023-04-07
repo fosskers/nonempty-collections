@@ -83,15 +83,15 @@ impl<T> NEVec<T> {
     /// ```
     /// use nonempty_collections::nev;
     ///
-    /// let mut non_empty = nev![42];
-    /// let head = non_empty.first_mut();
+    /// let mut v = nev![42];
+    /// let head = v.first_mut();
     /// *head += 1;
-    /// assert_eq!(non_empty.first(), &43);
+    /// assert_eq!(v.first(), &43);
     ///
-    /// let mut non_empty = nev![1, 4, 2, 3];
-    /// let head = non_empty.first_mut();
+    /// let mut v = nev![1, 4, 2, 3];
+    /// let head = v.first_mut();
     /// *head *= 42;
-    /// assert_eq!(non_empty.first(), &42);
+    /// assert_eq!(v.first(), &42);
     /// ```
     pub fn first_mut(&mut self) -> &mut T {
         &mut self.head
@@ -102,11 +102,11 @@ impl<T> NEVec<T> {
     /// ```
     /// use nonempty_collections::nev;
     ///
-    /// let non_empty = nev![42];
-    /// assert_eq!(non_empty.tail(), &[]);
+    /// let v = nev![42];
+    /// assert_eq!(v.tail(), &[]);
     ///
-    /// let non_empty = nev![1, 4, 2, 3];
-    /// assert_eq!(non_empty.tail(), &[4, 2, 3]);
+    /// let v = nev![1, 4, 2, 3];
+    /// assert_eq!(v.tail(), &[4, 2, 3]);
     /// ```
     pub fn tail(&self) -> &[T] {
         &self.tail
@@ -142,13 +142,13 @@ impl<T> NEVec<T> {
     /// ```
     /// use nonempty_collections::nev;
     ///
-    /// let mut non_empty = nev![1, 2, 3];
-    /// non_empty.insert(1, 4);
-    /// assert_eq!(non_empty, nev![1, 4, 2, 3]);
-    /// non_empty.insert(4, 5);
-    /// assert_eq!(non_empty, nev![1, 4, 2, 3, 5]);
-    /// non_empty.insert(0, 42);
-    /// assert_eq!(non_empty, nev![42, 1, 4, 2, 3, 5]);
+    /// let mut v = nev![1, 2, 3];
+    /// v.insert(1, 4);
+    /// assert_eq!(v, nev![1, 4, 2, 3]);
+    /// v.insert(4, 5);
+    /// assert_eq!(v, nev![1, 4, 2, 3, 5]);
+    /// v.insert(0, 42);
+    /// assert_eq!(v, nev![42, 1, 4, 2, 3, 5]);
     /// ```
     pub fn insert(&mut self, index: usize, element: T) {
         let len = self.len();
@@ -269,6 +269,11 @@ impl<T> NEVec<T> {
     /// assert_eq!(l_iter.next(), Some(&580));
     /// assert_eq!(l_iter.next(), None);
     /// ```
+    ///
+    /// # Panics
+    ///
+    /// If you manually advance this iterator and then call
+    /// [`NonEmptyIterator::first`], then you're in for a surprise.
     pub fn iter_mut(&mut self) -> IterMut<'_, T> {
         IterMut {
             head: Some(&mut self.head),
@@ -286,8 +291,8 @@ impl<T> NEVec<T> {
     /// ```
     /// use nonempty_collections::{nev, NEVec};
     ///
-    /// let non_empty_vec = NEVec::from_slice(&[1, 2, 3, 4, 5]);
-    /// assert_eq!(non_empty_vec, Some(nev![1, 2, 3, 4, 5]));
+    /// let v_vec = NEVec::from_slice(&[1, 2, 3, 4, 5]);
+    /// assert_eq!(v_vec, Some(nev![1, 2, 3, 4, 5]));
     ///
     /// let empty_vec: Option<NEVec<&u32>> = NEVec::from_slice(&[]);
     /// assert!(empty_vec.is_none());
@@ -315,8 +320,8 @@ impl<T> NEVec<T> {
     /// ```
     /// use nonempty_collections::{nev, NEVec};
     ///
-    /// let non_empty_vec = NEVec::from_vec(vec![1, 2, 3, 4, 5]);
-    /// assert_eq!(non_empty_vec, Some(nev![1, 2, 3, 4, 5]));
+    /// let v_vec = NEVec::from_vec(vec![1, 2, 3, 4, 5]);
+    /// assert_eq!(v_vec, Some(nev![1, 2, 3, 4, 5]));
     ///
     /// let empty_vec: Option<NEVec<&u32>> = NEVec::from_vec(vec![]);
     /// assert!(empty_vec.is_none());
@@ -338,15 +343,15 @@ impl<T> NEVec<T> {
     /// ```
     /// use nonempty_collections::nev;
     ///
-    /// let mut non_empty = nev![1, 2, 3, 4, 5];
+    /// let mut v = nev![1, 2, 3, 4, 5];
     ///
     /// // Guaranteed to have the head and we also get the tail.
-    /// assert_eq!(non_empty.split_first(), (&1, &[2, 3, 4, 5][..]));
+    /// assert_eq!(v.split_first(), (&1, &[2, 3, 4, 5][..]));
     ///
-    /// let non_empty = nev![1];
+    /// let v = nev![1];
     ///
     /// // Guaranteed to have the head element.
-    /// assert_eq!(non_empty.split_first(), (&1, &[][..]));
+    /// assert_eq!(v.split_first(), (&1, &[][..]));
     /// ```
     pub fn split_first(&self) -> (&T, &[T]) {
         (&self.head, &self.tail)
@@ -362,16 +367,16 @@ impl<T> NEVec<T> {
     /// ```
     /// use nonempty_collections::nev;
     ///
-    /// let mut non_empty = nev![1, 2, 3, 4, 5];
+    /// let mut v = nev![1, 2, 3, 4, 5];
     ///
     /// // Guaranteed to have the last element and the elements
     /// // preceding it.
-    /// assert_eq!(non_empty.split(), (&1, &[2, 3, 4][..], &5));
+    /// assert_eq!(v.split(), (&1, &[2, 3, 4][..], &5));
     ///
-    /// let non_empty = nev![1];
+    /// let v = nev![1];
     ///
     /// // Guaranteed to have the last element.
-    /// assert_eq!(non_empty.split(), (&1, &[][..], &1));
+    /// assert_eq!(v.split(), (&1, &[][..], &1));
     /// ```
     pub fn split(&self) -> (&T, &[T], &T) {
         match self.tail.split_last() {
@@ -387,12 +392,12 @@ impl<T> NEVec<T> {
     /// ```
     /// use nonempty_collections::nev;
     ///
-    /// let mut non_empty = nev![1];
+    /// let mut v = nev![1];
     /// let mut vec = vec![2, 3, 4, 5];
-    /// non_empty.append(&mut vec);
+    /// v.append(&mut vec);
     ///
     /// let mut expected = nev![1, 2, 3, 4, 5];
-    /// assert_eq!(non_empty, expected);
+    /// assert_eq!(v, expected);
     /// ```
     pub fn append(&mut self, other: &mut Vec<T>) {
         self.tail.append(other)
@@ -413,12 +418,12 @@ impl<T> NEVec<T> {
     /// ```
     /// use nonempty_collections::nev;
     ///
-    /// let non_empty = nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
-    /// assert_eq!(non_empty.binary_search(&0),   Ok(0));
-    /// assert_eq!(non_empty.binary_search(&13),  Ok(9));
-    /// assert_eq!(non_empty.binary_search(&4),   Err(7));
-    /// assert_eq!(non_empty.binary_search(&100), Err(13));
-    /// let r = non_empty.binary_search(&1);
+    /// let v = nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
+    /// assert_eq!(v.binary_search(&0),   Ok(0));
+    /// assert_eq!(v.binary_search(&13),  Ok(9));
+    /// assert_eq!(v.binary_search(&4),   Err(7));
+    /// assert_eq!(v.binary_search(&100), Err(13));
+    /// let r = v.binary_search(&1);
     /// assert!(match r { Ok(1..=4) => true, _ => false, });
     /// ```
     ///
@@ -428,11 +433,11 @@ impl<T> NEVec<T> {
     /// ```
     /// use nonempty_collections::nev;
     ///
-    /// let mut non_empty = nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
+    /// let mut v = nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
     /// let num = 42;
-    /// let idx = non_empty.binary_search(&num).unwrap_or_else(|x| x);
-    /// non_empty.insert(idx, num);
-    /// assert_eq!(non_empty, nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 42, 55]);
+    /// let idx = v.binary_search(&num).unwrap_or_else(|x| x);
+    /// v.insert(idx, num);
+    /// assert_eq!(v, nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 42, 55]);
     /// ```
     pub fn binary_search(&self, x: &T) -> Result<usize, usize>
     where
@@ -463,17 +468,17 @@ impl<T> NEVec<T> {
     /// ```
     /// use nonempty_collections::nev;
     ///
-    /// let non_empty = nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
+    /// let v = nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
     /// let seek = 0;
-    /// assert_eq!(non_empty.binary_search_by(|probe| probe.cmp(&seek)), Ok(0));
+    /// assert_eq!(v.binary_search_by(|probe| probe.cmp(&seek)), Ok(0));
     /// let seek = 13;
-    /// assert_eq!(non_empty.binary_search_by(|probe| probe.cmp(&seek)), Ok(9));
+    /// assert_eq!(v.binary_search_by(|probe| probe.cmp(&seek)), Ok(9));
     /// let seek = 4;
-    /// assert_eq!(non_empty.binary_search_by(|probe| probe.cmp(&seek)), Err(7));
+    /// assert_eq!(v.binary_search_by(|probe| probe.cmp(&seek)), Err(7));
     /// let seek = 100;
-    /// assert_eq!(non_empty.binary_search_by(|probe| probe.cmp(&seek)), Err(13));
+    /// assert_eq!(v.binary_search_by(|probe| probe.cmp(&seek)), Err(13));
     /// let seek = 1;
-    /// let r = non_empty.binary_search_by(|probe| probe.cmp(&seek));
+    /// let r = v.binary_search_by(|probe| probe.cmp(&seek));
     /// assert!(match r { Ok(1..=4) => true, _ => false, });
     /// ```
     pub fn binary_search_by<'a, F>(&'a self, mut f: F) -> Result<usize, usize>
@@ -512,17 +517,17 @@ impl<T> NEVec<T> {
     /// ```
     /// use nonempty_collections::nev;
     ///
-    /// let non_empty = nev![
+    /// let v = nev![
     ///     (0, 0), (2, 1), (4, 1), (5, 1), (3, 1),
     ///     (1, 2), (2, 3), (4, 5), (5, 8), (3, 13),
     ///     (1, 21), (2, 34), (4, 55)
     /// ];
     ///
-    /// assert_eq!(non_empty.binary_search_by_key(&0, |&(a,b)| b),  Ok(0));
-    /// assert_eq!(non_empty.binary_search_by_key(&13, |&(a,b)| b),  Ok(9));
-    /// assert_eq!(non_empty.binary_search_by_key(&4, |&(a,b)| b),   Err(7));
-    /// assert_eq!(non_empty.binary_search_by_key(&100, |&(a,b)| b), Err(13));
-    /// let r = non_empty.binary_search_by_key(&1, |&(a,b)| b);
+    /// assert_eq!(v.binary_search_by_key(&0, |&(a,b)| b),  Ok(0));
+    /// assert_eq!(v.binary_search_by_key(&13, |&(a,b)| b),  Ok(9));
+    /// assert_eq!(v.binary_search_by_key(&4, |&(a,b)| b),   Err(7));
+    /// assert_eq!(v.binary_search_by_key(&100, |&(a,b)| b), Err(13));
+    /// let r = v.binary_search_by_key(&1, |&(a,b)| b);
     /// assert!(match r { Ok(1..=4) => true, _ => false, });
     /// ```
     pub fn binary_search_by_key<'a, B, F>(&'a self, b: &B, mut f: F) -> Result<usize, usize>
@@ -643,14 +648,30 @@ pub struct IterMut<'a, T: 'a> {
     tail: std::slice::IterMut<'a, T>,
 }
 
-impl<'a, T> Iterator for IterMut<'a, T> {
+impl<'a, T> NonEmptyIterator for IterMut<'a, T> {
     type Item = &'a mut T;
+
+    type Iter = std::slice::IterMut<'a, T>;
+
+    fn first(self) -> (Self::Item, Self::Iter) {
+        (self.head.unwrap(), self.tail)
+    }
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.head {
             None => self.tail.next(),
             Some(_) => self.head.take(),
         }
+    }
+}
+
+impl<'a, T> IntoIterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+
+    type IntoIter = Chain<Once<&'a mut T>, std::slice::IterMut<'a, T>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        std::iter::once(self.head.unwrap()).chain(self.tail)
     }
 }
 
@@ -688,11 +709,11 @@ impl<T> std::ops::Index<usize> for NEVec<T> {
     /// ```
     /// use nonempty_collections::nev;
     ///
-    /// let non_empty = nev![1, 2, 3, 4, 5];
+    /// let v = nev![1, 2, 3, 4, 5];
     ///
-    /// assert_eq!(non_empty[0], 1);
-    /// assert_eq!(non_empty[1], 2);
-    /// assert_eq!(non_empty[3], 4);
+    /// assert_eq!(v[0], 1);
+    /// assert_eq!(v[1], 2);
+    /// assert_eq!(v[3], 4);
     /// ```
     fn index(&self, index: usize) -> &T {
         if index > 0 {
@@ -776,13 +797,13 @@ mod tests {
 
     #[test]
     fn test_mutate_head() {
-        let mut non_empty = NEVec::new(42);
-        non_empty.head += 1;
-        assert_eq!(non_empty.head, 43);
+        let mut v = NEVec::new(42);
+        v.head += 1;
+        assert_eq!(v.head, 43);
 
-        let mut non_empty = NEVec::from((1, vec![4, 2, 3]));
-        non_empty.head *= 42;
-        assert_eq!(non_empty.head, 42);
+        let mut v = NEVec::from((1, vec![4, 2, 3]));
+        v.head *= 42;
+        assert_eq!(v.head, 42);
     }
 
     #[cfg(feature = "serde")]
@@ -796,14 +817,13 @@ mod tests {
         #[test]
         fn test_simple_round_trip() -> Result<(), Box<dyn std::error::Error>> {
             // Given
-            let mut non_empty = NEVec::new(SimpleSerializable(42));
-            non_empty.push(SimpleSerializable(777));
-            let expected_value = non_empty.clone();
+            let mut v = NEVec::new(SimpleSerializable(42));
+            v.push(SimpleSerializable(777));
+            let expected_value = v.clone();
 
             // When
-            let res = serde_json::from_str::<'_, NEVec<SimpleSerializable>>(
-                &serde_json::to_string(&non_empty)?,
-            )?;
+            let res =
+                serde_json::from_str::<'_, NEVec<SimpleSerializable>>(&serde_json::to_string(&v)?)?;
 
             // Then
             assert_eq!(res, expected_value);
