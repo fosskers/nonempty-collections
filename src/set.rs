@@ -125,6 +125,11 @@ impl<T, S> NESet<T, S> {
     pub fn len(&self) -> usize {
         self.tail.len() + 1
     }
+
+    /// A `NESet` is never empty.
+    pub const fn is_empty(&self) -> bool {
+        false
+    }
 }
 
 impl<T> NESet<T>
@@ -151,9 +156,9 @@ where
     /// ```
     pub fn from_set(set: HashSet<T>) -> Option<NESet<T>> {
         let mut iter = set.into_iter();
-        iter.next().and_then(|head| {
+        iter.next().map(|head| {
             let tail: HashSet<_> = iter.collect();
-            Some(NESet { head, tail })
+            NESet { head, tail }
         })
     }
 }
@@ -219,7 +224,7 @@ where
     {
         self.tail
             .get(value)
-            .or_else(|| (value == self.head.borrow()).then(|| &self.head))
+            .or_else(|| (value == self.head.borrow()).then_some(&self.head))
     }
 
     /// Adds a value to the set.

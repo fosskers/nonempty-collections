@@ -964,7 +964,7 @@ where
     fn first(self) -> (Self::Item, Self::Iter) {
         let (head, rest) = self.iter.first();
 
-        (head.clone(), rest.copied())
+        (*head, rest.copied())
     }
 
     fn next(&mut self) -> Option<Self::Item> {

@@ -167,6 +167,11 @@ impl<T> NEVec<T> {
         self.tail.len() + 1
     }
 
+    /// A `NEVec` is never empty.
+    pub const fn is_empty(&self) -> bool {
+        false
+    }
+
     /// Get the capacity of the list.
     pub fn capacity(&self) -> usize {
         self.tail.capacity() + 1
@@ -241,7 +246,7 @@ impl<T> NEVec<T> {
     /// assert_eq!(l_iter.next(), Some(&58));
     /// assert_eq!(l_iter.next(), None);
     /// ```
-    pub fn iter<'a>(&'a self) -> Iter<'a, T> {
+    pub fn iter(&self) -> Iter<'_, T> {
         Iter {
             head: &self.head,
             iter: std::iter::once(&self.head).chain(self.tail.iter()),
@@ -264,7 +269,7 @@ impl<T> NEVec<T> {
     /// assert_eq!(l_iter.next(), Some(&580));
     /// assert_eq!(l_iter.next(), None);
     /// ```
-    pub fn iter_mut<'a>(&'a mut self) -> IterMut<'a, T> {
+    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
         IterMut {
             head: Some(&mut self.head),
             tail: self.tail.iter_mut(),

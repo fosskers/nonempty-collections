@@ -112,6 +112,11 @@ impl<K, V, S> NEMap<K, V, S> {
         self.tail.len() + 1
     }
 
+    /// A `NEMap` is never empty.
+    pub const fn is_empty(&self) -> bool {
+        false
+    }
+
     /// An iterator visiting all values in arbitrary order. The iterator element
     /// type is `&'a V`.
     ///
@@ -191,7 +196,7 @@ where
     {
         self.tail
             .get(k)
-            .or_else(|| (k == self.head_key.borrow()).then(|| &self.head_val))
+            .or_else(|| (k == self.head_key.borrow()).then_some(&self.head_val))
     }
 
     /// Returns the key-value pair corresponding to the key.
@@ -213,7 +218,7 @@ where
     {
         self.tail
             .get_key_value(k)
-            .or_else(|| (k == self.head_key.borrow()).then(|| (&self.head_key, &self.head_val)))
+            .or_else(|| (k == self.head_key.borrow()).then_some((&self.head_key, &self.head_val)))
     }
 
     /// Returns a reference to the value corresponding to the key.
