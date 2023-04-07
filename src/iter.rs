@@ -907,36 +907,29 @@ where
 
 /// A non-empty iterator that yields an element exactly once.
 pub struct Once<T> {
-    once: T,
-    used: bool,
+    once: Vec<T>,
 }
 
 impl<T> Once<T> {
     pub(crate) fn new(once: T) -> Once<T> {
-        Once { once, used: false }
+        Once { once: vec![once] }
     }
 }
 
-// FIXME Get rid of this `T: Default`.
-impl<T> NonEmptyIterator for Once<T>
-where
-    T: Default,
-{
+impl<T> NonEmptyIterator for Once<T> {
     type Item = T;
 
     type Iter = std::option::IntoIter<T>;
 
-    fn first(self) -> (Self::Item, Self::Iter) {
-        (self.once, None.into_iter())
+    fn first(mut self) -> (Self::Item, Self::Iter) {
+        (self.once.remove(0), None.into_iter())
     }
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.used {
+        if self.once.is_empty() {
             None
         } else {
-            self.used = true;
-            let item = std::mem::take(&mut self.once);
-            Some(item)
+            Some(self.once.remove(0))
         }
     }
 }
@@ -946,8 +939,8 @@ impl<T> IntoIterator for Once<T> {
 
     type IntoIter = std::option::IntoIter<T>;
 
-    fn into_iter(self) -> Self::IntoIter {
-        Some(self.once).into_iter()
+    fn into_iter(mut self) -> Self::IntoIter {
+        Some(self.once.remove(0)).into_iter()
     }
 }
 

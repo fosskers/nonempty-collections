@@ -649,10 +649,7 @@ impl<'a, T> Iterator for IterMut<'a, T> {
     }
 }
 
-impl<T> IntoNonEmptyIterator for NEVec<T>
-where
-    T: Default,
-{
+impl<T> IntoNonEmptyIterator for NEVec<T> {
     type Item = T;
 
     type IntoIter = crate::iter::Chain<crate::iter::Once<T>, std::vec::IntoIter<Self::Item>>;
