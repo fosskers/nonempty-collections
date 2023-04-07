@@ -737,12 +737,16 @@ impl<T> std::ops::IndexMut<usize> for NEVec<T> {
 
 #[cfg(feature = "serde")]
 pub mod serialize {
+    //! Serde support for [`NEVec`].
+
     use std::{convert::TryFrom, fmt};
 
     use super::NEVec;
 
+    /// Encoding/decoding errors.
     #[derive(Debug)]
     pub enum Error {
+        /// There was nothing to decode.
         Empty,
     }
 

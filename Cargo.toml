@@ -6,6 +6,9 @@ authors = ["Colin Woodbury <colin@fosskers.ca>"]
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/fosskers/nonempty-collections"
+readme = "README.md"
+keywords = ["nonempty", "vector", "set", "map"]
+categories = ["data-structures"]
 
 [dependencies]
 serde = { version = "1", features = ["serde_derive"], optional = true }
