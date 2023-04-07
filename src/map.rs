@@ -356,6 +356,16 @@ impl<'a, K, V> NonEmptyIterator for Iter<'a, K, V> {
     }
 }
 
+impl<'a, K, V> IntoIterator for Iter<'a, K, V> {
+    type Item = (&'a K, &'a V);
+
+    type IntoIter = Chain<Once<(&'a K, &'a V)>, std::collections::hash_map::Iter<'a, K, V>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter
+    }
+}
+
 /// A non-empty iterator over mutable values of an [`NEMap`].
 pub struct IterMut<'a, K: 'a, V: 'a> {
     iter: Chain<Once<(&'a K, &'a mut V)>, std::collections::hash_map::IterMut<'a, K, V>>,
@@ -373,6 +383,16 @@ impl<'a, K, V> NonEmptyIterator for IterMut<'a, K, V> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
+    }
+}
+
+impl<'a, K, V> IntoIterator for IterMut<'a, K, V> {
+    type Item = (&'a K, &'a mut V);
+
+    type IntoIter = Chain<Once<(&'a K, &'a mut V)>, std::collections::hash_map::IterMut<'a, K, V>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter
     }
 }
 
@@ -396,6 +416,16 @@ impl<'a, K, V> NonEmptyIterator for Keys<'a, K, V> {
     }
 }
 
+impl<'a, K, V> IntoIterator for Keys<'a, K, V> {
+    type Item = &'a K;
+
+    type IntoIter = Chain<Once<&'a K>, std::collections::hash_map::Keys<'a, K, V>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner
+    }
+}
+
 /// A non-empty iterator over the values of an [`NEMap`].
 pub struct Values<'a, K: 'a, V: 'a> {
     head_val: &'a V,
@@ -413,6 +443,16 @@ impl<'a, K, V> NonEmptyIterator for Values<'a, K, V> {
 
     fn next(&mut self) -> Option<Self::Item> {
         self.inner.next()
+    }
+}
+
+impl<'a, K, V> IntoIterator for Values<'a, K, V> {
+    type Item = &'a V;
+
+    type IntoIter = Chain<Once<&'a V>, std::collections::hash_map::Values<'a, K, V>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner
     }
 }
 
