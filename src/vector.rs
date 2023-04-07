@@ -168,6 +168,7 @@ impl<T> NEVec<T> {
     }
 
     /// A `NEVec` is never empty.
+    #[deprecated(since = "0.1.0", note = "A NEVec is never empty.")]
     pub const fn is_empty(&self) -> bool {
         false
     }

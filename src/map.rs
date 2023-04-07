@@ -113,6 +113,7 @@ impl<K, V, S> NEMap<K, V, S> {
     }
 
     /// A `NEMap` is never empty.
+    #[deprecated(since = "0.1.0", note = "A NEMap is never empty.")]
     pub const fn is_empty(&self) -> bool {
         false
     }
