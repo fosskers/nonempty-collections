@@ -1048,16 +1048,16 @@ pub struct FlatMap<I, U, F> {
     curr: Option<U>,
 }
 
-impl<I, U, V, F> NonEmptyIterator for FlatMap<I, V, F>
+impl<I, U, V, F> NonEmptyIterator for FlatMap<I, U, F>
 where
     I: NonEmptyIterator,
-    F: FnMut(I::Item) -> U,
-    U: IntoNonEmptyIterator<IntoIter = V, Item = V::Item> + IntoIterator<Item = V::Item>,
-    V: NonEmptyIterator,
+    F: FnMut(I::Item) -> V,
+    U: NonEmptyIterator,
+    V: IntoNonEmptyIterator<IntoIter = U, Item = U::Item> + IntoIterator<Item = U::Item>,
 {
-    type Item = <U as IntoNonEmptyIterator>::Item;
+    type Item = <V as IntoNonEmptyIterator>::Item;
 
-    type Iter = std::iter::Chain<V::Iter, std::iter::FlatMap<I::Iter, U, F>>;
+    type Iter = std::iter::Chain<U::Iter, std::iter::FlatMap<I::Iter, V, F>>;
 
     fn first(self) -> (Self::Item, Self::Iter) {
         let (i, iter) = self.iter.first();
@@ -1086,5 +1086,30 @@ where
                 }
             },
         }
+    }
+}
+
+/// ```
+/// use nonempty_collections::*;
+///
+/// let v = nev![1, 2, 3];
+/// let r: Vec<_> = v.into_nonempty_iter().flat_map(|n| nev![n]).into_iter().collect();
+/// assert_eq!(vec![1, 2, 3], r);
+/// ```
+impl<I, U, V, F> IntoIterator for FlatMap<I, U, F>
+where
+    I: IntoIterator,
+    F: FnMut(I::Item) -> V,
+    U: IntoIterator,
+    V: IntoIterator<Item = U::Item>,
+{
+    // type Item = <U as IntoIterator>::Item;
+    type Item = U::Item;
+
+    // type IntoIter = std::iter::FlatMap<<I as IntoIterator>::IntoIter, U, F>;
+    type IntoIter = std::iter::FlatMap<I::IntoIter, V, F>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter.into_iter().flat_map(self.f)
     }
 }
