@@ -32,11 +32,11 @@ pub trait NonEmptyIterator {
 
     /// Each `NonEmptyIterator` knows about a possibly-empty variant of itself,
     /// likely from `std`. Critically, they share an `Item`.
-    type Iter: Iterator<Item = Self::Item>;
+    type IntoIter: IntoIterator<Item = Self::Item>;
 
     /// A `NonEmptyIterator` can, by consuming itself, reliably produce its
     /// first element, alongside its possibly-empty variant.
-    fn first(self) -> (Self::Item, Self::Iter);
+    fn first(self) -> (Self::Item, Self::IntoIter);
 
     /// Advances the iterator and returns the next value.
     ///
@@ -225,7 +225,7 @@ pub trait NonEmptyIterator {
         // Differs from the implementation of `Iterator::count` to absolutely
         // ensure that `count` returns at least 1.
         let (_, rest) = self.first();
-        1 + rest.count()
+        1 + rest.into_iter().count()
     }
 
     /// Creates a non-empty iterator which gives the current iteration count as
@@ -411,10 +411,11 @@ pub trait NonEmptyIterator {
     {
         let (first, iter) = self.first();
 
-        iter.fold(first, |acc, item| match compare(&acc, &item) {
-            Ordering::Less => item,
-            _ => acc,
-        })
+        iter.into_iter()
+            .fold(first, |acc, item| match compare(&acc, &item) {
+                Ordering::Less => item,
+                _ => acc,
+            })
     }
 
     /// Returns the minimum element of a non-empty iterator.
@@ -446,10 +447,11 @@ pub trait NonEmptyIterator {
     {
         let (first, iter) = self.first();
 
-        iter.fold(first, |acc, item| match compare(&acc, &item) {
-            Ordering::Greater => item,
-            _ => acc,
-        })
+        iter.into_iter()
+            .fold(first, |acc, item| match compare(&acc, &item) {
+                Ordering::Greater => item,
+                _ => acc,
+            })
     }
 
     /// Returns the `n`th element of the iterator.
@@ -698,14 +700,14 @@ where
 {
     type Item = U;
 
-    type Iter = std::iter::Map<I::Iter, F>;
+    type IntoIter = std::iter::Map<<I::IntoIter as IntoIterator>::IntoIter, F>;
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         let (i, iter) = self.iter.first();
         let mut fun = self.f;
 
         // Reconstruct the `Map` we broke open.
-        (fun(i), iter.map(fun))
+        (fun(i), iter.into_iter().map(fun))
     }
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -746,12 +748,12 @@ where
 {
     type Item = T;
 
-    type Iter = std::iter::Cloned<I::Iter>;
+    type IntoIter = std::iter::Cloned<<I::IntoIter as IntoIterator>::IntoIter>;
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         let (i, iter) = self.iter.first();
 
-        (i.clone(), iter.cloned())
+        (i.clone(), iter.into_iter().cloned())
     }
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -787,12 +789,12 @@ where
 {
     type Item = (usize, I::Item);
 
-    type Iter = std::iter::Enumerate<I::Iter>;
+    type IntoIter = std::iter::Enumerate<<I::IntoIter as IntoIterator>::IntoIter>;
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         let (head, rest) = self.iter.first();
 
-        ((0, head), rest.enumerate())
+        ((0, head), rest.into_iter().enumerate())
     }
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -830,15 +832,15 @@ where
 {
     type Item = I::Item;
 
-    type Iter = std::iter::Take<I::Iter>;
+    type IntoIter = std::iter::Take<<I::IntoIter as IntoIterator>::IntoIter>;
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         let (head, rest) = self.iter.first();
 
         if self.n < 2 {
-            (head, rest.take(0))
+            (head, rest.into_iter().take(0))
         } else {
-            (head, rest.take(self.n - 1))
+            (head, rest.into_iter().take(self.n - 1))
         }
     }
 
@@ -885,12 +887,12 @@ where
 {
     type Item = A::Item;
 
-    type Iter = std::iter::Chain<A::Iter, B>;
+    type IntoIter = std::iter::Chain<<A::IntoIter as IntoIterator>::IntoIter, B>;
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         let (head, a_rest) = self.a.first();
 
-        (head, a_rest.chain(self.b))
+        (head, a_rest.into_iter().chain(self.b))
     }
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -926,9 +928,9 @@ impl<T> Once<T> {
 impl<T> NonEmptyIterator for Once<T> {
     type Item = T;
 
-    type Iter = std::option::IntoIter<T>;
+    type IntoIter = std::option::IntoIter<T>;
 
-    fn first(mut self) -> (Self::Item, Self::Iter) {
+    fn first(mut self) -> (Self::Item, Self::IntoIter) {
         (self.once.remove(0), None.into_iter())
     }
 
@@ -966,12 +968,12 @@ where
 {
     type Item = T;
 
-    type Iter = std::iter::Copied<I::Iter>;
+    type IntoIter = std::iter::Copied<<I::IntoIter as IntoIterator>::IntoIter>;
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         let (head, rest) = self.iter.first();
 
-        (*head, rest.copied())
+        (*head, rest.into_iter().copied())
     }
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -1008,13 +1010,16 @@ where
 {
     type Item = (<A as NonEmptyIterator>::Item, <B as NonEmptyIterator>::Item);
 
-    type Iter = std::iter::Zip<A::Iter, B::Iter>;
+    type IntoIter = std::iter::Zip<
+        <A::IntoIter as IntoIterator>::IntoIter,
+        <B::IntoIter as IntoIterator>::IntoIter,
+    >;
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         let (a_first, a_iter) = self.a.first();
         let (b_first, b_iter) = self.b.first();
 
-        ((a_first, b_first), a_iter.zip(b_iter))
+        ((a_first, b_first), a_iter.into_iter().zip(b_iter))
     }
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -1057,14 +1062,17 @@ where
 {
     type Item = <V as IntoNonEmptyIterator>::Item;
 
-    type Iter = std::iter::Chain<U::Iter, std::iter::FlatMap<I::Iter, V, F>>;
+    type IntoIter = std::iter::Chain<
+        <U::IntoIter as IntoIterator>::IntoIter,
+        std::iter::FlatMap<<I::IntoIter as IntoIterator>::IntoIter, V, F>,
+    >;
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         let (i, iter) = self.iter.first();
         let mut fun = self.f;
         let (j, oter) = fun(i).into_nonempty_iter().first();
 
-        (j, oter.chain(iter.flat_map(fun)))
+        (j, oter.into_iter().chain(iter.into_iter().flat_map(fun)))
     }
 
     fn next(&mut self) -> Option<Self::Item> {

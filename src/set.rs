@@ -490,9 +490,9 @@ impl<'a, T> IntoIterator for &'a NESet<T> {
 impl<'a, T> NonEmptyIterator for Iter<'a, T> {
     type Item = &'a T;
 
-    type Iter = Skip<Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>>;
+    type IntoIter = Skip<Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>>;
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         (self.head, self.iter.skip(1))
     }
 
@@ -539,7 +539,7 @@ where
 {
     type Item = &'a T;
 
-    type Iter = std::collections::hash_set::Union<'a, T, S>;
+    type IntoIter = std::collections::hash_set::Union<'a, T, S>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.orig_iter.next() {
@@ -553,7 +553,7 @@ where
         }
     }
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         (&self.orig.head, self.orig.tail.union(&self.other.tail))
     }
 

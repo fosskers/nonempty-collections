@@ -362,9 +362,9 @@ pub struct Iter<'a, K: 'a, V: 'a> {
 impl<'a, K, V> NonEmptyIterator for Iter<'a, K, V> {
     type Item = (&'a K, &'a V);
 
-    type Iter = Skip<Chain<Once<(&'a K, &'a V)>, std::collections::hash_map::Iter<'a, K, V>>>;
+    type IntoIter = Skip<Chain<Once<(&'a K, &'a V)>, std::collections::hash_map::Iter<'a, K, V>>>;
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         ((self.head_key, self.head_val), self.iter.skip(1))
     }
 
@@ -391,9 +391,9 @@ pub struct IterMut<'a, K: 'a, V: 'a> {
 impl<'a, K, V> NonEmptyIterator for IterMut<'a, K, V> {
     type Item = (&'a K, &'a mut V);
 
-    type Iter = Chain<Once<(&'a K, &'a mut V)>, std::collections::hash_map::IterMut<'a, K, V>>;
+    type IntoIter = Chain<Once<(&'a K, &'a mut V)>, std::collections::hash_map::IterMut<'a, K, V>>;
 
-    fn first(mut self) -> (Self::Item, Self::Iter) {
+    fn first(mut self) -> (Self::Item, Self::IntoIter) {
         let (key, head) = self.iter.next().unwrap();
         ((key, head), self.iter)
     }
@@ -422,9 +422,9 @@ pub struct Keys<'a, K: 'a, V: 'a> {
 impl<'a, K, V> NonEmptyIterator for Keys<'a, K, V> {
     type Item = &'a K;
 
-    type Iter = Skip<Chain<Once<&'a K>, std::collections::hash_map::Keys<'a, K, V>>>;
+    type IntoIter = Skip<Chain<Once<&'a K>, std::collections::hash_map::Keys<'a, K, V>>>;
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         (self.head_key, self.inner.skip(1))
     }
 
@@ -452,9 +452,9 @@ pub struct Values<'a, K: 'a, V: 'a> {
 impl<'a, K, V> NonEmptyIterator for Values<'a, K, V> {
     type Item = &'a V;
 
-    type Iter = Skip<Chain<Once<&'a V>, std::collections::hash_map::Values<'a, K, V>>>;
+    type IntoIter = Skip<Chain<Once<&'a V>, std::collections::hash_map::Values<'a, K, V>>>;
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         (self.head_val, self.inner.skip(1))
     }
 

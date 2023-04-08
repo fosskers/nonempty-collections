@@ -621,13 +621,13 @@ pub struct Iter<'a, T: 'a> {
 
 impl<'a, T> NonEmptyIterator for Iter<'a, T> {
     type Item = &'a T;
-    type Iter = Skip<Chain<Once<&'a T>, std::slice::Iter<'a, T>>>;
+    type IntoIter = Skip<Chain<Once<&'a T>, std::slice::Iter<'a, T>>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
     }
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         (self.head, self.iter.skip(1))
     }
 }
@@ -652,9 +652,9 @@ pub struct IterMut<'a, T: 'a> {
 impl<'a, T> NonEmptyIterator for IterMut<'a, T> {
     type Item = &'a mut T;
 
-    type Iter = std::slice::IterMut<'a, T>;
+    type IntoIter = std::slice::IterMut<'a, T>;
 
-    fn first(self) -> (Self::Item, Self::Iter) {
+    fn first(self) -> (Self::Item, Self::IntoIter) {
         (self.head.unwrap(), self.tail)
     }
 
