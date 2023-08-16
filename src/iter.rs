@@ -4,6 +4,7 @@ use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::iter::{Product, Sum};
+use std::result::Result;
 
 // Iterator structs which _always_ have something if the source iterator is non-empty:
 //
@@ -662,6 +663,32 @@ impl<T: Eq + Hash> FromNonEmptyIterator<T> for HashSet<T> {
         s.insert(head);
         s.extend(rest);
         s
+    }
+}
+
+impl<A, E, V> FromNonEmptyIterator<Result<A, E>> for Result<V, E>
+where
+    V: FromNonEmptyIterator<A>,
+{
+    //fn from_nonempty_iter<I: IntoIterator<Item = std::result::Result<A, E>>>(iter: I) -> std::result::Result<V, E> {
+    fn from_nonempty_iter<I>(iter: I) -> Result<V, E>
+    where
+        I: IntoNonEmptyIterator<Item = Result<A, E>>,
+    {
+        use crate::NEVec;
+
+        let (head, rest) = iter.into_nonempty_iter().first();
+        let head: A = head?;
+
+        let mut buf = NEVec::new(head);
+
+        for item in rest.into_iter() {
+            let item: A = item?;
+            buf.push(item);
+        }
+        let new_iter = buf.into_nonempty_iter();
+        let output: V = FromNonEmptyIterator::from_nonempty_iter(new_iter);
+        Ok(output)
     }
 }
 

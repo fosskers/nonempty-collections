@@ -836,4 +836,37 @@ mod tests {
             Ok(())
         }
     }
+
+    #[test]
+    fn test_result_collect() {
+        use crate::{IntoNonEmptyIterator, NonEmptyIterator};
+
+        let nonempty = nev![2, 4, 8];
+        let output = nonempty
+            .into_nonempty_iter()
+            .map(|n| {
+                if n % 2 == 0 {
+                    Ok(n)
+                } else {
+                    Err("odd number!")
+                }
+            })
+            .collect::<Result<NEVec<u32>, &'static str>>();
+
+        assert_eq!(output, Ok(nev![2, 4, 8]));
+
+        let nonempty = nev![2, 1, 8];
+        let output = nonempty
+            .into_nonempty_iter()
+            .map(|n| {
+                if n % 2 == 0 {
+                    Ok(n)
+                } else {
+                    Err("odd number!")
+                }
+            })
+            .collect::<Result<NEVec<u32>, &'static str>>();
+
+        assert_eq!(output, Err("odd number!"));
+    }
 }
