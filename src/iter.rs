@@ -670,7 +670,6 @@ impl<A, E, V> FromNonEmptyIterator<Result<A, E>> for Result<V, E>
 where
     V: FromNonEmptyIterator<A>,
 {
-    //fn from_nonempty_iter<I: IntoIterator<Item = std::result::Result<A, E>>>(iter: I) -> std::result::Result<V, E> {
     fn from_nonempty_iter<I>(iter: I) -> Result<V, E>
     where
         I: IntoNonEmptyIterator<Item = Result<A, E>>,
