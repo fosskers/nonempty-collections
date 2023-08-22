@@ -567,6 +567,11 @@ impl<T> NEVec<T> {
             }
         }
     }
+
+    /// Yields a `NESlice`
+    pub fn as_nonempty_slice(&self) -> crate::NESlice<T> {
+        crate::NESlice::new(&self.head, &self.tail)
+    }
 }
 
 impl<T> From<NEVec<T>> for Vec<T> {
@@ -868,5 +873,14 @@ mod tests {
             .collect::<Result<NEVec<u32>, &'static str>>();
 
         assert_eq!(output, Err("odd number!"));
+    }
+
+    #[test]
+    fn test_as_slice() {
+        let nonempty = NEVec::from((0, vec![1, 2, 3]));
+        assert_eq!(
+            nonempty.as_nonempty_slice(),
+            crate::NESlice::new(&0, &[1, 2, 3])
+        );
     }
 }
