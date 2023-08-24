@@ -6,6 +6,8 @@ use std::hash::Hash;
 use std::iter::{Product, Sum};
 use std::result::Result;
 
+use crate::NEVec;
+
 // Iterator structs which _always_ have something if the source iterator is non-empty:
 //
 // - [x] Chain (if one, the other, or both are nonempty)
@@ -674,8 +676,6 @@ where
     where
         I: IntoNonEmptyIterator<Item = Result<A, E>>,
     {
-        use crate::NEVec;
-
         let (head, rest) = iter.into_nonempty_iter().first();
         let head: A = head?;
 
