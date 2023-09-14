@@ -114,7 +114,6 @@ mod tests {
         use crate::{IntoNonEmptyIterator, NonEmptyIterator};
 
         let slice = [0, 1, 2, 3];
-        //let nonempty = NESlice::from_slice(&slice).unwrap();
         let nonempty = NESlice::new(&slice[0], &slice[1..]);
         for (i, n) in nonempty.into_nonempty_iter().enumerate() {
             assert_eq!(i as i32, *n);
