@@ -14,8 +14,8 @@
 //! Consider that unlike `Vec`, [`NEVec::first`] and [`NEVec::last`] don't
 //! return in `Option`; they always succeed.
 //!
-//! Alongside [`NEVec`] are its cousins [`NEMap`] and [`NESet`]; Hash Maps and
-//! Hash Sets which are guaranteed to contain at least one item.
+//! Alongside [`NEVec`] are its cousins [`NESlice`], [`NEMap`], and [`NESet`],
+//! which are all guaranteed to contain at least one item.
 //!
 //! # Examples
 //!

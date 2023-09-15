@@ -568,7 +568,7 @@ impl<T> NEVec<T> {
         }
     }
 
-    /// Yields a `NESlice`
+    /// Yields a `NESlice`.
     pub fn as_nonempty_slice<'b>(&'b self) -> crate::NESlice<'b, T> {
         crate::NESlice::new(&self.head, &self.tail)
     }

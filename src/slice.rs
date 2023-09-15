@@ -1,19 +1,27 @@
 //! Non-empty Slices.
+
 use crate::iter::{IntoNonEmptyIterator, NonEmptyIterator};
 use std::iter::{Chain, Once, Skip};
 
-/// Non-empty slice
+/// A non-empty slice. Like [`crate::NEVec`], but guaranteed to have borrowed
+/// contents.
+///
+/// [`NESlice::from_slice`] is the simplest way to construct this from borrowed data.
+///
+/// Unfortunately there is no macro for this, but if you want one, just use
+/// `nev!` and handle the ownership manually. Also consider
+/// [`crate::NEVec::as_nonempty_slice`].
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NESlice<'a, T> {
-    /// The element of the non-empty Vector. Always exists.
+    /// The element of the non-empty slice. Always exists.
     pub head: &'a T,
 
-    /// The remaining elements of the non-empty Vector, perhaps empty.
+    /// The remaining elements of the non-empty slice, perhaps empty.
     pub tail: &'a [T],
 }
 
 impl<'a, T> NESlice<'a, T> {
-    /// Create a new non-empty list with an initial element.
+    /// Create a new non-empty slice with an initial element.
     pub fn new(head: &'a T, tail: &'a [T]) -> Self {
         Self { head, tail }
     }
@@ -23,8 +31,8 @@ impl<'a, T> NESlice<'a, T> {
         &self.head
     }
 
-    /// Using `from_slice` gives a proof that the input slice is non-empty in the Some
-    /// branch
+    /// Using `from_slice` gives a proof that the input slice is non-empty in
+    /// the `Some` branch.
     pub fn from_slice(slice: &'a [T]) -> Option<Self> {
         slice.split_first().map(|(head, tail)| Self { head, tail })
     }
@@ -34,7 +42,7 @@ impl<'a, T> NESlice<'a, T> {
         self.tail.len() + 1
     }
 
-    /// Generates a standard iterator
+    /// Generates a standard iterator.
     pub fn iter(&self) -> Iter<'_, T> {
         Iter {
             head: &self.head,
