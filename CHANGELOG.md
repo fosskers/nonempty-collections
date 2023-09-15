@@ -1,5 +1,12 @@
 # `nonempty-collections`
 
+## 0.1.3 (2023-09-15)
+
+#### Added
+
+- `NESlice` for when what you have on hand is already borrowed. Thanks again to
+  Greg Shuflin.
+
 ## 0.1.2 (2023-09-05)
 
 #### Added
