@@ -1,6 +1,6 @@
 //! Non-empty [`HashMap`]s.
 
-use crate::{IntoNonEmptyIterator, NonEmptyIterator};
+use crate::{FromNonEmptyIterator, IntoNonEmptyIterator, NonEmptyIterator};
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::hash::{BuildHasher, Hash};
@@ -349,6 +349,25 @@ impl<K, V, S> IntoNonEmptyIterator for NEMap<K, V, S> {
 
     fn into_nonempty_iter(self) -> Self::IntoIter {
         crate::iter::once((self.head_key, self.head_val)).chain(self.tail)
+    }
+}
+
+impl<K, V, S> FromNonEmptyIterator<(K, V)> for NEMap<K, V, S>
+where
+    K: Eq + Hash,
+    S: BuildHasher + Default,
+{
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = (K, V)>,
+    {
+        let ((head_key, head_val), rest) = iter.into_nonempty_iter().first();
+
+        NEMap {
+            head_key,
+            head_val,
+            tail: rest.into_iter().collect(),
+        }
     }
 }
 
