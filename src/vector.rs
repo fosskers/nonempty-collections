@@ -599,9 +599,11 @@ impl<T> From<(T, Vec<T>)> for NEVec<T> {
 }
 
 /// ```
-/// use nonempty_collections::nev;
+/// use nonempty_collections::*;
 ///
-/// let v = nev![1, 2, 3];
+/// let v0 = nev![1, 2, 3];
+/// let v1: NEVec<_> = v0.iter().cloned().collect();
+/// assert_eq!(v0, v1);
 /// ```
 impl<T> FromNonEmptyIterator<T> for NEVec<T> {
     fn from_nonempty_iter<I>(iter: I) -> Self

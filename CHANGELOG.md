@@ -1,5 +1,12 @@
 # `nonempty-collections`
 
+## Unreleased
+
+#### Added
+
+- `FromNonEmptyIterator` impls for `NEMap` and `NESet`.
+- `Debug`, `Clone`, `PartialEq`, and `Eq` for `NEMap`.
+
 ## 0.1.3 (2023-09-15)
 
 #### Added

@@ -1,7 +1,7 @@
 //! Non-empty Sets.
 
 use crate::iter::NonEmptyIterator;
-use crate::IntoNonEmptyIterator;
+use crate::{FromNonEmptyIterator, IntoNonEmptyIterator};
 use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::hash::{BuildHasher, Hash};
@@ -449,6 +449,31 @@ impl<T, S> IntoNonEmptyIterator for NESet<T, S> {
 
     fn into_nonempty_iter(self) -> Self::IntoIter {
         crate::iter::once(self.head).chain(self.tail)
+    }
+}
+
+/// ```
+/// use nonempty_collections::*;
+///
+/// let s0 = nes![1, 2, 3];
+/// let s1: NESet<_> = s0.iter().cloned().collect();
+/// assert_eq!(s0, s1);
+/// ```
+impl<T, S> FromNonEmptyIterator<T> for NESet<T, S>
+where
+    T: Eq + Hash,
+    S: BuildHasher + Default,
+{
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = T>,
+    {
+        let (head, rest) = iter.into_nonempty_iter().first();
+
+        NESet {
+            head,
+            tail: rest.into_iter().collect(),
+        }
     }
 }
 
