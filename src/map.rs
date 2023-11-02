@@ -37,6 +37,7 @@ macro_rules! nem {
 /// let m = nem!["elves" => 3000, "orcs" => 10000];
 /// assert_eq!(2, m.len());
 /// ```
+#[derive(Debug, Clone)]
 pub struct NEMap<K, V, S = std::collections::hash_map::RandomState> {
     /// The key of the ever-present element of the non-empty `HashMap`.
     pub head_key: K,
@@ -322,6 +323,36 @@ where
     }
 }
 
+impl<K, V, S> PartialEq for NEMap<K, V, S>
+where
+    K: Eq + Hash,
+    V: Eq,
+    S: BuildHasher,
+{
+    /// This is an `O(n)` comparison of each key/value pair, one by one.
+    /// Short-circuits if any comparison fails.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let m0 = nem!['a' => 1, 'b' => 2];
+    /// let m1 = nem!['b' => 2, 'a' => 1];
+    /// assert_eq!(m0, m1);
+    /// ```
+    fn eq(&self, other: &Self) -> bool {
+        self.iter()
+            .all(|(k, v)| other.get(k).map(|ov| v == ov).unwrap_or(false))
+    }
+}
+
+impl<K, V, S> Eq for NEMap<K, V, S>
+where
+    K: Eq + Hash,
+    V: Eq,
+    S: BuildHasher,
+{
+}
+
 impl<K, V, S> From<NEMap<K, V, S>> for HashMap<K, V, S>
 where
     K: Eq + Hash,
@@ -352,6 +383,14 @@ impl<K, V, S> IntoNonEmptyIterator for NEMap<K, V, S> {
     }
 }
 
+/// ```
+/// use nonempty_collections::*;
+///
+/// let v = nev![('a', 1), ('b', 2), ('c', 3)];
+/// let m0: NEMap<_, _> = v.into_nonempty_iter().collect();
+/// let m1: NEMap<_, _> = nem!['a' => 1, 'b' => 2, 'c' => 3];
+/// assert_eq!(m0, m1);
+/// ```
 impl<K, V, S> FromNonEmptyIterator<(K, V)> for NEMap<K, V, S>
 where
     K: Eq + Hash,
