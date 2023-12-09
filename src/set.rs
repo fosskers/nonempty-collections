@@ -6,6 +6,7 @@ use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::hash::{BuildHasher, Hash};
 use std::iter::{Chain, Once, Skip};
+use std::num::NonZeroUsize;
 
 /// Like the [`crate::nev`] macro, but for Sets. A nice short-hand for
 /// constructing [`NESet`] values.
@@ -14,7 +15,7 @@ use std::iter::{Chain, Once, Skip};
 /// use nonempty_collections::nes;
 ///
 /// let s = nes![1, 2, 2, 3];
-/// assert_eq!(3, s.len());
+/// assert_eq!(3, s.len().get());
 /// ```
 #[macro_export]
 macro_rules! nes {
@@ -98,8 +99,9 @@ pub struct NESet<T, S = std::collections::hash_map::RandomState> {
 
 impl<T, S> NESet<T, S> {
     /// Returns the number of elements the set can hold without reallocating.
-    pub fn capacity(&self) -> usize {
-        self.tail.capacity() + 1
+    pub fn capacity(&self) -> NonZeroUsize {
+        let capacity = self.tail.capacity();
+        unsafe { NonZeroUsize::new_unchecked(capacity + 1) }
     }
 
     /// Returns a reference to the set's `BuildHasher`.
@@ -115,16 +117,17 @@ impl<T, S> NESet<T, S> {
         }
     }
 
-    /// Returns the number of elements in the set. Always 1 or more.
+    /// Returns the number of elements in the set.
     ///
     /// ```
     /// use nonempty_collections::nes;
     ///
     /// let s = nes![1,2,3];
-    /// assert_eq!(3, s.len());
+    /// assert_eq!(3, s.len().get());
     /// ```
-    pub fn len(&self) -> usize {
-        self.tail.len() + 1
+    pub fn len(&self) -> NonZeroUsize {
+        let len = self.tail.len();
+        unsafe { NonZeroUsize::new_unchecked(len + 1) }
     }
 
     /// A `NESet` is never empty.
@@ -388,18 +391,18 @@ where
     }
 
     /// Creates a new `NESet` with a single element and specified capacity.
-    pub fn with_capacity(capacity: usize, value: T) -> NESet<T> {
+    pub fn with_capacity(capacity: NonZeroUsize, value: T) -> NESet<T> {
         NESet {
             head: value,
-            tail: HashSet::with_capacity(capacity),
+            tail: HashSet::with_capacity(capacity.get() - 1),
         }
     }
 
     /// See [`HashSet::with_capacity_and_hasher`].
-    pub fn with_capacity_and_hasher(capacity: usize, hasher: S, value: T) -> NESet<T, S> {
+    pub fn with_capacity_and_hasher(capacity: NonZeroUsize, hasher: S, value: T) -> NESet<T, S> {
         NESet {
             head: value,
-            tail: HashSet::with_capacity_and_hasher(capacity, hasher),
+            tail: HashSet::with_capacity_and_hasher(capacity.get() - 1, hasher),
         }
     }
 
@@ -430,7 +433,7 @@ where
     /// assert!(s0 != s3);
     /// ```
     fn eq(&self, other: &Self) -> bool {
-        self.len() == other.len() && self.intersection(other).count() == self.len()
+        self.len() == other.len() && self.intersection(other).count() == self.len().get()
     }
 }
 

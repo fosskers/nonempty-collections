@@ -5,6 +5,7 @@ use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::hash::{BuildHasher, Hash};
 use std::iter::{Chain, Once, Skip};
+use std::num::NonZeroUsize;
 
 /// Like the [`crate::nev`] macro, but for Maps. A nice short-hand for
 /// constructing [`NEMap`] values.
@@ -13,7 +14,7 @@ use std::iter::{Chain, Once, Skip};
 /// use nonempty_collections::nem;
 ///
 /// let m = nem!["elves" => 3000, "orcs" => 10000];
-/// assert_eq!(2, m.len());
+/// assert_eq!(2, m.len().get());
 /// ```
 #[macro_export]
 macro_rules! nem {
@@ -35,7 +36,7 @@ macro_rules! nem {
 /// use nonempty_collections::nem;
 ///
 /// let m = nem!["elves" => 3000, "orcs" => 10000];
-/// assert_eq!(2, m.len());
+/// assert_eq!(2, m.len().get());
 /// ```
 #[derive(Debug, Clone)]
 pub struct NEMap<K, V, S = std::collections::hash_map::RandomState> {
@@ -51,8 +52,9 @@ pub struct NEMap<K, V, S = std::collections::hash_map::RandomState> {
 
 impl<K, V, S> NEMap<K, V, S> {
     /// Returns the number of elements the map can hold without reallocating.
-    pub fn capacity(&self) -> usize {
-        self.tail.capacity() + 1
+    pub fn capacity(&self) -> NonZeroUsize {
+        let capacity = self.tail.capacity();
+        unsafe { NonZeroUsize::new_unchecked(capacity + 1) }
     }
 
     /// Returns a reference to the map's `BuildHasher`.
@@ -101,16 +103,17 @@ impl<K, V, S> NEMap<K, V, S> {
         }
     }
 
-    /// Returns the number of elements in the map. Always 1 or more.
+    /// Returns the number of elements in the map.
     ///
     /// ```
     /// use nonempty_collections::nem;
     ///
     /// let m = nem!["a" => 1, "b" => 2];
-    /// assert_eq!(2, m.len());
+    /// assert_eq!(2, m.len().get());
     /// ```
-    pub fn len(&self) -> usize {
-        self.tail.len() + 1
+    pub fn len(&self) -> NonZeroUsize {
+        let len = self.tail.len();
+        unsafe { NonZeroUsize::new_unchecked(len + 1) }
     }
 
     /// A `NEMap` is never empty.
@@ -295,21 +298,26 @@ where
         self.tail.shrink_to_fit()
     }
 
-    /// Creates a new `NEMap` with a single element and specified capacity.
-    pub fn with_capacity(capacity: usize, k: K, v: V) -> NEMap<K, V> {
+    /// Creates a new `NEMap` with a specified capacity.
+    pub fn with_capacity(capacity: NonZeroUsize, k: K, v: V) -> NEMap<K, V> {
         NEMap {
             head_key: k,
             head_val: v,
-            tail: HashMap::with_capacity(capacity),
+            tail: HashMap::with_capacity(capacity.get() - 1),
         }
     }
 
     /// See [`HashMap::with_capacity_and_hasher`].
-    pub fn with_capacity_and_hasher(capacity: usize, hasher: S, k: K, v: V) -> NEMap<K, V, S> {
+    pub fn with_capacity_and_hasher(
+        capacity: NonZeroUsize,
+        hasher: S,
+        k: K,
+        v: V,
+    ) -> NEMap<K, V, S> {
         NEMap {
             head_key: k,
             head_val: v,
-            tail: HashMap::with_capacity_and_hasher(capacity, hasher),
+            tail: HashMap::with_capacity_and_hasher(capacity.get() - 1, hasher),
         }
     }
 

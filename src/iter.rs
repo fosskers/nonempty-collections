@@ -4,6 +4,7 @@ use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::iter::{Product, Sum};
+use std::num::NonZeroUsize;
 use std::result::Result;
 
 use crate::NEVec;
@@ -216,19 +217,21 @@ pub trait NonEmptyIterator {
     /// use nonempty_collections::*;
     ///
     /// let n = nev![1];
-    /// assert_eq!(1, n.iter().count());
+    /// assert_eq!(1, n.iter().count().get());
     ///
     /// let n = nev![1,2,3,4,5,6];
-    /// assert_eq!(6, n.iter().count());
+    /// assert_eq!(6, n.iter().count().get());
     /// ````
-    fn count(self) -> usize
+    fn count(self) -> NonZeroUsize
     where
         Self: Sized,
     {
         // Differs from the implementation of `Iterator::count` to absolutely
         // ensure that `count` returns at least 1.
         let (_, rest) = self.first();
-        1 + rest.into_iter().count()
+        let count = rest.into_iter().count();
+
+        unsafe { NonZeroUsize::new_unchecked(count + 1) }
     }
 
     /// Creates a non-empty iterator which gives the current iteration count as
@@ -543,28 +546,23 @@ pub trait NonEmptyIterator {
     ///
     /// See also [`Iterator::take`].
     ///
-    /// # Panics
-    ///
-    /// Panics if `n == 0`.
-    ///
     /// # Examples
     ///
     /// ```
+    /// use std::num::NonZeroUsize;
     /// use nonempty_collections::*;
-    /// use nonempty_collections::NEVec;
     ///
-    /// let n: NEVec<_> = nev![1,2,3].iter().map(|n| n * 2).take(2).collect();
+    /// let n: NEVec<_> = nev![1,2,3].iter().map(|n| n * 2).take(NonZeroUsize::new(2).unwrap()).collect();
     /// assert_eq!(nev![2,4], n);
     /// ```
-    fn take(self, n: usize) -> Take<Self>
+    fn take(self, n: NonZeroUsize) -> Take<Self>
     where
         Self: Sized,
     {
-        if n == 0 {
-            panic!("Cannot take 0 elements from a non-empty iterator!");
+        Take {
+            iter: self,
+            n: n.get(),
         }
-
-        Take { iter: self, n }
     }
 
     /// Iterates over all initial elements that pass a given predicate.
@@ -881,10 +879,11 @@ where
 }
 
 /// ```
+/// use std::num::NonZeroUsize;
 /// use nonempty_collections::*;
 ///
 /// let v = nev![1,2,3];
-/// let r = v.iter().take(1).into_iter().count();
+/// let r = v.iter().take(NonZeroUsize::new(1).unwrap()).into_iter().count();
 /// assert_eq!(1, r);
 /// ```
 impl<I> IntoIterator for Take<I>

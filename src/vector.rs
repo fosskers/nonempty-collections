@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::iter::{FromNonEmptyIterator, IntoNonEmptyIterator, NonEmptyIterator};
 use std::cmp::Ordering;
 use std::iter::{Chain, Once, Skip};
+use std::num::NonZeroUsize;
 use std::ops::{IndexMut, Not};
 
 /// Like the [`vec!`] macro, but enforces at least one argument. A nice short-hand
@@ -152,7 +153,7 @@ impl<T> NEVec<T> {
     /// ```
     pub fn insert(&mut self, index: usize, element: T) {
         let len = self.len();
-        assert!(index <= len);
+        assert!(index <= len.get());
 
         if index == 0 {
             let head = std::mem::replace(&mut self.head, element);
@@ -163,8 +164,9 @@ impl<T> NEVec<T> {
     }
 
     /// Get the length of the list.
-    pub fn len(&self) -> usize {
-        self.tail.len() + 1
+    pub fn len(&self) -> NonZeroUsize {
+        let len = self.tail.len();
+        unsafe { NonZeroUsize::new_unchecked(len + 1) }
     }
 
     /// A `NEVec` is never empty.
@@ -174,8 +176,9 @@ impl<T> NEVec<T> {
     }
 
     /// Get the capacity of the list.
-    pub fn capacity(&self) -> usize {
-        self.tail.capacity() + 1
+    pub fn capacity(&self) -> NonZeroUsize {
+        let capacity = self.tail.capacity() + 1;
+        unsafe { NonZeroUsize::new_unchecked(capacity) }
     }
 
     /// Get the last element. Never fails.
@@ -229,10 +232,9 @@ impl<T> NEVec<T> {
         }
     }
 
-    /// Truncate the list to a certain size. Must be greater than `0`.
-    pub fn truncate(&mut self, len: usize) {
-        assert!(len >= 1);
-        self.tail.truncate(len - 1);
+    /// Truncate the list to a certain size.
+    pub fn truncate(&mut self, len: NonZeroUsize) {
+        self.tail.truncate(len.get() - 1);
     }
 
     /// ```
