@@ -1201,7 +1201,7 @@ where
     }
 }
 
-/// Fallible conversion into a [`NonEmptyIterator`].
+/// Convenience trait extending [`Iterator`]
 pub trait IteratorExt {
     /// The type of the elements being iterated over.
     type Item;
