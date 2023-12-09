@@ -109,8 +109,8 @@ pub mod vector;
 
 pub use iter::FromNonEmptyIterator;
 pub use iter::IntoNonEmptyIterator;
+pub use iter::IteratorExt;
 pub use iter::NonEmptyIterator;
-pub use iter::TryIntoNonEmptyIterator;
 pub use map::NEMap;
 pub use set::NESet;
 pub use slice::NESlice;

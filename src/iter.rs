@@ -6,7 +6,7 @@ use std::hash::Hash;
 use std::iter::{Product, Sum};
 use std::result::Result;
 
-use crate::NEVec;
+use crate::{NEMap, NESet, NEVec};
 
 // Iterator structs which _always_ have something if the source iterator is non-empty:
 //
@@ -631,6 +631,59 @@ pub trait NonEmptyIterator {
             b: other.into_nonempty_iter(),
         }
     }
+
+    /// A specialization of [`NonEmptyIterator::collect`] for convenience.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let a = nev![1, 2, 3];
+    /// let r = a.into_nonempty_iter().collect_nev();
+    ///
+    /// assert_eq!(nev![1, 2, 3], r);
+    /// ```
+    fn collect_nev(self) -> NEVec<Self::Item>
+    where
+        Self: Sized,
+    {
+        self.collect()
+    }
+
+    /// A specialization of [`NonEmptyIterator::collect`] for convenience.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let a = nev![1, 2, 2, 3];
+    /// let r = a.into_nonempty_iter().collect_nes();
+    ///
+    /// assert_eq!(nes![1, 2, 3], r);
+    /// ```
+    fn collect_nes(self) -> NESet<Self::Item>
+    where
+        Self: Sized,
+        Self::Item: Eq + Hash,
+    {
+        self.collect()
+    }
+
+    /// A specialization of [`NonEmptyIterator::collect`] for convenience.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let a = nev![(1, 'a'), (2, 'b'), (2, 'c'), (3, 'd')];
+    /// let r = a.into_nonempty_iter().collect_nem();
+    ///
+    /// assert_eq!(nem![1 => 'a', 2 => 'c', 3 => 'd'], r);
+    /// ```
+    fn collect_nem<K, V>(self) -> NEMap<K, V>
+    where
+        Self: Sized,
+        NEMap<K, V>: FromNonEmptyIterator<Self::Item>,
+    {
+        self.collect()
+    }
 }
 
 /// Conversion from a [`NonEmptyIterator`].
@@ -1149,7 +1202,7 @@ where
 }
 
 /// Fallible conversion into a [`NonEmptyIterator`].
-pub trait TryIntoNonEmptyIterator {
+pub trait IteratorExt {
     /// The type of the elements being iterated over.
     type Item;
 
@@ -1158,6 +1211,89 @@ pub trait TryIntoNonEmptyIterator {
 
     /// Tries to convert [`self`] into [`NonEmptyIterator`].
     fn try_into_nonempty_iter(self) -> Option<Self::IntoIter>;
+
+    /// A specialization of [`NonEmptyIterator::collect`] for convenience.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let a = vec![1, 2, 3];
+    /// let r = a.into_iter().try_collect_nev();
+    ///
+    /// assert!(r.is_some());
+    /// assert_eq!(nev![1, 2, 3], r.unwrap());
+    /// ```
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    /// use std::iter;
+    ///
+    /// let r = iter::empty::<u8>().try_collect_nev();
+    ///
+    /// assert!(r.is_none());
+    /// ```
+    fn try_collect_nev(self) -> Option<NEVec<Self::Item>>
+    where
+        Self: Sized,
+    {
+        self.try_into_nonempty_iter().map(NonEmptyIterator::collect)
+    }
+
+    /// A specialization of [`NonEmptyIterator::collect`] for convenience.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let a = vec![1, 2, 2, 3];
+    /// let r = a.into_iter().try_collect_nes();
+    ///
+    /// assert!(r.is_some());
+    /// assert_eq!(nes![1, 2, 3], r.unwrap());
+    /// ```
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    /// use std::iter;
+    ///
+    /// let r = iter::empty::<u8>().try_collect_nes();
+    ///
+    /// assert!(r.is_none());
+    /// ```
+    fn try_collect_nes(self) -> Option<NESet<Self::Item>>
+    where
+        Self: Sized,
+        Self::Item: Eq + Hash,
+    {
+        self.try_into_nonempty_iter().map(NonEmptyIterator::collect)
+    }
+
+    /// A specialization of [`NonEmptyIterator::collect`] for convenience.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let a = vec![(1, 'a'), (2, 'b'), (2, 'c'), (3, 'd')];
+    /// let r = a.into_iter().try_collect_nem();
+    ///
+    /// assert!(r.is_some());
+    /// assert_eq!(nem![1 => 'a', 2 => 'c', 3 => 'd'], r.unwrap());
+    /// ```
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    /// use std::iter;
+    ///
+    /// let r = iter::empty::<(u8, char)>().try_collect_nem();
+    ///
+    /// assert!(r.is_none());
+    /// ```
+    fn try_collect_nem<K, V>(self) -> Option<NEMap<K, V>>
+    where
+        Self: Sized,
+        NEMap<K, V>: FromNonEmptyIterator<Self::Item>,
+    {
+        self.try_into_nonempty_iter().map(NonEmptyIterator::collect)
+    }
 }
 
 /// ```
@@ -1179,7 +1315,7 @@ pub trait TryIntoNonEmptyIterator {
 ///
 /// assert!(x.is_none());
 /// ```
-impl<I, T> TryIntoNonEmptyIterator for I
+impl<I, T> IteratorExt for I
 where
     I: Iterator<Item = T>,
 {
