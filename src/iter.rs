@@ -1147,3 +1147,49 @@ where
         self.iter.into_iter().flat_map(self.f)
     }
 }
+
+/// Fallible conversion into a [`NonEmptyIterator`].
+pub trait TryIntoNonEmptyIterator {
+    /// The type of the elements being iterated over.
+    type Item;
+
+    /// Which kind of [`NonEmptyIterator`] are we turning this into?
+    type IntoIter: NonEmptyIterator<Item = Self::Item>;
+
+    /// Tries to convert [`self`] into [`NonEmptyIterator`].
+    fn try_into_nonempty_iter(self) -> Option<Self::IntoIter>;
+}
+
+/// ```
+/// use nonempty_collections::*;
+///
+/// let a = vec![1];
+/// let x = a.into_iter().try_into_nonempty_iter();
+///
+/// assert!(x.is_some());
+///
+/// let y = x.unwrap().collect::<NEVec<_>>();
+/// assert_eq!(y.len(), 1);
+/// ```
+/// ```
+/// use nonempty_collections::*;
+///
+/// let b: Vec::<u8> = vec![];
+/// let x = b.into_iter().try_into_nonempty_iter();
+///
+/// assert!(x.is_none());
+/// ```
+impl<I, T> TryIntoNonEmptyIterator for I
+where
+    I: Iterator<Item = T>,
+{
+    type Item = T;
+    type IntoIter = Chain<Once<Self::Item>, Self>;
+
+    /// Tries to convert [`self`] into [`NonEmptyIterator`]. Calls self.next()
+    /// once. If [`self`] doesn't return [`Some`] upon the first call to
+    /// `next()`, returns [`None`].
+    fn try_into_nonempty_iter(mut self) -> Option<Self::IntoIter> {
+        self.next().map(|head| once(head).chain(self))
+    }
+}
