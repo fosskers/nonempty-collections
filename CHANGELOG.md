@@ -1,5 +1,12 @@
 # `nonempty-collections`
 
+## Unreleased
+
+#### Added
+
+- `NonEmptyIterator::reduce`, which yields a concrete `Self::Item` instead of an
+  `Option`.
+
 ## 0.1.4 (2023-11-02)
 
 #### Added
