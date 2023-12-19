@@ -18,13 +18,13 @@ can't. So overall, code, type signatures, and logic become cleaner.
 Consider that unlike `Vec`, [`NEVec::first`] and [`NEVec::last`] don't
 return in `Option`; they always succeed.
 
-Alongside [`NEVec`] are its cousins [`NEMap`] and [`NESet`]; Hash Maps and
-Hash Sets which are guaranteed to contain at least one item.
+Alongside [`NEVec`] are its cousins [`NESlice`], [`NEMap`], and [`NESet`],
+which are all guaranteed to contain at least one item.
 
 ## Examples
 
 The simplest way to construct these non-empty collections is via their
-macros: [`nev`], [`nes`], and [`nem`]:
+macros: [`nev!`], [`nes!`], and [`nem!`]:
 
 ```rust
 use nonempty_collections::*;
@@ -91,6 +91,9 @@ use nonempty_collections::*;
 let v: NEVec<_> = nev![1, 2, 3].into_nonempty_iter().map(|n| n + 1).collect();
 assert_eq!(2, v.head);
 ```
+
+Consider also [`IteratorExt::to_nonempty_iter`] for converting any given
+[`Iterator`] into a non-empty one, if it contains at least one item.
 
 ## Caveats
 
