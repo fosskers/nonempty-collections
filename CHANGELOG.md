@@ -1,5 +1,12 @@
 # `nonempty-collections`
 
+## Unreleased
+
+#### Added
+
+- `IteratorExt::to_nonempty_iter` for converting any given `Iterator` into a
+  non-empty one (if possible).
+
 ## 0.1.4 (2023-11-02)
 
 #### Added
