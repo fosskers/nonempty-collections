@@ -631,6 +631,32 @@ pub trait NonEmptyIterator {
             b: other.into_nonempty_iter(),
         }
     }
+
+    /// Reduces the elements to a single one, by repeatedly applying a reducing
+    /// operation.
+    ///
+    /// See also [`Iterator::reduce`].
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let a = nev![1, 2, 3, 4];
+    /// let b = a.clone();
+    ///
+    /// let x = a.into_nonempty_iter().reduce(|acc, v| acc + v);
+    /// assert_eq!(x, 10);
+    ///
+    /// let y = b.into_nonempty_iter().reduce(|acc, v| acc * v);
+    /// assert_eq!(y, 24);
+    /// ```
+    fn reduce<F>(self, f: F) -> Self::Item
+    where
+        Self: Sized,
+        F: FnMut(Self::Item, Self::Item) -> Self::Item,
+    {
+        let (head, rest) = self.first();
+        rest.into_iter().fold(head, f)
+    }
 }
 
 /// Conversion from a [`NonEmptyIterator`].

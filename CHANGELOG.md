@@ -4,6 +4,8 @@
 
 #### Added
 
+- `NonEmptyIterator::reduce`, which yields a concrete `Self::Item` instead of an
+  `Option`.
 - `IteratorExt::to_nonempty_iter` for converting any given `Iterator` into a
   non-empty one (if possible).
 
