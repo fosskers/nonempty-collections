@@ -20,7 +20,7 @@
 //! # Examples
 //!
 //! The simplest way to construct these non-empty collections is via their
-//! macros: [`nev`], [`nes`], and [`nem`]:
+//! macros: [`nev!`], [`nes!`], and [`nem!`]:
 //!
 //! ```
 //! use nonempty_collections::*;
@@ -87,6 +87,9 @@
 //! let v: NEVec<_> = nev![1, 2, 3].into_nonempty_iter().map(|n| n + 1).collect();
 //! assert_eq!(2, v.head);
 //! ```
+//!
+//! Consider also [`IteratorExt::to_nonempty_iter`] for converting any given
+//! [`Iterator`] into a non-empty one, if it contains at least one item.
 //!
 //! # Caveats
 //!

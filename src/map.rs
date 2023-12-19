@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::hash::{BuildHasher, Hash};
 use std::iter::{Chain, Once, Skip};
 
-/// Like the [`crate::nev`] macro, but for Maps. A nice short-hand for
+/// Like the [`crate::nev!`] macro, but for Maps. A nice short-hand for
 /// constructing [`NEMap`] values.
 ///
 /// ```

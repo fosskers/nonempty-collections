@@ -1148,7 +1148,7 @@ where
     }
 }
 
-/// Convenience trait extending [`Iterator`]
+/// Convenience trait extending [`Iterator`].
 pub trait IteratorExt {
     /// The type of the elements being iterated over.
     type Item;
@@ -1156,29 +1156,32 @@ pub trait IteratorExt {
     /// Which kind of [`NonEmptyIterator`] are we turning this into?
     type IntoIter: NonEmptyIterator<Item = Self::Item>;
 
-    /// Tries to convert [`self`] into [`NonEmptyIterator`].
+    /// Tries to convert `self` into a [`NonEmptyIterator`].
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let a = vec![1];
+    /// let x = a.into_iter().to_nonempty_iter();
+    /// assert!(x.is_some());
+    ///
+    /// let y = x.unwrap().collect::<NEVec<_>>();
+    /// assert_eq!(y.len(), 1);
+    /// ```
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let b: Vec::<u8> = vec![];
+    /// let x = b.into_iter().to_nonempty_iter();
+    ///
+    /// assert!(x.is_none());
+    /// ```
+    ///
+    /// To construct non-empty collections directly, consider macros like [`crate::nev!`].
     fn to_nonempty_iter(self) -> Option<Self::IntoIter>;
 }
 
-/// ```
-/// use nonempty_collections::*;
-///
-/// let a = vec![1];
-/// let x = a.into_iter().to_nonempty_iter();
-///
-/// assert!(x.is_some());
-///
-/// let y = x.unwrap().collect::<NEVec<_>>();
-/// assert_eq!(y.len(), 1);
-/// ```
-/// ```
-/// use nonempty_collections::*;
-///
-/// let b: Vec::<u8> = vec![];
-/// let x = b.into_iter().to_nonempty_iter();
-///
-/// assert!(x.is_none());
-/// ```
 impl<I, T> IteratorExt for I
 where
     I: Iterator<Item = T>,
@@ -1186,9 +1189,9 @@ where
     type Item = T;
     type IntoIter = Chain<Once<Self::Item>, Self>;
 
-    /// Tries to convert [`self`] into [`NonEmptyIterator`]. Calls self.next()
-    /// once. If [`self`] doesn't return [`Some`] upon the first call to
-    /// `next()`, returns [`None`].
+    /// Tries to convert `self` into [`NonEmptyIterator`]. Calls `self.next()`
+    /// once. If `self` doesn't return `Some` upon the first call to `next()`,
+    /// returns `None`.
     fn to_nonempty_iter(mut self) -> Option<Self::IntoIter> {
         self.next().map(|head| once(head).chain(self))
     }

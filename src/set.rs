@@ -7,7 +7,7 @@ use std::collections::HashSet;
 use std::hash::{BuildHasher, Hash};
 use std::iter::{Chain, Once, Skip};
 
-/// Like the [`crate::nev`] macro, but for Sets. A nice short-hand for
+/// Like the [`crate::nev!`] macro, but for Sets. A nice short-hand for
 /// constructing [`NESet`] values.
 ///
 /// ```

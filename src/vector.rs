@@ -23,6 +23,8 @@ use std::ops::{IndexMut, Not};
 /// // Doesn't compile!
 /// // let v = nev![];
 /// ```
+///
+/// Consider also [`crate::nem!`] and [`crate::nes!`].
 #[macro_export]
 macro_rules! nev {
     ($h:expr, $( $x:expr ),*) => {{
