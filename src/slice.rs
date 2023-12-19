@@ -28,7 +28,7 @@ impl<'a, T> NESlice<'a, T> {
 
     /// Get the first element. Never fails.
     pub const fn first(&self) -> &T {
-        &self.head
+        self.head
     }
 
     /// Using `from_slice` gives a proof that the input slice is non-empty in
@@ -42,10 +42,15 @@ impl<'a, T> NESlice<'a, T> {
         self.tail.len() + 1
     }
 
+    /// No, this slice is not empty.
+    pub fn is_empty(&self) -> bool {
+        false
+    }
+
     /// Generates a standard iterator.
     pub fn iter(&self) -> Iter<'_, T> {
         Iter {
-            head: &self.head,
+            head: self.head,
             iter: std::iter::once(self.head).chain(self.tail.iter()),
         }
     }
@@ -58,7 +63,7 @@ impl<'a, T> IntoNonEmptyIterator for NESlice<'a, T> {
 
     fn into_nonempty_iter(self) -> Self::IntoIter {
         Iter {
-            head: &self.head,
+            head: self.head,
             iter: std::iter::once(self.head).chain(self.tail.iter()),
         }
     }
