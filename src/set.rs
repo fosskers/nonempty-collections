@@ -464,15 +464,26 @@ where
     T: Eq + Hash,
     S: BuildHasher + Default,
 {
+    /// ```
+    /// use nonempty_collections::{nes, nev, FromNonEmptyIterator, NESet};
+    ///
+    /// let v = nev![1, 1, 2, 3, 2];
+    /// let s = NESet::from_nonempty_iter(v);
+    ///
+    /// assert_eq!(nes![1, 2, 3], s);
+    /// ```
     fn from_nonempty_iter<I>(iter: I) -> Self
     where
         I: IntoNonEmptyIterator<Item = T>,
     {
         let (head, rest) = iter.into_nonempty_iter().first();
 
+        let mut tail = rest.into_iter().collect::<HashSet<T, S>>();
+        tail.remove(&head);
+
         NESet {
             head,
-            tail: rest.into_iter().collect(),
+            tail,
         }
     }
 }
