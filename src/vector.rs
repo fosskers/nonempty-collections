@@ -574,6 +574,81 @@ impl<T> NEVec<T> {
     pub fn as_nonempty_slice(&self) -> crate::NESlice<'_, T> {
         crate::NESlice::new(&self.head, &self.tail)
     }
+
+    /// Removes all but the first of consecutive elements in the vector that resolve to the same
+    /// key.
+    ///
+    /// If the vector is sorted, this removes all duplicates.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    /// let mut v = nev![10, 20, 21, 30, 20];
+    ///
+    /// v.dedup_by_key(|i| *i / 10);
+    ///
+    /// assert_eq!(nev![10, 20, 30, 20], v);
+    /// ```
+    pub fn dedup_by_key<F, K>(&mut self, mut key: F)
+    where
+        F: FnMut(&mut T) -> K,
+        K: PartialEq,
+    {
+        self.dedup_by(|a, b| key(a) == key(b))
+    }
+
+    /// Removes all but the first of consecutive elements in the vector satisfying a given equality
+    /// relation.
+    ///
+    /// The `same_bucket` function is passed references to two elements from the vector and
+    /// must determine if the elements compare equal. The elements are passed in opposite order
+    /// from their order in the slice, so if `same_bucket(a, b)` returns `true`, `a` is removed.
+    ///
+    /// If the vector is sorted, this removes all duplicates.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    /// let mut v = nev!["foo", "Foo", "foo", "bar", "Bar", "baz", "bar"];
+    ///
+    /// v.dedup_by(|a, b| a.eq_ignore_ascii_case(b));
+    ///
+    /// assert_eq!(nev!["foo", "bar", "baz", "bar"], v);
+    /// ```
+    pub fn dedup_by<F>(&mut self, mut same_bucket: F)
+    where
+        F: FnMut(&mut T, &mut T) -> bool,
+    {
+        while let Some(first) = self.tail.first_mut() {
+            if same_bucket(first, &mut self.head) {
+                self.tail.remove(0);
+            } else {
+                break;
+            }
+        }
+        self.tail.dedup_by(same_bucket);
+    }
+}
+
+impl<T: PartialEq> NEVec<T> {
+    /// Removes consecutive repeated elements in the vector according to the
+    /// [`PartialEq`] trait implementation.
+    ///
+    /// If the vector is sorted, this removes all duplicates.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    /// let mut v = nev![1, 1, 1, 2, 3, 2, 2, 1];
+    /// v.dedup();
+    /// assert_eq!(nev![1, 2, 3, 2, 1], v);
+    /// ```
+    pub fn dedup(&mut self) {
+        self.dedup_by(|a, b| a == b)
+    }
 }
 
 impl<T> From<NEVec<T>> for Vec<T> {
