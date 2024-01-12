@@ -9,6 +9,11 @@
 - `IteratorExt::to_nonempty_iter` for converting any given `Iterator` into a
   non-empty one (if possible).
 
+#### Fixed
+
+- Account for potentially duplicated `head` value when converting into an
+  `NESet` from other nonempty iterators.
+
 ## 0.1.4 (2023-11-02)
 
 #### Added
