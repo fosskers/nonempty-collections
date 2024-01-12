@@ -1,6 +1,6 @@
 # `nonempty-collections`
 
-## Unreleased
+## 0.1.5 (2024-01-12)
 
 #### Added
 
@@ -8,6 +8,7 @@
   `Option`.
 - `IteratorExt::to_nonempty_iter` for converting any given `Iterator` into a
   non-empty one (if possible).
+- The `NEVec::dedup*` series for removing duplicate items in-place.
 
 #### Fixed
 
