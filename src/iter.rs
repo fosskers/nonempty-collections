@@ -435,7 +435,7 @@ pub trait NonEmptyIterator {
     ///
     /// ```
     /// use nonempty_collections::*;
-    /// let max = nev!["hi", "hey", "rust", "yolo"].into_nonempty_iter().max_by_key(|item|item.len());
+    /// let max = nev!["hi", "hey", "rust", "yolo"].into_nonempty_iter().max_by_key(|item| item.len());
     /// assert_eq!("rust", max);
     /// ```
     fn max_by_key<B: Ord, F>(self, mut key: F) -> Self::Item
