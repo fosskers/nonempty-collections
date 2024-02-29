@@ -101,15 +101,20 @@
 //! # Features
 //!
 //! * `serde`: `serde` support.
+//! * `indexmap`: support for non-empty [`IndexMap`](https://docs.rs/indexmap/latest/indexmap/)
 
 #![warn(missing_docs)]
 
+#[cfg(feature = "indexmap")]
+pub mod index_map;
 pub mod iter;
 pub mod map;
 pub mod set;
 pub mod slice;
 pub mod vector;
 
+#[cfg(feature = "indexmap")]
+pub use index_map::NEIndexMap;
 pub use iter::FromNonEmptyIterator;
 pub use iter::IntoNonEmptyIterator;
 pub use iter::IteratorExt;

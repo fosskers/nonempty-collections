@@ -105,5 +105,6 @@ something.
 ## Features
 
 * `serde`: `serde` support.
+* `indexmap`: support for non-empty [`IndexMap`](https://docs.rs/indexmap/latest/indexmap/)
 
 <!-- cargo-rdme end -->
