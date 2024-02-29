@@ -498,7 +498,7 @@ pub trait NonEmptyIterator {
     ///
     /// ```
     /// use nonempty_collections::*;
-    /// let min = nev!["hi", "hello", "greetings", "hy"].into_nonempty_iter().min_by_key(|item|item.len());
+    /// let min = nev!["hi", "hello", "greetings", "hy"].into_nonempty_iter().min_by_key(|item| item.len());
     /// assert_eq!("hi", min);
     /// ```
     fn min_by_key<B: Ord, F>(self, mut key: F) -> Self::Item
