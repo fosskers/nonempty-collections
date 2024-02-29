@@ -438,9 +438,10 @@ pub trait NonEmptyIterator {
     /// let max = nev!["hi", "hey", "rust", "yolo"].into_nonempty_iter().max_by_key(|item| item.len());
     /// assert_eq!("rust", max);
     /// ```
-    fn max_by_key<B: Ord, F>(self, mut key: F) -> Self::Item
+    fn max_by_key<B, F>(self, mut key: F) -> Self::Item
     where
         Self: Sized,
+        B: Ord,
         F: FnMut(&Self::Item) -> B,
     {
         self.map(|item| (key(&item), item))
@@ -501,9 +502,10 @@ pub trait NonEmptyIterator {
     /// let min = nev!["hi", "hello", "greetings", "hy"].into_nonempty_iter().min_by_key(|item| item.len());
     /// assert_eq!("hi", min);
     /// ```
-    fn min_by_key<B: Ord, F>(self, mut key: F) -> Self::Item
+    fn min_by_key<B, F>(self, mut key: F) -> Self::Item
     where
         Self: Sized,
+        B: Ord,
         F: FnMut(&Self::Item) -> B,
     {
         self.map(|item| (key(&item), item))
