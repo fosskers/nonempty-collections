@@ -421,6 +421,34 @@ pub trait NonEmptyIterator {
             })
     }
 
+    /// Returns the element that gives the maximum value from the
+    /// specified function.
+    ///
+    /// There are two differences with [`Iterator::max_by_key`]:
+    /// - this function always yields a value while [`Iterator::max_by_key`]
+    ///   yields an `Option`.
+    /// - if several elements are equally maximum, the *first* element is
+    ///   returned (unlike [`Iterator::max_by_key`] which returns the last
+    ///   element).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    /// let max = nev!["hi", "hey", "rust", "yolo"].into_nonempty_iter().max_by_key(|item| item.len());
+    /// assert_eq!("rust", max);
+    /// ```
+    fn max_by_key<B, F>(self, mut key: F) -> Self::Item
+    where
+        Self: Sized,
+        B: Ord,
+        F: FnMut(&Self::Item) -> B,
+    {
+        self.map(|item| (key(&item), item))
+            .max_by(|(left_key, _), (right_key, _)| left_key.cmp(right_key))
+            .1
+    }
+
     /// Returns the minimum element of a non-empty iterator.
     ///
     /// Unlike [`Iterator::min`], this always yields a value.
@@ -455,6 +483,34 @@ pub trait NonEmptyIterator {
                 Ordering::Greater => item,
                 _ => acc,
             })
+    }
+
+    /// Returns the element that gives the minimum value from the
+    /// specified function.
+    ///
+    /// There are two differences with [`Iterator::min_by_key`]:
+    /// - this function always yields a value while [`Iterator::min_by_key`]
+    ///   yields an `Option`.
+    /// - if several elements are equally minimum, the *first* element is
+    ///   returned (unlike [`Iterator::min_by_key`] which returns the last
+    ///   element).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    /// let min = nev!["hi", "hello", "greetings", "hy"].into_nonempty_iter().min_by_key(|item| item.len());
+    /// assert_eq!("hi", min);
+    /// ```
+    fn min_by_key<B, F>(self, mut key: F) -> Self::Item
+    where
+        Self: Sized,
+        B: Ord,
+        F: FnMut(&Self::Item) -> B,
+    {
+        self.map(|item| (key(&item), item))
+            .min_by(|(left_key, _), (right_key, _)| left_key.cmp(right_key))
+            .1
     }
 
     /// Returns the `n`th element of the iterator.

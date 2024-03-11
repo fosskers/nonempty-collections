@@ -1,5 +1,11 @@
 # `nonempty-collections`
 
+## Unreleased
+
+#### Added
+
+- `max_by_key` and `min_by_key`, thanks to Rinde van Lon.
+
 ## 0.1.5 (2024-01-12)
 
 #### Added
