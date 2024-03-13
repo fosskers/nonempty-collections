@@ -1,4 +1,8 @@
 //! [`NEIndexMap`] is a non-empty variant of [`IndexMap`].
+//!
+//! Unlike `HashMap` and [`crate::NEMap`], these feature a predictable iteration
+//! order.
+
 #![deny(clippy::correctness, clippy::suspicious)]
 #![warn(clippy::complexity, clippy::perf, clippy::style, clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
@@ -38,6 +42,9 @@ macro_rules! ne_indexmap {
 }
 
 /// A non-empty, growable [`IndexMap`].
+///
+/// Unlike `HashMap` and [`crate::NEMap`], these feature a predictable iteration
+/// order.
 ///
 /// ```
 /// use nonempty_collections::*;
@@ -140,8 +147,10 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     ///
     /// ```
     /// use nonempty_collections::*;
+    ///
     /// let mut m = ne_indexmap![0 => "Fremen".to_string(), 1 => "Crysknife".to_string(), 2 => "Water of Life".to_string()];
     /// m.values_mut().into_iter().for_each(|v| v.truncate(3));
+    ///
     /// assert_eq!(vec![&mut "Fre".to_string(), &mut "Cry".to_string(),&mut "Wat".to_string()], m.values_mut().collect::<Vec<_>>());
     /// ```
     pub fn values_mut(&mut self) -> ValuesMut<'_, K, V> {
@@ -200,7 +209,7 @@ where
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let m = ne_indexmap! {"Paul" => ()};
+    /// let m = ne_indexmap!{"Paul" => ()};
     /// assert!(m.contains_key("Paul"));
     /// assert!(!m.contains_key("Atreides"));
     /// ```
@@ -558,6 +567,14 @@ impl<'a, K, V> IntoIterator for IterMut<'a, K, V> {
 }
 
 /// A non-empty iterator over the keys of an [`NEIndexMap`].
+///
+/// ```
+/// use nonempty_collections::*;
+///
+/// let m = ne_indexmap!{"elves" => 3000, "orcs" => 10000};
+/// let v = m.keys().copied().collect::<NEVec<_>>();
+/// assert_eq!(nev!["elves", "orcs"], v);
+/// ```
 pub struct Keys<'a, K: 'a, V: 'a> {
     head_key: &'a K,
     inner: std::iter::Chain<std::iter::Once<&'a K>, indexmap::map::Keys<'a, K, V>>,
@@ -604,7 +621,16 @@ impl<K: Debug, V: Debug> Debug for Keys<'_, K, V> {
     }
 }
 
-/// A non-empty iterator over the values of an [`NEMap`].
+/// A non-empty iterator over the values of an [`NEIndexMap`].
+///
+/// ```
+/// use nonempty_collections::*;
+///
+/// let m = ne_indexmap!{"elves" => 3000, "orcs" => 10000};
+/// let mut v = m.values().copied().collect::<NEVec<_>>();
+/// v.sort();
+/// assert_eq!(nev![3000, 10000], v);
+/// ```
 pub struct Values<'a, K: 'a, V: 'a> {
     head_val: &'a V,
     inner: std::iter::Chain<std::iter::Once<&'a V>, indexmap::map::Values<'a, K, V>>,

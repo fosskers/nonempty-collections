@@ -4,7 +4,8 @@
 
 #### Added
 
-- `NEIndexMap`, `NonEmptyIterator::max_by_key` and `NonEmptyIterator::min_by_key`, thanks to [Rinde van Lon](https://github.com/rinde/).
+- `NEIndexMap`, thanks to [Rinde van Lon](https://github.com/rinde/).
+- `NonEmptyIterator::max_by_key` and `NonEmptyIterator::min_by_key`, also thanks to Rinde.
 
 ## 0.1.5 (2024-01-12)
 
