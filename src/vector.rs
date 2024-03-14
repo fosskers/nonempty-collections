@@ -263,6 +263,7 @@ impl<T> NEVec<T> {
         Iter {
             head: &self.head,
             iter: std::iter::once(&self.head).chain(self.tail.iter()),
+            at_start: true,
         }
     }
 
@@ -737,6 +738,7 @@ impl<T> FromNonEmptyIterator<T> for NEVec<T> {
 pub struct Iter<'a, T: 'a> {
     head: &'a T,
     iter: Chain<Once<&'a T>, std::slice::Iter<'a, T>>,
+    at_start: bool,
 }
 
 impl<'a, T> NonEmptyIterator for Iter<'a, T> {
@@ -744,11 +746,12 @@ impl<'a, T> NonEmptyIterator for Iter<'a, T> {
     type IntoIter = Skip<Chain<Once<&'a T>, std::slice::Iter<'a, T>>>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        self.at_start = false;
         self.iter.next()
     }
 
     fn first(self) -> (Self::Item, Self::IntoIter) {
-        (self.head, self.iter.skip(1))
+        (self.head, self.iter.skip(usize::from(self.at_start)))
     }
 }
 
