@@ -387,7 +387,7 @@ impl<K, V, S> IntoNonEmptyIterator for NEMap<K, V, S> {
 /// ```
 /// use nonempty_collections::*;
 ///
-/// let v = nev![('a', 1), ('b', 2), ('c', 3)];
+/// let v = nev![('a', 1), ('b', 2), ('c', 3), ('a', 4)];
 /// let m0: NEMap<_, _> = v.into_nonempty_iter().collect();
 /// let m1: NEMap<_, _> = nem!['a' => 1, 'b' => 2, 'c' => 3];
 /// assert_eq!(m0, m1);
@@ -404,9 +404,9 @@ where
         let ((head_key, head_val), rest) = iter.into_nonempty_iter().first();
 
         NEMap {
-            head_key,
             head_val,
-            tail: rest.into_iter().collect(),
+            tail: rest.into_iter().filter(|(k, _)| &head_key != k).collect(),
+            head_key,
         }
     }
 }
