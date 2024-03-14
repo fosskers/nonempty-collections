@@ -1,12 +1,12 @@
 //! Non-empty iterators.
 
+use crate::NEVec;
 use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::iter::{Product, Sum};
+use std::num::NonZeroUsize;
 use std::result::Result;
-
-use crate::NEVec;
 
 // Iterator structs which _always_ have something if the source iterator is non-empty:
 //
@@ -216,19 +216,19 @@ pub trait NonEmptyIterator {
     /// use nonempty_collections::*;
     ///
     /// let n = nev![1];
-    /// assert_eq!(1, n.iter().count());
+    /// assert_eq!(1, n.iter().count().get());
     ///
     /// let n = nev![1,2,3,4,5,6];
-    /// assert_eq!(6, n.iter().count());
+    /// assert_eq!(6, n.iter().count().get());
     /// ````
-    fn count(self) -> usize
+    fn count(self) -> NonZeroUsize
     where
         Self: Sized,
     {
         // Differs from the implementation of `Iterator::count` to absolutely
         // ensure that `count` returns at least 1.
         let (_, rest) = self.first();
-        1 + rest.into_iter().count()
+        NonZeroUsize::MIN.saturating_add(rest.into_iter().count())
     }
 
     /// Creates a non-empty iterator which gives the current iteration count as

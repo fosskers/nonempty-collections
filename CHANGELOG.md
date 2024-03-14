@@ -6,6 +6,12 @@
 
 - `NEIndexMap`, thanks to [Rinde van Lon](https://github.com/rinde/).
 - `NonEmptyIterator::max_by_key` and `NonEmptyIterator::min_by_key`, also thanks to Rinde.
+- `NEVec::with_capacity`
+
+#### Changed
+
+- **BREAKING:** All `len` implementations and `NonEmptyIterator::count` have had
+  their return type changed to `NonZeroUsize`.
 
 ## 0.1.5 (2024-01-12)
 
