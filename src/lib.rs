@@ -116,6 +116,7 @@ pub mod vector;
 #[cfg(feature = "indexmap")]
 pub use index_map::NEIndexMap;
 pub use iter::FromNonEmptyIterator;
+pub use iter::IntoIteratorExt;
 pub use iter::IntoNonEmptyIterator;
 pub use iter::IteratorExt;
 pub use iter::NonEmptyIterator;
