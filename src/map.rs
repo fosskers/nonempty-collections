@@ -5,6 +5,7 @@ use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::hash::{BuildHasher, Hash};
 use std::iter::{Chain, Once, Skip};
+use std::num::NonZeroUsize;
 
 /// Like the [`crate::nev!`] macro, but for Maps. A nice short-hand for
 /// constructing [`NEMap`] values.
@@ -13,7 +14,7 @@ use std::iter::{Chain, Once, Skip};
 /// use nonempty_collections::nem;
 ///
 /// let m = nem!["elves" => 3000, "orcs" => 10000];
-/// assert_eq!(2, m.len());
+/// assert_eq!(2, m.len().get());
 /// ```
 #[macro_export]
 macro_rules! nem {
@@ -35,7 +36,7 @@ macro_rules! nem {
 /// use nonempty_collections::nem;
 ///
 /// let m = nem!["elves" => 3000, "orcs" => 10000];
-/// assert_eq!(2, m.len());
+/// assert_eq!(2, m.len().get());
 /// ```
 #[derive(Debug, Clone)]
 pub struct NEMap<K, V, S = std::collections::hash_map::RandomState> {
@@ -107,10 +108,10 @@ impl<K, V, S> NEMap<K, V, S> {
     /// use nonempty_collections::nem;
     ///
     /// let m = nem!["a" => 1, "b" => 2];
-    /// assert_eq!(2, m.len());
+    /// assert_eq!(2, m.len().get());
     /// ```
-    pub fn len(&self) -> usize {
-        self.tail.len() + 1
+    pub fn len(&self) -> NonZeroUsize {
+        NonZeroUsize::MIN.saturating_add(self.tail.len())
     }
 
     /// A `NEMap` is never empty.

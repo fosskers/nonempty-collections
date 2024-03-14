@@ -18,6 +18,7 @@ use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
 use indexmap::Equivalent;
 use indexmap::IndexMap;
+use std::num::NonZeroUsize;
 
 /// Short-hand for constructing [`NEIndexMap`] values.
 ///
@@ -117,8 +118,8 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     /// let m = ne_indexmap!{"a" => 1, "b" => 2};
     /// assert_eq!(2, m.len());
     /// ```
-    pub fn len(&self) -> usize {
-        self.tail.len() + 1
+    pub fn len(&self) -> NonZeroUsize {
+        NonZeroUsize::MIN.saturating_add(self.tail.len())
     }
 
     /// A `NEIndexMap` is never empty.
@@ -368,7 +369,7 @@ where
     /// If `a` or `b` are out of bounds.
     #[allow(clippy::panic)]
     pub fn swap_indices(&mut self, mut a: usize, mut b: usize) {
-        if a == b && a < self.len() {
+        if a == b && a < self.len().get() {
             return;
         }
         if b == 0 {

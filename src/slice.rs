@@ -2,6 +2,7 @@
 
 use crate::iter::{IntoNonEmptyIterator, NonEmptyIterator};
 use std::iter::{Chain, Once, Skip};
+use std::num::NonZeroUsize;
 
 /// A non-empty slice. Like [`crate::NEVec`], but guaranteed to have borrowed
 /// contents.
@@ -38,8 +39,8 @@ impl<'a, T> NESlice<'a, T> {
     }
 
     /// Get the length of the slice.
-    pub fn len(&self) -> usize {
-        self.tail.len() + 1
+    pub fn len(&self) -> NonZeroUsize {
+        NonZeroUsize::MIN.saturating_add(self.tail.len())
     }
 
     /// No, this slice is not empty.

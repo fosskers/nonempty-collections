@@ -6,6 +6,7 @@ use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::hash::{BuildHasher, Hash};
 use std::iter::{Chain, Once, Skip};
+use std::num::NonZeroUsize;
 
 /// Like the [`crate::nev!`] macro, but for Sets. A nice short-hand for
 /// constructing [`NESet`] values.
@@ -14,7 +15,7 @@ use std::iter::{Chain, Once, Skip};
 /// use nonempty_collections::nes;
 ///
 /// let s = nes![1, 2, 2, 3];
-/// assert_eq!(3, s.len());
+/// assert_eq!(3, s.len().get());
 /// ```
 #[macro_export]
 macro_rules! nes {
@@ -121,10 +122,10 @@ impl<T, S> NESet<T, S> {
     /// use nonempty_collections::nes;
     ///
     /// let s = nes![1,2,3];
-    /// assert_eq!(3, s.len());
+    /// assert_eq!(3, s.len().get());
     /// ```
-    pub fn len(&self) -> usize {
-        self.tail.len() + 1
+    pub fn len(&self) -> NonZeroUsize {
+        NonZeroUsize::MIN.saturating_add(self.tail.len())
     }
 
     /// A `NESet` is never empty.
@@ -430,7 +431,7 @@ where
     /// assert!(s0 != s3);
     /// ```
     fn eq(&self, other: &Self) -> bool {
-        self.len() == other.len() && self.intersection(other).count() == self.len()
+        self.len() == other.len() && self.intersection(other).count() == self.len().get()
     }
 }
 
@@ -481,10 +482,7 @@ where
         let mut tail = rest.into_iter().collect::<HashSet<T, S>>();
         tail.remove(&head);
 
-        NESet {
-            head,
-            tail,
-        }
+        NESet { head, tail }
     }
 }
 

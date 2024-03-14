@@ -29,7 +29,7 @@
 //! let s: NESet<u32> = nes![1, 2, 2, 3]; // 1 2 3
 //! let m: NEMap<&str, bool> = nem!["a" => true, "b" => false];
 //! assert_eq!(1, v.head);
-//! assert_eq!(3, s.len());
+//! assert_eq!(3, s.len().get());
 //! assert!(m.get("a").unwrap());
 //! ```
 //!

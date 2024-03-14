@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::iter::{FromNonEmptyIterator, IntoNonEmptyIterator, NonEmptyIterator};
 use std::cmp::Ordering;
 use std::iter::{Chain, Once, Skip};
+use std::num::NonZeroUsize;
 use std::ops::{IndexMut, Not};
 
 /// Like the [`vec!`] macro, but enforces at least one argument. A nice short-hand
@@ -161,7 +162,7 @@ impl<T> NEVec<T> {
     /// assert_eq!(v, nev![42, 1, 4, 2, 3, 5]);
     /// ```
     pub fn insert(&mut self, index: usize, element: T) {
-        let len = self.len();
+        let len = self.len().get();
         assert!(index <= len);
 
         if index == 0 {
@@ -173,8 +174,8 @@ impl<T> NEVec<T> {
     }
 
     /// Get the length of the list.
-    pub fn len(&self) -> usize {
-        self.tail.len() + 1
+    pub fn len(&self) -> NonZeroUsize {
+        NonZeroUsize::MIN.saturating_add(self.tail.len())
     }
 
     /// A `NEVec` is never empty.

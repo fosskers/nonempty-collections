@@ -1248,7 +1248,7 @@ pub trait IteratorExt {
     /// assert!(x.is_some());
     ///
     /// let y = x.unwrap().collect::<NEVec<_>>();
-    /// assert_eq!(y.len(), 1);
+    /// assert_eq!(y.len().get(), 1);
     /// ```
     ///
     /// ```
