@@ -190,12 +190,16 @@ impl<K, V> NEIndexMap<K, V> {
         }
     }
 
-    /// Creates a new `NEIndexMap` with a single element and specified capacity.
-    pub fn with_capacity(capacity: usize, k: K, v: V) -> NEIndexMap<K, V> {
+    /// Creates a new `NEIndexMap` with a single element and specified
+    /// heap capacity.
+    ///
+    /// Note that the effective capacity of this map is always `heap_capacity + 1`
+    /// because the first element is stored inline.
+    pub fn with_capacity(heap_capacity: usize, k: K, v: V) -> NEIndexMap<K, V> {
         Self {
             head_key: k,
             head_val: v,
-            tail: IndexMap::with_capacity(capacity),
+            tail: IndexMap::with_capacity(heap_capacity),
         }
     }
 }
