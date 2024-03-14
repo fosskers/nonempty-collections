@@ -181,7 +181,7 @@ impl<K: Debug, V: Debug, S> Debug for NEIndexMap<K, V, S> {
 }
 
 impl<K, V> NEIndexMap<K, V> {
-    /// Creates a new `NEMap` with a single element.
+    /// Creates a new `NEIndexMap` with a single element.
     pub fn new(k: K, v: V) -> Self {
         Self {
             head_key: k,
