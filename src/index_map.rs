@@ -448,7 +448,7 @@ impl<K, V, S> IntoNonEmptyIterator for NEIndexMap<K, V, S> {
 /// ```
 /// use nonempty_collections::*;
 ///
-/// let v = nev![('a', 1), ('b', 2), ('c', 3)];
+/// let v = nev![('a', 1), ('b', 2), ('c', 3), ('a', 4)];
 /// let m0 = v.into_nonempty_iter().collect::<NEIndexMap<_, _>>();
 /// let m1 = ne_indexmap!{'a' => 1, 'b' => 2, 'c' => 3};
 /// assert_eq!(m0, m1);
@@ -465,9 +465,12 @@ where
         let ((head_key, head_val), rest) = iter.into_nonempty_iter().first();
 
         Self {
-            head_key,
             head_val,
-            tail: rest.into_iter().collect(),
+            tail: rest
+                .into_iter()
+                .filter(|(k, _)| !head_key.equivalent(k))
+                .collect(),
+            head_key,
         }
     }
 }
