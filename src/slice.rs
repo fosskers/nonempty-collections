@@ -55,6 +55,33 @@ impl<'a, T> NESlice<'a, T> {
             iter: std::iter::once(self.head).chain(self.tail.iter()),
         }
     }
+
+    /// Returns a non-empty iterator over `chunk_size` elements of the `NESlice`
+    /// at a time, starting at the beginning of the `NESlice`.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    /// use std::num::NonZeroUsize;
+    ///
+    /// let v = nev![1,2,3,4,5,6];
+    /// let s = v.as_nonempty_slice();
+    /// let n = NonZeroUsize::new(2).unwrap();
+    /// let r = s.nonempty_chunks(n).collect::<NEVec<_>>();
+    ///
+    /// let a = nev![1,2];
+    /// let b = nev![3,4];
+    /// let c = nev![5,6];
+    ///
+    /// assert_eq!(r, nev![a.as_nonempty_slice(), b.as_nonempty_slice(), c.as_nonempty_slice()]);
+    /// ```
+    pub fn nonempty_chunks(&'a self, chunk_size: NonZeroUsize) -> NEChunks<'a, T> {
+        NEChunks {
+            window: chunk_size,
+            head: self.head,
+            tail: self.tail,
+            index: 0,
+        }
+    }
 }
 
 impl<'a, T> IntoNonEmptyIterator for NESlice<'a, T> {
@@ -100,9 +127,70 @@ impl<'a, T> IntoIterator for Iter<'a, T> {
     }
 }
 
+/// A non-empty Iterator of [`NESlice`] chunks.
+pub struct NEChunks<'a, T> {
+    pub(crate) window: NonZeroUsize,
+    pub(crate) head: &'a T,
+    pub(crate) tail: &'a [T],
+    pub(crate) index: usize,
+}
+
+type SliceFilter<'a, T> = fn(&'a [T]) -> Option<NESlice<'a, T>>;
+
+impl<'a, T> NonEmptyIterator for NEChunks<'a, T> {
+    type Item = NESlice<'a, T>;
+    type IntoIter = std::iter::FilterMap<std::slice::Chunks<'a, T>, SliceFilter<'a, T>>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index == 0 {
+            let end = self.window.get() - 1;
+
+            let slice = NESlice {
+                head: self.head,
+                tail: &self.tail[0..end],
+            };
+
+            self.index = end;
+
+            Some(slice)
+        } else {
+            let end = self.index + self.window.get();
+            let slc: &'a [T] = &self.tail[self.index..end];
+
+            match slc {
+                [] => None,
+                [head, tail @ ..] => {
+                    let slice = NESlice { head, tail };
+                    self.index = end;
+                    Some(slice)
+                }
+            }
+        }
+    }
+
+    fn first(self) -> (Self::Item, Self::IntoIter) {
+        let end = self.window.get() - 1;
+
+        let slice = NESlice {
+            head: self.head,
+            tail: &self.tail[0..end],
+        };
+
+        let tail: &'a [T] = &self.tail[end..];
+
+        let rest = tail
+            .chunks(self.window.get())
+            .filter_map(NESlice::from_slice as SliceFilter<'a, T>);
+
+        (slice, rest)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::NESlice;
+    use std::num::NonZeroUsize;
+
+    use crate::{nev, NESlice, NonEmptyIterator};
 
     #[test]
     fn test_from_conversion() {
@@ -123,6 +211,7 @@ mod tests {
             assert_eq!(*n, *n); // Prove that we're dealing with references.
         }
     }
+
     #[test]
     fn test_into_nonempty_iter() {
         use crate::{IntoNonEmptyIterator, NonEmptyIterator};
@@ -132,5 +221,38 @@ mod tests {
         for (i, n) in nonempty.into_nonempty_iter().enumerate() {
             assert_eq!(i as i32, *n);
         }
+    }
+
+    #[test]
+    fn chunks() {
+        let v = nev![1, 2, 3, 4, 5, 6, 7];
+
+        let n = NonZeroUsize::new(3).unwrap();
+        let a: Vec<_> = v.nonempty_chunks(n).collect();
+
+        assert_eq!(
+            a,
+            vec![
+                nev![1, 2, 3].as_nonempty_slice(),
+                nev![4, 5, 6].as_nonempty_slice(),
+                nev![7].as_nonempty_slice()
+            ]
+        );
+
+        let n = NonZeroUsize::new(1).unwrap();
+        let b: Vec<_> = v.nonempty_chunks(n).collect();
+
+        assert_eq!(
+            b,
+            vec![
+                nev![1].as_nonempty_slice(),
+                nev![2].as_nonempty_slice(),
+                nev![3].as_nonempty_slice(),
+                nev![4].as_nonempty_slice(),
+                nev![5].as_nonempty_slice(),
+                nev![6].as_nonempty_slice(),
+                nev![7].as_nonempty_slice(),
+            ]
+        );
     }
 }

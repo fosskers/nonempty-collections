@@ -7,6 +7,7 @@
 - `NEIndexMap`, thanks to [Rinde van Lon](https://github.com/rinde/).
 - `NonEmptyIterator::max_by_key` and `NonEmptyIterator::min_by_key`, also thanks to Rinde.
 - `NEVec::with_capacity`
+- `NEVec::nonempty_chunks` and `NESlice::nonempty_chunks`
 
 #### Changed
 

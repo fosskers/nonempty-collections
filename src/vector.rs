@@ -4,6 +4,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::iter::{FromNonEmptyIterator, IntoNonEmptyIterator, NonEmptyIterator};
+use crate::slice::NEChunks;
 use std::cmp::Ordering;
 use std::iter::{Chain, Once, Skip};
 use std::num::NonZeroUsize;
@@ -638,6 +639,32 @@ impl<T> NEVec<T> {
             }
         }
         self.tail.dedup_by(same_bucket);
+    }
+
+    /// Returns a non-empty iterator over `chunk_size` elements of the `NEVec`
+    /// at a time, starting at the beginning of the `NEVec`.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    /// use std::num::NonZeroUsize;
+    ///
+    /// let v = nev![1,2,3,4,5,6];
+    /// let n = NonZeroUsize::new(2).unwrap();
+    /// let r = v.nonempty_chunks(n).collect::<NEVec<_>>();
+    ///
+    /// let a = nev![1,2];
+    /// let b = nev![3,4];
+    /// let c = nev![5,6];
+    ///
+    /// assert_eq!(r, nev![a.as_nonempty_slice(), b.as_nonempty_slice(), c.as_nonempty_slice()]);
+    /// ```
+    pub fn nonempty_chunks(&self, chunk_size: NonZeroUsize) -> NEChunks<'_, T> {
+        NEChunks {
+            window: chunk_size,
+            head: &self.head,
+            tail: self.tail.as_slice(),
+            index: 0,
+        }
     }
 }
 
