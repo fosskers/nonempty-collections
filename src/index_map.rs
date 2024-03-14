@@ -26,7 +26,7 @@ use std::num::NonZeroUsize;
 /// use nonempty_collections::ne_indexmap;
 ///
 /// let m = ne_indexmap!{"elves" => 3000, "orcs" => 10000};
-/// assert_eq!(2, m.len());
+/// assert_eq!(2, m.len().get());
 /// ```
 #[macro_export]
 macro_rules! ne_indexmap {
@@ -51,7 +51,7 @@ macro_rules! ne_indexmap {
 /// use nonempty_collections::*;
 ///
 /// let m = ne_indexmap!{"Netherlands" => 18, "Canada" => 40};
-/// assert_eq!(2, m.len());
+/// assert_eq!(2, m.len().get());
 /// ```
 #[derive(Clone)]
 pub struct NEIndexMap<K, V, S = std::collections::hash_map::RandomState> {
@@ -116,7 +116,7 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     /// use nonempty_collections::*;
     ///
     /// let m = ne_indexmap!{"a" => 1, "b" => 2};
-    /// assert_eq!(2, m.len());
+    /// assert_eq!(2, m.len().get());
     /// ```
     pub fn len(&self) -> NonZeroUsize {
         NonZeroUsize::MIN.saturating_add(self.tail.len())
