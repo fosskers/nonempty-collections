@@ -73,6 +73,14 @@ impl<T> NEVec<T> {
         }
     }
 
+    /// Creates a new `NEVec` with a single element and specified capacity.
+    pub fn with_capacity(capacity: usize, head: T) -> Self {
+        NEVec {
+            head,
+            tail: Vec::with_capacity(capacity),
+        }
+    }
+
     /// Get the first element. Never fails.
     pub const fn first(&self) -> &T {
         &self.head
