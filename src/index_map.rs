@@ -349,12 +349,21 @@ where
         self.tail.shrink_to_fit();
     }
 
-    /// See [`IndexMap::with_capacity_and_hasher`].
-    pub fn with_capacity_and_hasher(capacity: usize, hasher: S, k: K, v: V) -> NEIndexMap<K, V, S> {
+    /// Creates a new `NEIndexMap` with a single element and specified
+    /// heap capacity and hasher.
+    ///
+    /// Note that the effective capacity of this map is always `heap_capacity + 1`
+    /// because the first element is stored inline.
+    pub fn with_capacity_and_hasher(
+        heap_capacity: usize,
+        hasher: S,
+        k: K,
+        v: V,
+    ) -> NEIndexMap<K, V, S> {
         Self {
             head_key: k,
             head_val: v,
-            tail: IndexMap::with_capacity_and_hasher(capacity, hasher),
+            tail: IndexMap::with_capacity_and_hasher(heap_capacity, hasher),
         }
     }
 
