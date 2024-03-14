@@ -999,3 +999,41 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::nev;
+    use crate::NonEmptyIterator;
+
+    #[test]
+    fn test() {
+        let v = nev![0, 1, 2];
+
+        // first call first()
+        let iter = v.iter().copied();
+        let (first, mut rest) = iter.first();
+        assert_eq!(0, first);
+        assert_eq!(Some(1), rest.next());
+        assert_eq!(Some(2), rest.next());
+        assert_eq!(None, rest.next());
+
+        // call first() after next()
+        let mut iter = v.iter().copied();
+        assert_eq!(Some(0), iter.next());
+        let (first, mut rest) = iter.first();
+        assert_eq!(0, first);
+        assert_eq!(Some(1), rest.next());
+        assert_eq!(Some(2), rest.next());
+        assert_eq!(None, rest.next());
+
+        // call first() after iterating over the entire iterator
+        let mut iter = v.iter().copied();
+        assert_eq!(Some(0), iter.next());
+        assert_eq!(Some(1), iter.next());
+        assert_eq!(Some(2), iter.next());
+        assert_eq!(None, iter.next());
+        let (first, mut rest) = iter.first();
+        assert_eq!(0, first);
+        assert_eq!(None, rest.next());
+    }
+}
