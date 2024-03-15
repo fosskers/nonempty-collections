@@ -1,5 +1,11 @@
 # `nonempty-collections`
 
+## Unreleased
+
+#### Added
+
+- The missing `IntoIterator` impl for `NEChunks`.
+
 ## 0.2.0 (2024-03-14)
 
 #### Added

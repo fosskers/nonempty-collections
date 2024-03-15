@@ -186,6 +186,16 @@ impl<'a, T> NonEmptyIterator for NEChunks<'a, T> {
     }
 }
 
+impl<'a, T> IntoIterator for NEChunks<'a, T> {
+    type Item = &'a T;
+
+    type IntoIter = std::iter::Chain<std::iter::Once<&'a T>, std::slice::Iter<'a, T>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        std::iter::once(self.head).chain(self.tail)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::num::NonZeroUsize;
@@ -254,5 +264,16 @@ mod tests {
                 nev![7].as_nonempty_slice(),
             ]
         );
+    }
+
+    #[test]
+    fn chunks_into_iter() {
+        let v = nev![1, 2, 3];
+        let n = NonZeroUsize::new(3).unwrap();
+        let c = v.nonempty_chunks(n);
+
+        // Just a demonstration that `NEChunks` can be used as-is with a `for`
+        // loop.
+        for _ in c {}
     }
 }
