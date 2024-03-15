@@ -181,7 +181,7 @@ impl<K: Debug, V: Debug, S> Debug for NEIndexMap<K, V, S> {
 }
 
 impl<K, V> NEIndexMap<K, V> {
-    /// Creates a new `NEMap` with a single element.
+    /// Creates a new `NEIndexMap` with a single element.
     pub fn new(k: K, v: V) -> Self {
         Self {
             head_key: k,
@@ -190,12 +190,16 @@ impl<K, V> NEIndexMap<K, V> {
         }
     }
 
-    /// Creates a new `NEIndexMap` with a single element and specified capacity.
-    pub fn with_capacity(capacity: usize, k: K, v: V) -> NEIndexMap<K, V> {
+    /// Creates a new `NEIndexMap` with a single element and specified
+    /// heap capacity.
+    ///
+    /// Note that the effective capacity of this map is always `heap_capacity + 1`
+    /// because the first element is stored inline.
+    pub fn with_capacity(heap_capacity: usize, k: K, v: V) -> NEIndexMap<K, V> {
         Self {
             head_key: k,
             head_val: v,
-            tail: IndexMap::with_capacity(capacity),
+            tail: IndexMap::with_capacity(heap_capacity),
         }
     }
 }
@@ -345,12 +349,21 @@ where
         self.tail.shrink_to_fit();
     }
 
-    /// See [`IndexMap::with_capacity_and_hasher`].
-    pub fn with_capacity_and_hasher(capacity: usize, hasher: S, k: K, v: V) -> NEIndexMap<K, V, S> {
+    /// Creates a new `NEIndexMap` with a single element and specified
+    /// heap capacity and hasher.
+    ///
+    /// Note that the effective capacity of this map is always `heap_capacity + 1`
+    /// because the first element is stored inline.
+    pub fn with_capacity_and_hasher(
+        heap_capacity: usize,
+        hasher: S,
+        k: K,
+        v: V,
+    ) -> NEIndexMap<K, V, S> {
         Self {
             head_key: k,
             head_val: v,
-            tail: IndexMap::with_capacity_and_hasher(capacity, hasher),
+            tail: IndexMap::with_capacity_and_hasher(heap_capacity, hasher),
         }
     }
 
