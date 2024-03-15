@@ -5,6 +5,8 @@
 #### Added
 
 - The missing `IntoIterator` impl for `NEChunks`.
+- `IntoIteratorExt` for direct conversion from anything that implements
+  `IntoIterator`. Thanks to Rinde van Lon.
 
 #### Fixed
 
