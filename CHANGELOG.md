@@ -1,6 +1,6 @@
 # `nonempty-collections`
 
-## Unreleased
+## 0.2.1 (2024-03-15)
 
 #### Added
 
