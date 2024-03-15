@@ -6,6 +6,10 @@
 
 - The missing `IntoIterator` impl for `NEChunks`.
 
+#### Fixed
+
+- A bug involving repeated keys in `NEMap` and `NEIndexedMap`. Thanks to Rinde van Lon.
+
 ## 0.2.0 (2024-03-14)
 
 #### Added
