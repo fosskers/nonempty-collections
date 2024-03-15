@@ -1278,3 +1278,52 @@ where
         self.next().map(|head| once(head).chain(self))
     }
 }
+
+/// Convenience trait extending [`IntoIterator`].
+pub trait IntoIteratorExt {
+    /// The type of the elements being iterated over.
+    type Item;
+    /// Which kind of [`NonEmptyIterator`] are we turning this into?
+    type IntoIter: NonEmptyIterator<Item = Self::Item>;
+
+    /// Tries to convert `self` into a [`NonEmptyIterator`].
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let a = vec![1];
+    /// let x = a.try_into_nonempty_iter();
+    /// assert!(x.is_some());
+    ///
+    /// let y = x.unwrap().collect::<NEVec<_>>();
+    /// assert_eq!(y.len().get(), 1);
+    /// ```
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let b: Vec::<u8> = vec![];
+    /// let x = b.try_into_nonempty_iter();
+    ///
+    /// assert!(x.is_none());
+    /// ```
+    ///
+    /// To construct non-empty collections directly, consider macros like [`crate::nev!`].
+    fn try_into_nonempty_iter(self) -> Option<Self::IntoIter>;
+}
+
+impl<T> IntoIteratorExt for T
+where
+    T: IntoIterator,
+{
+    type Item = T::Item;
+
+    type IntoIter = Chain<Once<Self::Item>, T::IntoIter>;
+
+    /// Tries to convert `self` into [`NonEmptyIterator`]. Calls `self.next()`
+    /// once. If `self` doesn't return `Some` upon the first call to `next()`,
+    /// returns `None`.
+    fn try_into_nonempty_iter(self) -> Option<Self::IntoIter> {
+        self.into_iter().to_nonempty_iter()
+    }
+}
