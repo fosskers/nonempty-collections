@@ -1,6 +1,6 @@
 //! Non-empty Slices.
 
-use crate::iter::{IntoNonEmptyIterator, NonEmptyIterator};
+use crate::iter::{IntoIteratorProxy, IntoNonEmptyIterator, NonEmptyIterator};
 use std::iter::{Chain, Once, Skip};
 use std::num::NonZeroUsize;
 
@@ -195,23 +195,6 @@ impl<'a, T> IntoIterator for NEChunks<'a, T> {
 
     fn into_iter(self) -> Self::IntoIter {
         IntoIteratorProxy { iter: self }
-    }
-}
-
-/// A wrapper type for automatic derivation of [`IntoIterator`] for anything
-/// that's already [`NonEmptyIterator`].
-pub struct IntoIteratorProxy<T> {
-    iter: T,
-}
-
-impl<T> Iterator for IntoIteratorProxy<T>
-where
-    T: NonEmptyIterator,
-{
-    type Item = T::Item;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
     }
 }
 

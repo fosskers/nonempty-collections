@@ -1327,3 +1327,20 @@ where
         self.into_iter().to_nonempty_iter()
     }
 }
+
+/// A wrapper type for easy derivation of [`IntoIterator`] for anything
+/// that's already [`NonEmptyIterator`].
+pub struct IntoIteratorProxy<T> {
+    pub(crate) iter: T,
+}
+
+impl<T> Iterator for IntoIteratorProxy<T>
+where
+    T: NonEmptyIterator,
+{
+    type Item = T::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+}
