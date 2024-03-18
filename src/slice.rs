@@ -187,12 +187,29 @@ impl<'a, T> NonEmptyIterator for NEChunks<'a, T> {
 }
 
 impl<'a, T> IntoIterator for NEChunks<'a, T> {
-    type Item = &'a T;
+    type Item = NESlice<'a, T>;
 
-    type IntoIter = std::iter::Chain<std::iter::Once<&'a T>, std::slice::Iter<'a, T>>;
+    type IntoIter = IntoIteratorProxy<NEChunks<'a, T>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        std::iter::once(self.head).chain(self.tail)
+        IntoIteratorProxy { iter: self }
+    }
+}
+
+/// A wrapper type for automatic derivation of [`IntoIterator`] for anything
+/// that's already [`NonEmptyIterator`].
+pub struct IntoIteratorProxy<T> {
+    iter: T,
+}
+
+impl<T> Iterator for IntoIteratorProxy<T>
+where
+    T: NonEmptyIterator,
+{
+    type Item = T::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
     }
 }
 
@@ -205,10 +222,9 @@ mod tests {
     #[test]
     fn test_from_conversion() {
         let slice = [1, 2, 3, 4, 5];
-
         let nonempty_slice = NESlice::from_slice(&slice);
-
         let nonempty_slice = nonempty_slice.unwrap();
+
         assert_eq!(nonempty_slice.head, &1);
         assert_eq!(nonempty_slice.tail, &[2, 3, 4, 5]);
     }
@@ -274,6 +290,8 @@ mod tests {
 
         // Just a demonstration that `NEChunks` can be used as-is with a `for`
         // loop.
-        for _ in c {}
+        for slice in c {
+            let _: NESlice<'_, i32> = slice;
+        }
     }
 }
