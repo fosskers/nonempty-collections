@@ -1,6 +1,7 @@
 //! Non-empty Slices.
 
 use crate::iter::{IntoIteratorProxy, IntoNonEmptyIterator, NonEmptyIterator};
+use std::cmp::min;
 use std::iter::{Chain, Once, Skip};
 use std::num::NonZeroUsize;
 
@@ -143,7 +144,7 @@ impl<'a, T> NonEmptyIterator for NEChunks<'a, T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.index == 0 {
-            let end = self.window.get() - 1;
+            let end = min(self.window.get() - 1, self.tail.len());
 
             let slice = NESlice {
                 head: self.head,
@@ -156,6 +157,7 @@ impl<'a, T> NonEmptyIterator for NEChunks<'a, T> {
         } else if self.index >= self.tail.len() {
             None
         } else {
+            println!("index: {}, tail: {}", self.index, self.tail.len());
             let end = self.index + self.window.get();
             let slc: &'a [T] = &self.tail[self.index..end];
 
@@ -284,6 +286,21 @@ mod tests {
     fn chunks_into_iter() {
         let v = nev![1, 2, 3];
         let n = NonZeroUsize::new(3).unwrap();
+        let c = v.nonempty_chunks(n);
+
+        // Just a demonstration that `NEChunks` can be used as-is with a `for`
+        // loop.
+        for slice in c {
+            let _: NESlice<'_, i32> = slice;
+        }
+    }
+
+    // A test to reproduce index our of range errors
+    // and ensure that the `NEChunks` iterator works
+    #[test]
+    fn chunks_into_iter_with_chunk_size_over_len() {
+        let v = nev![1, 2, 3];
+        let n = NonZeroUsize::new(4).unwrap();
         let c = v.nonempty_chunks(n);
 
         // Just a demonstration that `NEChunks` can be used as-is with a `for`
