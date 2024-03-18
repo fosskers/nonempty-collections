@@ -151,21 +151,24 @@ impl<'a, T> NonEmptyIterator for NEChunks<'a, T> {
                 tail: &self.tail[0..end],
             };
 
-            self.index = end;
+            // 2024-03-18: This is a workaround for edge case of 1 element slice, thus the index
+            // does not get incremented as end is 0, thus the next iteration will return the same
+            // slice gain and again.
+            self.index = end + 1;
 
             Some(slice)
-        } else if self.index >= self.tail.len() {
+        } else if self.index >= (self.tail.len() + 1) {
             None
         } else {
             // Ensure we never go out of bounds
-            let end = min(self.index + self.window.get(), self.tail.len());
-            let slc: &'a [T] = &self.tail[self.index..end];
+            let end = min(self.index - 1 + self.window.get(), self.tail.len());
+            let slc: &'a [T] = &self.tail[self.index - 1..end];
 
             match slc {
                 [] => None,
                 [head, tail @ ..] => {
                     let slice = NESlice { head, tail };
-                    self.index = end;
+                    self.index = end + 1;
                     Some(slice)
                 }
             }
@@ -337,5 +340,19 @@ mod tests {
                 nev![57].as_nonempty_slice(),
             ]
         );
+    }
+
+    // This test cover an edge case non supported by the `chunks` method
+    // when the slice has only one element.
+    #[test]
+    fn chunks_into_iter_edge_case_single_element() {
+        let v = nev![1];
+        let n = NonZeroUsize::new(3).unwrap();
+        let c: crate::slice::NEChunks<'_, i32> = v.nonempty_chunks(n);
+
+        let mut iter = c.into_iter();
+
+        assert_eq!(1, iter.next().unwrap().len().get());
+        assert!(iter.next().is_none());
     }
 }
