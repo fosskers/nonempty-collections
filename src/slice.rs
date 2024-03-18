@@ -157,7 +157,6 @@ impl<'a, T> NonEmptyIterator for NEChunks<'a, T> {
         } else if self.index >= self.tail.len() {
             None
         } else {
-            println!("index: {}, tail: {}", self.index, self.tail.len());
             let end = self.index + self.window.get();
             let slc: &'a [T] = &self.tail[self.index..end];
 
