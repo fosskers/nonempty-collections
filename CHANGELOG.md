@@ -1,5 +1,12 @@
 # `nonempty-collections`
 
+## 0.2.2 (2024-03-18)
+
+#### Fixed
+
+- `IntoIterator` for `NEChunks` yielding the wrong type.
+- `NonEmptyIterator` for `NEChunks` missing a cutoff condition.
+
 ## 0.2.1 (2024-03-15)
 
 #### Added
