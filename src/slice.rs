@@ -294,16 +294,16 @@ mod tests {
         }
     }
 
-    // A test to reproduce index our of range errors
+    // A test to reproduce index out of range errors
     // and ensure that the `NEChunks` iterator works
+    // as expected.
     #[test]
     fn chunks_into_iter_with_chunk_size_over_len() {
         let v = nev![1, 2, 3];
         let n = NonZeroUsize::new(4).unwrap();
         let c = v.nonempty_chunks(n);
 
-        // Just a demonstration that `NEChunks` can be used as-is with a `for`
-        // loop.
+        // Iterating over should not produce any errors.
         for slice in c {
             let _: NESlice<'_, i32> = slice;
         }
