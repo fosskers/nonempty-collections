@@ -153,6 +153,8 @@ impl<'a, T> NonEmptyIterator for NEChunks<'a, T> {
             self.index = end;
 
             Some(slice)
+        } else if self.index >= self.tail.len() {
+            None
         } else {
             let end = self.index + self.window.get();
             let slc: &'a [T] = &self.tail[self.index..end];
@@ -280,6 +282,19 @@ mod tests {
                 nev![7].as_nonempty_slice(),
             ]
         );
+    }
+
+    #[test]
+    fn chunks_len() {
+        let v = nev![1, 2, 3];
+        let n = NonZeroUsize::new(3).unwrap();
+        let c = v.nonempty_chunks(n).count().get();
+        assert_eq!(c, 1);
+
+        let v = nev![1, 2, 3, 4];
+        let n = NonZeroUsize::new(3).unwrap();
+        let c = v.nonempty_chunks(n).count().get();
+        assert_eq!(c, 2);
     }
 
     #[test]
