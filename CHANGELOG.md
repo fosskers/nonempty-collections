@@ -1,5 +1,11 @@
 # `nonempty-collections`
 
+## Unreleased
+
+#### Fixed
+
+- More edge cases involving `NEChunks`.
+
 ## 0.2.2 (2024-03-18)
 
 #### Fixed

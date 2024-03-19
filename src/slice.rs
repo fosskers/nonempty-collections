@@ -1,7 +1,6 @@
 //! Non-empty Slices.
 
 use crate::iter::{IntoIteratorProxy, IntoNonEmptyIterator, NonEmptyIterator};
-use std::cmp::min;
 use std::iter::{Chain, Once, Skip};
 use std::num::NonZeroUsize;
 
@@ -144,7 +143,7 @@ impl<'a, T> NonEmptyIterator for NEChunks<'a, T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.index == 0 {
-            let end = min(self.window.get() - 1, self.tail.len());
+            let end = (self.window.get() - 1).min(self.tail.len());
 
             let slice = NESlice {
                 head: self.head,
@@ -161,7 +160,7 @@ impl<'a, T> NonEmptyIterator for NEChunks<'a, T> {
             None
         } else {
             // Ensure we never go out of bounds
-            let end = min(self.index - 1 + self.window.get(), self.tail.len());
+            let end = (self.index - 1 + self.window.get()).min(self.tail.len());
             let slc: &'a [T] = &self.tail[self.index - 1..end];
 
             match slc {
@@ -176,7 +175,7 @@ impl<'a, T> NonEmptyIterator for NEChunks<'a, T> {
     }
 
     fn first(self) -> (Self::Item, Self::IntoIter) {
-        let end = min(self.window.get() - 1, self.tail.len());
+        let end = (self.window.get() - 1).min(self.tail.len());
 
         let slice = NESlice {
             head: self.head,
@@ -207,7 +206,7 @@ impl<'a, T> IntoIterator for NEChunks<'a, T> {
 mod tests {
     use std::num::NonZeroUsize;
 
-    use crate::{nev, NESlice, NonEmptyIterator};
+    use crate::{nev, slice::NEChunks, NESlice, NEVec, NonEmptyIterator};
 
     #[test]
     fn test_from_conversion() {
@@ -290,19 +289,6 @@ mod tests {
         assert_eq!(c, 2);
     }
 
-    #[test]
-    fn chunks_into_iter() {
-        let v = nev![1, 2, 3];
-        let n = NonZeroUsize::new(3).unwrap();
-        let c = v.nonempty_chunks(n);
-
-        // Just a demonstration that `NEChunks` can be used as-is with a `for`
-        // loop.
-        for slice in c {
-            let _: NESlice<'_, i32> = slice;
-        }
-    }
-
     // A test to reproduce index out of range errors
     // and ensure that the `NEChunks` iterator works
     // as expected.
@@ -316,6 +302,13 @@ mod tests {
         for slice in c {
             let _: NESlice<'_, i32> = slice;
         }
+
+        let v = nev![1, 2, 3];
+        let n = NonZeroUsize::new(4).unwrap();
+        let c: NEVec<_> = v.nonempty_chunks(n).collect();
+
+        assert_eq!(1, c.len().get());
+        assert_eq!(&v.as_nonempty_slice(), c.first());
     }
 
     // A test to ensure the correctness of the `NEChunks` iterator
@@ -323,7 +316,7 @@ mod tests {
     fn chunks_into_iter_should_return_elements_exactly_once() {
         let v = nev![1, 2, 3, 4, 5, 6, 57];
         let n = NonZeroUsize::new(3).unwrap();
-        let c: crate::slice::NEChunks<'_, i32> = v.nonempty_chunks(n);
+        let c: NEChunks<'_, i32> = v.nonempty_chunks(n);
 
         let mut r: Vec<NESlice<i32>> = vec![];
 
@@ -348,7 +341,7 @@ mod tests {
     fn chunks_into_iter_edge_case_single_element() {
         let v = nev![1];
         let n = NonZeroUsize::new(3).unwrap();
-        let c: crate::slice::NEChunks<'_, i32> = v.nonempty_chunks(n);
+        let c: NEChunks<'_, i32> = v.nonempty_chunks(n);
 
         let mut iter = c.into_iter();
 
