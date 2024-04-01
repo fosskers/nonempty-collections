@@ -1,5 +1,6 @@
 //! Non-empty iterators.
 
+use crate::impl_nonempty_iter_for_arrays;
 use crate::NEVec;
 use std::cmp::Ordering;
 use std::collections::HashSet;
@@ -1342,5 +1343,63 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
+    }
+}
+
+
+impl_nonempty_iter_for_arrays!(
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+    27, 28, 29, 30, 31, 32
+);
+
+#[macro_export]
+macro_rules! impl_nonempty_iter_for_arrays {
+    ($($i:literal),+ $(,)?) => {
+        $(
+            impl<T> IntoNonEmptyIterator for [T; $i] {
+                type Item = T;
+
+                type IntoIter = ArrayNonEmptyIterator<T, $i>;
+
+                fn into_nonempty_iter(self) -> Self::IntoIter {
+                    ArrayNonEmptyIterator {
+                        iter: self.into_iter(),
+                    }
+                }
+            }
+        )+
+    };
+}
+
+pub struct ArrayNonEmptyIterator<T, const C: usize> {
+    iter: core::array::IntoIter<T, C>,
+}
+
+impl<T, const C: usize> NonEmptyIterator for ArrayNonEmptyIterator<T, C> {
+    type Item = T;
+
+    type IntoIter = core::array::IntoIter<T, C>;
+
+    fn first(self) -> (Self::Item, Self::IntoIter) {
+        let mut iter = self.iter.into_iter();
+        (iter.next().unwrap(), iter)
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter.next()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_array_macro() {
+        receive([0]);
+        fn receive(x: impl IntoNonEmptyIterator<Item = usize>) {
+            let c = x.into_nonempty_iter().count();
+            println!("{c:?}");
+        }
     }
 }
