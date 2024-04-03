@@ -666,6 +666,78 @@ impl<T> NEVec<T> {
             index: 0,
         }
     }
+
+    /// Returns the index of the partition point according to the given predicate
+    /// (the index of the first element of the second partition).
+    ///
+    /// The vector is assumed to be partitioned according to the given predicate.
+    /// This means that all elements for which the predicate returns true are at the start of the vector
+    /// and all elements for which the predicate returns false are at the end.
+    /// For example, `[7, 15, 3, 5, 4, 12, 6]` is partitioned under the predicate `x % 2 != 0`
+    /// (all odd numbers are at the start, all even at the end).
+    ///
+    /// If this vector is not partitioned, the returned result is unspecified and meaningless,
+    /// as this method performs a kind of binary search.
+    ///
+    /// See also [`binary_search`], [`binary_search_by`], and [`binary_search_by_key`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use nonempty_collections::*;
+    /// #
+    /// let v = nev![1, 2, 3, 3, 5, 6, 7];
+    /// let i = v.partition_point(|&x| x < 5);
+    ///
+    /// assert_eq!(i, 4);
+    /// ```
+    ///
+    /// If all elements of the non empty vector match the predicate, then the
+    /// length of the vector will be returned:
+    ///
+    /// ```
+    /// # use nonempty_collections::*;
+    /// #
+    /// let a = nev![2, 4, 8];
+    /// assert_eq!(a.partition_point(|x| x < &100), a.len().get());
+    /// let a: [i32; 0] = [];
+    /// assert_eq!(a.partition_point(|x| x < &100), 0);
+    /// ```
+    ///
+    /// If you want to insert an item to a sorted vector, while maintaining
+    /// sort order:
+    ///
+    /// ```
+    /// # use nonempty_collections::*;
+    /// #
+    /// let mut s = nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
+    /// let num = 42;
+    /// let idx = s.partition_point(|&x| x < num);
+    /// s.insert(idx, num);
+    /// assert_eq!(s, nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 42, 55]);
+    /// ```
+    ///
+    /// ```
+    /// # use nonempty_collections::*;
+    /// #
+    /// # let mut s = nev![7];
+    /// # assert_eq!(0, s.partition_point(|&x| x < 7));
+    /// # assert_eq!(1, s.partition_point(|&x| x >= 7));
+    /// ```
+    #[must_use]
+    pub fn partition_point<P>(&self, mut pred: P) -> usize
+    where
+        P: FnMut(&T) -> bool,
+    {
+        self.binary_search_by(|x| {
+            if pred(x) {
+                Ordering::Less
+            } else {
+                Ordering::Greater
+            }
+        })
+        .unwrap_or_else(|i| i)
+    }
 }
 
 impl<T: PartialEq> NEVec<T> {
