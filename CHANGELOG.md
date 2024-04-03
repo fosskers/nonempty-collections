@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+#### Added
+
+- Added `NEVec::partition_point` to match the function of the same name in `std`.
+
 #### Fixed
 
 - Render feature-gated types on `docs.rs`.
