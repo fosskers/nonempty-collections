@@ -1,5 +1,11 @@
 # `nonempty-collections`
 
+## Unreleased
+
+#### Fixed
+
+- Render feature-gated types on `docs.rs`.
+
 ## 0.2.3 (2024-03-19)
 
 #### Fixed
