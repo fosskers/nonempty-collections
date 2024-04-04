@@ -122,3 +122,24 @@ macro_rules! impl_nonempty_iter_for_arrays {
         )+
     };
 }
+
+#[cfg(test)]
+mod test {
+    use crate::IntoNonEmptyIterator;
+    use crate::NonEmptyIterator;
+
+    #[test]
+    fn test_iter() {
+        let iter = [1, 2, 3, 4].into_nonempty_iter();
+        let (first, rest) = iter.first();
+        assert_eq!(1, first);
+        assert_eq!(vec![2, 3, 4], rest.into_iter().collect::<Vec<_>>());
+
+        let iter = [1].into_nonempty_iter();
+        let (first, rest) = iter.first();
+        assert_eq!(1, first);
+        assert_eq!(0, rest.into_iter().count());
+
+        assert_eq!(33, [1, -2, 33, 4].into_nonempty_iter().max());
+    }
+}
