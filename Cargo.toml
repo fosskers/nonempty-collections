@@ -16,6 +16,11 @@ indexmap = { version = "2.2.5", optional = true }
 
 [dev-dependencies]
 serde_json = "1"
+divan = "0.1.14"
+
+[[bench]]
+name = "vec"
+harness = false
 
 [package.metadata.docs.rs]
 all-features = true
