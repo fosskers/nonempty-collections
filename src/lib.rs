@@ -105,6 +105,7 @@
 
 #![warn(missing_docs)]
 
+pub mod array;
 #[cfg(feature = "indexmap")]
 pub mod index_map;
 pub mod iter;
@@ -113,6 +114,8 @@ pub mod set;
 pub mod slice;
 pub mod vector;
 
+pub use array::ArrayNonEmptyIterator;
+pub use array::NonEmptyArrayExt;
 #[cfg(feature = "indexmap")]
 pub use index_map::NEIndexMap;
 pub use iter::FromNonEmptyIterator;
