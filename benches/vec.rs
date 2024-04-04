@@ -96,3 +96,18 @@ fn get_nevec(bencher: Bencher) {
         }
     })
 }
+
+#[divan::bench]
+fn map_vec(bencher: Bencher) {
+    let vec = (0..64).collect::<Vec<_>>();
+    bencher.bench(|| black_box(vec.iter().map(|i| i + 7).collect::<Vec<_>>()))
+}
+
+#[divan::bench]
+fn map_nevec(bencher: Bencher) {
+    let vec = (0..64)
+        .try_into_nonempty_iter()
+        .unwrap()
+        .collect::<NEVec<_>>();
+    bencher.bench(|| black_box(vec.iter().map(|i| i + 7).collect::<NEVec<_>>()))
+}
