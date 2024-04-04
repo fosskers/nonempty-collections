@@ -39,11 +39,6 @@ pub trait NonEmptyArrayExt<T> {
         T: Clone;
 }
 
-impl_nonempty_iter_for_arrays!(
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
-    27, 28, 29, 30, 31, 32
-);
-
 /// Non-empty iterator for arrays with length > 0.
 ///
 /// # Examples
@@ -82,6 +77,11 @@ impl<T, const C: usize> NonEmptyIterator for ArrayNonEmptyIterator<T, C> {
         self.iter.next()
     }
 }
+
+impl_nonempty_iter_for_arrays!(
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+    27, 28, 29, 30, 31, 32
+);
 
 #[doc(hidden)]
 #[macro_export]
