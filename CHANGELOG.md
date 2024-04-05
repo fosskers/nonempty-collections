@@ -1,6 +1,10 @@
 # `nonempty-collections`
 
-## Unreleased
+## 0.2.4 (2024-04-04)
+
+#### Added
+
+- Added `NEVec::partition_point` to match the function of the same name in `std`.
 
 #### Fixed
 

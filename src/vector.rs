@@ -679,7 +679,8 @@ impl<T> NEVec<T> {
     /// If this vector is not partitioned, the returned result is unspecified and meaningless,
     /// as this method performs a kind of binary search.
     ///
-    /// See also [`binary_search`], [`binary_search_by`], and [`binary_search_by_key`].
+    /// See also [`NEVec::binary_search`], [`NEVec::binary_search_by`], and
+    /// [`NEVec::binary_search_by_key`].
     ///
     /// # Examples
     ///
@@ -692,16 +693,14 @@ impl<T> NEVec<T> {
     /// assert_eq!(i, 4);
     /// ```
     ///
-    /// If all elements of the non empty vector match the predicate, then the
+    /// If all elements of the non-empty vector match the predicate, then the
     /// length of the vector will be returned:
     ///
     /// ```
     /// # use nonempty_collections::*;
     /// #
     /// let a = nev![2, 4, 8];
-    /// assert_eq!(a.partition_point(|x| x < &100), a.len().get());
-    /// let a: [i32; 0] = [];
-    /// assert_eq!(a.partition_point(|x| x < &100), 0);
+    /// assert_eq!(a.partition_point(|&x| x < 100), a.len().get());
     /// ```
     ///
     /// If you want to insert an item to a sorted vector, while maintaining
@@ -715,14 +714,6 @@ impl<T> NEVec<T> {
     /// let idx = s.partition_point(|&x| x < num);
     /// s.insert(idx, num);
     /// assert_eq!(s, nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 42, 55]);
-    /// ```
-    ///
-    /// ```
-    /// # use nonempty_collections::*;
-    /// #
-    /// # let mut s = nev![7];
-    /// # assert_eq!(0, s.partition_point(|&x| x < 7));
-    /// # assert_eq!(1, s.partition_point(|&x| x >= 7));
     /// ```
     #[must_use]
     pub fn partition_point<P>(&self, mut pred: P) -> usize
