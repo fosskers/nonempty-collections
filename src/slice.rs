@@ -44,7 +44,8 @@ impl<'a, T> NESlice<'a, T> {
     }
 
     /// No, this slice is not empty.
-    pub fn is_empty(&self) -> bool {
+    #[deprecated(note = "A NESlice is never empty.")]
+    pub const fn is_empty(&self) -> bool {
         false
     }
 
