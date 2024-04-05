@@ -40,11 +40,11 @@ use crate::NonEmptyIterator;
 /// assert_eq!(NonZeroUsize::MIN, [1].nonzero_len());
 /// ```
 ///
-/// Copy into a non-empty vec:
+/// Convert array into a non-empty vec:
 ///
 /// ```
 /// # use nonempty_collections::*;
-/// assert_eq!(nev![4], [4].to_nonempty_vec());
+/// assert_eq!(nev![4], [4].into_nonempty_vec());
 /// ```
 pub trait NonEmptyArrayExt<T> {
     /// Create a `NESlice` that borrows the contents of `self`.
@@ -53,10 +53,8 @@ pub trait NonEmptyArrayExt<T> {
     /// Returns the length of this array as a [`NonZeroUsize`].
     fn nonzero_len(&self) -> NonZeroUsize;
 
-    /// Copies `self` into a new [`crate::NEVec`].
-    fn to_nonempty_vec(&self) -> crate::NEVec<T>
-    where
-        T: Clone;
+    /// Moves `self` into a new [`crate::NEVec`].
+    fn into_nonempty_vec(self) -> crate::NEVec<T>;
 }
 
 /// Non-empty iterator for arrays with length > 0.
@@ -141,13 +139,8 @@ macro_rules! impl_nonempty_iter_for_arrays {
                     unsafe { NonZeroUsize::new_unchecked($i) }
                 }
 
-                fn to_nonempty_vec(&self) -> crate::NEVec<T>
-                where
-                    T: Clone
-                {
-                    // This should never panic because a slice with length > 0
-                    // is non-empty by definition.
-                    crate::NEVec::from_slice(self).unwrap()
+                fn into_nonempty_vec(self) -> crate::NEVec<T> {
+                    self.into_nonempty_iter().collect()
                 }
             }
         )+
