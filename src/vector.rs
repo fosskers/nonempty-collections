@@ -1039,4 +1039,12 @@ mod test {
         assert_eq!(0, first);
         assert_eq!(None, rest.next());
     }
+
+    #[test]
+    fn test2() {
+        let v = nev![8, 0];
+        let mut iter = v.iter().copied();
+        iter.next();
+        assert_eq!(vec![1], iter.map(|x| x + 1).collect::<Vec<_>>());
+    }
 }
