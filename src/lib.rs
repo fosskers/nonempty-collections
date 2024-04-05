@@ -91,6 +91,21 @@
 //! Consider also [`IteratorExt::to_nonempty_iter`] for converting any given
 //! [`Iterator`] into a non-empty one, if it contains at least one item.
 //!
+//! # Arrays
+//!
+//! Since fixed-size arrays are by definition already not empty, they aren't
+//! given a special wrapper type like [`crate::NEVec`]. Instead, we enable them
+//! to be easily iterated over in a compatible way:
+//!
+//! ```
+//! use nonempty_collections::*;
+//!
+//! let a: [u32; 4] = [1, 2, 3, 4];
+//! let v: NEVec<_> = a.into_nonempty_iter().map(|n| n + 1).collect();
+//! assert_eq!(nev![2, 3, 4, 5], v);
+//! ```
+//! See [`NonEmptyArrayExt`] for more conversions.
+//!
 //! # Caveats
 //!
 //! Since `NEVec`, `NEMap`, and `NESet` must have a least one element, it is not
