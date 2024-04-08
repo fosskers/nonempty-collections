@@ -33,7 +33,7 @@ let v: NEVec<u32> = nev![1, 2, 3];
 let s: NESet<u32> = nes![1, 2, 2, 3]; // 1 2 3
 let m: NEMap<&str, bool> = nem!["a" => true, "b" => false];
 assert_eq!(1, v.head);
-assert_eq!(3, s.len());
+assert_eq!(3, s.len().get());
 assert!(m.get("a").unwrap());
 ```
 
@@ -94,6 +94,21 @@ assert_eq!(2, v.head);
 
 Consider also [`IteratorExt::to_nonempty_iter`] for converting any given
 [`Iterator`] into a non-empty one, if it contains at least one item.
+
+## Arrays
+
+Since fixed-size arrays are by definition already not empty, they aren't
+given a special wrapper type like [`crate::NEVec`]. Instead, we enable them
+to be easily iterated over in a compatible way:
+
+```rust
+use nonempty_collections::*;
+
+let a: [u32; 4] = [1, 2, 3, 4];
+let v: NEVec<_> = a.into_nonempty_iter().map(|n| n + 1).collect();
+assert_eq!(nev![2, 3, 4, 5], v);
+```
+See [`NonEmptyArrayExt`] for more conversions.
 
 ## Caveats
 

@@ -14,6 +14,10 @@
 //! ```
 //!
 //! See [`NonEmptyArrayExt`] for more conversions.
+//!
+//! # Caveats
+//!
+//! These extensions are only provided for arrays up to size 32.
 
 use std::num::NonZeroUsize;
 

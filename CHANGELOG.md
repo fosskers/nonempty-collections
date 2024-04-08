@@ -1,5 +1,11 @@
 # `nonempty-collections`
 
+## Unreleased
+
+#### Added
+
+- Implementation of `NonEmptyIterator` for fixed-sized stdlib Arrays.
+
 ## 0.2.4 (2024-04-04)
 
 #### Added
