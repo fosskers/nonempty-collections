@@ -16,6 +16,7 @@ use std::mem;
 use crate::FromNonEmptyIterator;
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
+use indexmap::indexmap;
 use indexmap::Equivalent;
 use indexmap::IndexMap;
 use std::num::NonZeroUsize;
@@ -55,14 +56,7 @@ macro_rules! ne_indexmap {
 /// ```
 #[derive(Clone)]
 pub struct NEIndexMap<K, V, S = std::collections::hash_map::RandomState> {
-    /// The key of the ever-present element of the non-empty `IndexMap`.
-    head_key: K,
-
-    /// The value of the ever-present element of the non-empty `IndexMap`.
-    head_val: V,
-
-    /// The remaining key-value pairs, perhaps empty.
-    tail: IndexMap<K, V, S>,
+    inner: IndexMap<K, V, S>,
 }
 
 impl<K, V, S> NEIndexMap<K, V, S> {
@@ -80,9 +74,7 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     #[allow(clippy::iter_not_returning_iterator)]
     pub fn iter(&self) -> Iter<'_, K, V> {
         Iter {
-            head_key: &self.head_key,
-            head_val: &self.head_val,
-            iter: std::iter::once((&self.head_key, &self.head_val)).chain(self.tail.iter()),
+            iter: self.inner.iter(),
         }
     }
 
@@ -90,7 +82,7 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     #[allow(clippy::iter_not_returning_iterator)]
     pub fn iter_mut(&mut self) -> IterMut<'_, K, V> {
         IterMut {
-            iter: std::iter::once((&self.head_key, &mut self.head_val)).chain(self.tail.iter_mut()),
+            iter: self.inner.iter_mut(),
         }
     }
 
@@ -184,23 +176,16 @@ impl<K, V> NEIndexMap<K, V> {
     /// Creates a new `NEIndexMap` with a single element.
     pub fn new(k: K, v: V) -> Self {
         Self {
-            head_key: k,
-            head_val: v,
-            tail: IndexMap::default(),
+            inner: indexmap! {k => v},
         }
     }
 
     /// Creates a new `NEIndexMap` with a single element and specified
     /// heap capacity.
-    ///
-    /// Note that the effective capacity of this map is always `heap_capacity + 1`
-    /// because the first element is stored inline.
-    pub fn with_capacity(heap_capacity: usize, k: K, v: V) -> NEIndexMap<K, V> {
-        Self {
-            head_key: k,
-            head_val: v,
-            tail: IndexMap::with_capacity(heap_capacity),
-        }
+    pub fn with_capacity(capacity: usize, k: K, v: V) -> NEIndexMap<K, V> {
+        let mut inner = IndexMap::with_capacity(capacity);
+        inner.insert(k, v);
+        Self { inner }
     }
 }
 
@@ -222,7 +207,7 @@ where
     where
         Q: Hash + Equivalent<K> + ?Sized,
     {
-        self.tail.contains_key(k) || k.equivalent(&self.head_key)
+        self.inner.contains_key(k)
     }
 
     /// Return a reference to the value stored for `key`, if it is present,
@@ -239,9 +224,7 @@ where
     where
         Q: Hash + Equivalent<K> + ?Sized,
     {
-        self.tail
-            .get(k)
-            .or_else(|| (k.equivalent(&self.head_key)).then_some(&self.head_val))
+        self.inner.get(k)
     }
 
     /// Return references to the key-value pair stored for `key`,
@@ -259,11 +242,7 @@ where
     where
         Q: Hash + Equivalent<K>,
     {
-        if key.equivalent(&self.head_key) {
-            Some((&self.head_key, &self.head_val))
-        } else {
-            self.tail.get_key_value(key)
-        }
+        self.inner.get_key_value(key)
     }
 
     /// Return a mutable reference to the value stored for `key`, if it is
@@ -289,11 +268,7 @@ where
     where
         Q: Hash + Equivalent<K>,
     {
-        if key.equivalent(&self.head_key) {
-            Some(&mut self.head_val)
-        } else {
-            self.tail.get_mut(key)
-        }
+        self.inner.get_mut(key)
     }
 
     /// Return item index, if it exists in the map.
@@ -310,11 +285,7 @@ where
     where
         Q: Hash + Equivalent<K>,
     {
-        if key.equivalent(&self.head_key) {
-            Some(0)
-        } else {
-            self.tail.get_index_of(key).map(|i| i + 1)
-        }
+        self.inner.get_index_of(key)
     }
 
     /// Insert a key-value pair into the map.
@@ -351,29 +322,17 @@ where
 
     /// Creates a new `NEIndexMap` with a single element and specified
     /// heap capacity and hasher.
-    ///
-    /// Note that the effective capacity of this map is always `heap_capacity + 1`
-    /// because the first element is stored inline.
-    pub fn with_capacity_and_hasher(
-        heap_capacity: usize,
-        hasher: S,
-        k: K,
-        v: V,
-    ) -> NEIndexMap<K, V, S> {
-        Self {
-            head_key: k,
-            head_val: v,
-            tail: IndexMap::with_capacity_and_hasher(heap_capacity, hasher),
-        }
+    pub fn with_capacity_and_hasher(capacity: usize, hasher: S, k: K, v: V) -> NEIndexMap<K, V, S> {
+        let mut inner = IndexMap::with_capacity_and_hasher(capacity, hasher);
+        inner.insert(k, v);
+        Self { inner }
     }
 
     /// See [`IndexMap::with_hasher`].
     pub fn with_hasher(hasher: S, k: K, v: V) -> NEIndexMap<K, V, S> {
-        Self {
-            head_key: k,
-            head_val: v,
-            tail: IndexMap::with_hasher(hasher),
-        }
+        let mut inner = IndexMap::with_hasher(hasher);
+        inner.insert(k, v);
+        Self { inner }
     }
 
     /// Swaps the position of two key-value pairs in the map.
@@ -475,15 +434,8 @@ where
     where
         I: IntoNonEmptyIterator<Item = (K, V)>,
     {
-        let ((head_key, head_val), rest) = iter.into_nonempty_iter().first();
-
         Self {
-            head_val,
-            tail: rest
-                .into_iter()
-                .filter(|(k, _)| !head_key.equivalent(k))
-                .collect(),
-            head_key,
+            inner: iter.into_nonempty_iter().into_iter().collect(),
         }
     }
 }
@@ -502,26 +454,10 @@ impl<K, V> std::ops::Index<usize> for NEIndexMap<K, V> {
 
 /// A non-empty iterator over the entries of an [`NEIndexMap`].
 pub struct Iter<'a, K: 'a, V: 'a> {
-    head_key: &'a K,
-    head_val: &'a V,
-    iter: std::iter::Chain<std::iter::Once<(&'a K, &'a V)>, indexmap::map::Iter<'a, K, V>>,
+    iter: indexmap::map::Iter<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for Iter<'a, K, V> {
-    type Item = (&'a K, &'a V);
-
-    type IntoIter = std::iter::Skip<
-        std::iter::Chain<std::iter::Once<(&'a K, &'a V)>, indexmap::map::Iter<'a, K, V>>,
-    >;
-
-    fn first(self) -> (Self::Item, Self::IntoIter) {
-        ((self.head_key, self.head_val), self.iter.skip(1))
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
-}
+impl<'a, K, V> NonEmptyIterator for Iter<'a, K, V> {}
 
 impl<'a, K, V> IntoIterator for Iter<'a, K, V> {
     type Item = (&'a K, &'a V);
@@ -538,8 +474,6 @@ impl<'a, K, V> IntoIterator for Iter<'a, K, V> {
 impl<K, V> Clone for Iter<'_, K, V> {
     fn clone(&self) -> Self {
         Iter {
-            head_key: self.head_key,
-            head_val: self.head_val,
             iter: self.iter.clone(),
         }
     }
@@ -556,27 +490,12 @@ pub struct IterMut<'a, K: 'a, V: 'a> {
     iter: std::iter::Chain<std::iter::Once<(&'a K, &'a mut V)>, indexmap::map::IterMut<'a, K, V>>,
 }
 
-impl<'a, K, V> NonEmptyIterator for IterMut<'a, K, V> {
-    type Item = (&'a K, &'a mut V);
-
-    type IntoIter =
-        std::iter::Chain<std::iter::Once<(&'a K, &'a mut V)>, indexmap::map::IterMut<'a, K, V>>;
-
-    fn first(mut self) -> (Self::Item, Self::IntoIter) {
-        let (key, val) = self.iter.next().unwrap();
-        ((key, val), self.iter)
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
-}
+impl<'a, K, V> NonEmptyIterator for IterMut<'a, K, V> {}
 
 impl<'a, K, V> IntoIterator for IterMut<'a, K, V> {
     type Item = (&'a K, &'a mut V);
 
-    type IntoIter =
-        std::iter::Chain<std::iter::Once<(&'a K, &'a mut V)>, indexmap::map::IterMut<'a, K, V>>;
+    type IntoIter = indexmap::map::IterMut<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
@@ -594,28 +513,15 @@ impl<'a, K, V> IntoIterator for IterMut<'a, K, V> {
 /// ```
 pub struct Keys<'a, K: 'a, V: 'a> {
     head_key: &'a K,
-    inner: std::iter::Chain<std::iter::Once<&'a K>, indexmap::map::Keys<'a, K, V>>,
+    inner: indexmap::map::Keys<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for Keys<'a, K, V> {
-    type Item = &'a K;
-
-    type IntoIter =
-        std::iter::Skip<std::iter::Chain<std::iter::Once<&'a K>, indexmap::map::Keys<'a, K, V>>>;
-
-    fn first(self) -> (Self::Item, Self::IntoIter) {
-        (self.head_key, self.inner.skip(1))
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next()
-    }
-}
+impl<'a, K, V> NonEmptyIterator for Keys<'a, K, V> {}
 
 impl<'a, K, V> IntoIterator for Keys<'a, K, V> {
     type Item = &'a K;
 
-    type IntoIter = std::iter::Chain<std::iter::Once<&'a K>, indexmap::map::Keys<'a, K, V>>;
+    type IntoIter = indexmap::map::Keys<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner
@@ -653,25 +559,12 @@ pub struct Values<'a, K: 'a, V: 'a> {
     inner: std::iter::Chain<std::iter::Once<&'a V>, indexmap::map::Values<'a, K, V>>,
 }
 
-impl<'a, K, V> NonEmptyIterator for Values<'a, K, V> {
-    type Item = &'a V;
-
-    type IntoIter =
-        std::iter::Skip<std::iter::Chain<std::iter::Once<&'a V>, indexmap::map::Values<'a, K, V>>>;
-
-    fn first(self) -> (Self::Item, Self::IntoIter) {
-        (self.head_val, self.inner.skip(1))
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next()
-    }
-}
+impl<'a, K, V> NonEmptyIterator for Values<'a, K, V> {}
 
 impl<'a, K, V> IntoIterator for Values<'a, K, V> {
     type Item = &'a V;
 
-    type IntoIter = std::iter::Chain<std::iter::Once<&'a V>, indexmap::map::Values<'a, K, V>>;
+    type IntoIter = indexmap::map::Values<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner
@@ -696,30 +589,15 @@ impl<K: Debug, V: Debug> Debug for Values<'_, K, V> {
 
 /// A non-empty iterator over the mutable values of an [`NEIndexMap`].
 pub struct ValuesMut<'a, K: 'a, V: 'a> {
-    inner: std::iter::Chain<std::iter::Once<&'a mut V>, indexmap::map::ValuesMut<'a, K, V>>,
+    inner: indexmap::map::ValuesMut<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for ValuesMut<'a, K, V> {
-    type Item = &'a mut V;
-
-    type IntoIter =
-        std::iter::Chain<std::iter::Once<&'a mut V>, indexmap::map::ValuesMut<'a, K, V>>;
-
-    fn first(mut self) -> (Self::Item, Self::IntoIter) {
-        let value = self.inner.next().unwrap();
-        (value, self.inner)
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next()
-    }
-}
+impl<'a, K, V> NonEmptyIterator for ValuesMut<'a, K, V> {}
 
 impl<'a, K, V> IntoIterator for ValuesMut<'a, K, V> {
     type Item = &'a mut V;
 
-    type IntoIter =
-        std::iter::Chain<std::iter::Once<&'a mut V>, indexmap::map::ValuesMut<'a, K, V>>;
+    type IntoIter = indexmap::map::ValuesMut<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner
