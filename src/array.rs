@@ -93,7 +93,7 @@ impl<T, const C: usize> NonEmptyIterator for ArrayNonEmptyIterator<T, C> {
     type IntoIter = core::array::IntoIter<T, C>;
 
     fn first(self) -> (Self::Item, Self::IntoIter) {
-        let mut iter = self.iter.into_iter();
+        let mut iter = self.iter;
         (iter.next().unwrap(), iter)
     }
 
@@ -128,10 +128,10 @@ macro_rules! impl_nonempty_iter_for_arrays {
             }
 
             impl<T> NonEmptyArrayExt<T> for [T; $i] {
-                fn as_nonempty_slice(&self) -> crate::NESlice<'_, T> {
+                fn as_nonempty_slice(&self) -> $crate::NESlice<'_, T> {
                     // This should never panic because a slice with length > 0
                     // is non-empty by definition.
-                    crate::NESlice::from_slice(self).unwrap()
+                    $crate::NESlice::from_slice(self).unwrap()
                 }
 
                 fn nonzero_len(&self) -> NonZeroUsize {
@@ -139,7 +139,7 @@ macro_rules! impl_nonempty_iter_for_arrays {
                     unsafe { NonZeroUsize::new_unchecked($i) }
                 }
 
-                fn into_nonempty_vec(self) -> crate::NEVec<T> {
+                fn into_nonempty_vec(self) -> $crate::NEVec<T> {
                     self.into_nonempty_iter().collect()
                 }
             }
