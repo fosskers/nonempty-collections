@@ -91,20 +91,17 @@ pub struct ArrayNonEmptyIterator<T, const C: usize> {
     iter: core::array::IntoIter<T, C>,
 }
 
-impl<T, const C: usize> NonEmptyIterator for ArrayNonEmptyIterator<T, C> {
+impl<T, const C: usize> IntoIterator for ArrayNonEmptyIterator<T, C> {
     type Item = T;
 
     type IntoIter = core::array::IntoIter<T, C>;
 
-    fn first(self) -> (Self::Item, Self::IntoIter) {
-        let mut iter = self.iter;
-        (iter.next().unwrap(), iter)
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter.into_iter()
     }
 }
+
+impl<T, const C: usize> NonEmptyIterator for ArrayNonEmptyIterator<T, C> {}
 
 // NOTE 2024-04-05 This must never be implemented for 0.
 //
