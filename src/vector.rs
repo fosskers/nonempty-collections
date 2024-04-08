@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use crate::iter::{FromNonEmptyIterator, IntoNonEmptyIterator, NonEmptyIterator};
 use crate::slice::NEChunks;
 use std::cmp::Ordering;
-use std::iter::{Chain, Once, Skip};
 use std::num::NonZeroUsize;
 use std::ops::{IndexMut, Not};
 
@@ -30,12 +29,12 @@ use std::ops::{IndexMut, Not};
 #[macro_export]
 macro_rules! nev {
     ($h:expr, $( $x:expr ),*) => {{
-        let mut tail = Vec::new();
-        $( tail.push($x); )*
-        $crate::NEVec { head: $h, tail }
+        let mut v = $crate::NEVec::new($h);
+        $( v.push($x); )*
+        v
     }};
     ($h:expr) => {
-        $crate::NEVec { head: $h, tail: Vec::new() }
+        $crate::NEVec::new($h)
     }
 }
 
@@ -59,33 +58,25 @@ macro_rules! nev {
 )]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NEVec<T> {
-    /// The element of the non-empty Vector. Always exists.
-    pub head: T,
-
-    /// The remaining elements of the non-empty Vector, perhaps empty.
-    pub tail: Vec<T>,
+    inner: Vec<T>,
 }
 
 impl<T> NEVec<T> {
     /// Create a new non-empty list with an initial element.
     pub const fn new(head: T) -> Self {
-        NEVec {
-            head,
-            tail: Vec::new(),
-        }
+        NEVec { inner: vec![head] }
     }
 
     /// Creates a new `NEVec` with a single element and specified capacity.
     pub fn with_capacity(capacity: usize, head: T) -> Self {
-        NEVec {
-            head,
-            tail: Vec::with_capacity(capacity),
-        }
+        let mut inner = Vec::with_capacity(capacity);
+        inner.push(head);
+        NEVec { inner }
     }
 
     /// Get the first element. Never fails.
     pub const fn first(&self) -> &T {
-        &self.head
+        unsafe { &self.inner.get_unchecked(0) }
     }
 
     /// Get the mutable reference to the first element. Never fails.
@@ -106,30 +97,15 @@ impl<T> NEVec<T> {
     /// assert_eq!(v.first(), &42);
     /// ```
     pub fn first_mut(&mut self) -> &mut T {
-        &mut self.head
-    }
-
-    /// Get the possibly-empty tail of the list.
-    ///
-    /// ```
-    /// use nonempty_collections::nev;
-    ///
-    /// let v = nev![42];
-    /// assert_eq!(v.tail(), &[]);
-    ///
-    /// let v = nev![1, 4, 2, 3];
-    /// assert_eq!(v.tail(), &[4, 2, 3]);
-    /// ```
-    pub fn tail(&self) -> &[T] {
-        &self.tail
+        unsafe { &mut self.inner.get_unchecked_mut(0) }
     }
 
     /// Push an element to the end of the list.
     pub fn push(&mut self, e: T) {
-        self.tail.push(e)
+        self.inner.push(e)
     }
 
-    /// Pop an element from the end of the list. Will never pop the head value.
+    /// Pop an element from the end of the list. Is a no-op when [`len()`] is 1.
     ///
     /// ```
     /// use nonempty_collections::nev;
@@ -139,7 +115,11 @@ impl<T> NEVec<T> {
     /// assert_eq!(None, v.pop());
     /// ```
     pub fn pop(&mut self) -> Option<T> {
-        self.tail.pop()
+        if self.len() > 1 {
+            self.inner.pop()
+        } else {
+            None
+        }
     }
 
     /// Inserts an element at position index within the vector, shifting all
@@ -163,20 +143,12 @@ impl<T> NEVec<T> {
     /// assert_eq!(v, nev![42, 1, 4, 2, 3, 5]);
     /// ```
     pub fn insert(&mut self, index: usize, element: T) {
-        let len = self.len().get();
-        assert!(index <= len);
-
-        if index == 0 {
-            let head = std::mem::replace(&mut self.head, element);
-            self.tail.insert(0, head);
-        } else {
-            self.tail.insert(index - 1, element);
-        }
+        self.inner.insert(index, element);
     }
 
     /// Get the length of the list.
     pub fn len(&self) -> NonZeroUsize {
-        NonZeroUsize::MIN.saturating_add(self.tail.len())
+        unsafe { NonZeroUsize::new_unchecked(self.inner.len()) }
     }
 
     /// A `NEVec` is never empty.
@@ -314,10 +286,13 @@ impl<T> NEVec<T> {
     where
         T: Clone,
     {
-        slice.split_first().map(|(h, t)| NEVec {
-            head: h.clone(),
-            tail: t.into(),
-        })
+        if slice.is_empty() {
+            None
+        } else {
+            NEVec {
+                inner: slice.into_iter().collect(),
+            }
+        }
     }
 
     /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is
@@ -343,13 +318,12 @@ impl<T> NEVec<T> {
         if vec.is_empty() {
             None
         } else {
-            let head = vec.remove(0);
-            Some(NEVec { head, tail: vec })
+            Some(NEVec { inner: vec })
         }
     }
 
     /// Deconstruct a `NEVec` into its head and tail. This operation never fails
-    /// since we are guranteed to have a head element.
+    /// since we are guaranteed to have a head element.
     ///
     /// # Example Use
     ///
@@ -367,7 +341,7 @@ impl<T> NEVec<T> {
     /// assert_eq!(v.split_first(), (&1, &[][..]));
     /// ```
     pub fn split_first(&self) -> (&T, &[T]) {
-        (&self.head, &self.tail)
+        self.inner.split_first().unwrap()
     }
 
     /// Deconstruct a `NEVec` into its first, last, and
@@ -392,9 +366,11 @@ impl<T> NEVec<T> {
     /// assert_eq!(v.split(), (&1, &[][..], &1));
     /// ```
     pub fn split(&self) -> (&T, &[T], &T) {
-        match self.tail.split_last() {
-            None => (&self.head, &[], &self.head),
-            Some((last, middle)) => (&self.head, middle, last),
+        let (first, rest) = self.split_first();
+        if let Some((last, middle)) = rest.split_last() {
+            (first, middle, last)
+        } else {
+            (&self.head, &[], &self.head)
         }
     }
 
@@ -770,7 +746,9 @@ impl<T> From<(T, Vec<T>)> for NEVec<T> {
     /// Turns a pair of an element and a Vec into
     /// a NEVec.
     fn from((head, tail): (T, Vec<T>)) -> Self {
-        NEVec { head, tail }
+        let mut vec = vec![head];
+        vec.extend(tail);
+        NEVec { inner: vec }
     }
 }
 
@@ -786,11 +764,8 @@ impl<T> FromNonEmptyIterator<T> for NEVec<T> {
     where
         I: IntoNonEmptyIterator<Item = T>,
     {
-        let (head, rest) = iter.into_nonempty_iter().first();
-
         NEVec {
-            head,
-            tail: rest.into_iter().collect(),
+            inner: iter.into_nonempty_iter().into_iter().collect(),
         }
     }
 }
@@ -799,26 +774,15 @@ impl<T> FromNonEmptyIterator<T> for NEVec<T> {
 #[derive(Debug)]
 pub struct Iter<'a, T: 'a> {
     head: &'a T,
-    iter: Chain<Once<&'a T>, std::slice::Iter<'a, T>>,
+    iter: std::slice::Iter<'a, T>,
 }
 
-impl<'a, T> NonEmptyIterator for Iter<'a, T> {
-    type Item = &'a T;
-    type IntoIter = Skip<Chain<Once<&'a T>, std::slice::Iter<'a, T>>>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
-
-    fn first(self) -> (Self::Item, Self::IntoIter) {
-        (self.head, self.iter.skip(1))
-    }
-}
+impl<'a, T> NonEmptyIterator for Iter<'a, T> {}
 
 impl<'a, T> IntoIterator for Iter<'a, T> {
     type Item = &'a T;
 
-    type IntoIter = Chain<Once<&'a T>, std::slice::Iter<'a, T>>;
+    type IntoIter = std::slice::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
@@ -832,27 +796,12 @@ pub struct IterMut<'a, T: 'a> {
     tail: std::slice::IterMut<'a, T>,
 }
 
-impl<'a, T> NonEmptyIterator for IterMut<'a, T> {
-    type Item = &'a mut T;
-
-    type IntoIter = std::slice::IterMut<'a, T>;
-
-    fn first(self) -> (Self::Item, Self::IntoIter) {
-        (self.head.unwrap(), self.tail)
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.head {
-            None => self.tail.next(),
-            Some(_) => self.head.take(),
-        }
-    }
-}
+impl<'a, T> NonEmptyIterator for IterMut<'a, T> {}
 
 impl<'a, T> IntoIterator for IterMut<'a, T> {
     type Item = &'a mut T;
 
-    type IntoIter = Chain<Once<&'a mut T>, std::slice::IterMut<'a, T>>;
+    type IntoIter = std::slice::IterMut<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         std::iter::once(self.head.unwrap()).chain(self.tail)
@@ -960,8 +909,7 @@ mod tests {
     fn test_from_conversion() {
         let result = NEVec::from((1, vec![2, 3, 4, 5]));
         let expected = NEVec {
-            head: 1,
-            tail: vec![2, 3, 4, 5],
+            inner: vec![1, 2, 3, 4, 5],
         };
         assert_eq!(result, expected);
     }
