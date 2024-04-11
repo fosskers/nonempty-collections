@@ -30,12 +30,20 @@ pub fn once<T>(value: T) -> Once<T> {
 
 /// An [`Iterator`] that is guaranteed to have at least one item.
 pub trait NonEmptyIterator: IntoIterator {
-    fn next(self) -> (Self::Item, Self::IntoIter) {
+    /// Advances this non-empty iterator, this consumes the iterator and returns the first item and a possibly empty iterator.
+    fn next(self) -> (Self::Item, Self::IntoIter)
+    where
+        Self: Sized,
+    {
         let mut iter = self.into_iter();
         (iter.next().unwrap(), iter)
     }
 
     /// Tests if every element of the iterator matches a predicate.
+    ///
+    /// Because this function always advances the iterator at least once, the
+    /// non-empty guarantee is invalidated. Therefore, the function returns a bool
+    /// and a potentially empty iterator that contains the remaining elements.
     ///
     /// See also [`Iterator::all`].
     ///
@@ -43,27 +51,15 @@ pub trait NonEmptyIterator: IntoIterator {
     /// use nonempty_collections::*;
     ///
     /// let n = nev![2,2,2];
-    /// assert!(n.iter().all(|n| n % 2 == 0));
+    /// assert!(n.iter().all(|n| n % 2 == 0).0);
     /// ```
-    fn all<F>(&mut self, f: F) -> bool
+    fn all<F>(self, f: F) -> (bool, Self::IntoIter)
     where
         Self: Sized,
         F: FnMut(Self::Item) -> bool,
     {
-        let mut fun = f;
-
-        loop {
-            match self.next() {
-                Some(i) => {
-                    if !fun(i) {
-                        return false;
-                    }
-                }
-                None => {
-                    return true;
-                }
-            }
-        }
+        let mut iter = self.into_iter();
+        (iter.all(f), iter)
     }
 
     /// Tests if any element of the iterator matches a predicate.
@@ -74,28 +70,16 @@ pub trait NonEmptyIterator: IntoIterator {
     /// use nonempty_collections::*;
     ///
     /// let n = nev![1,1,1,2,1,1];
-    /// assert!(n.iter().any(|n| n % 2 == 0));
-    /// assert!(!n.iter().any(|n| n % 3 == 0));
+    /// assert!(n.iter().any(|n| n % 2 == 0).0);
+    /// assert!(!n.iter().any(|n| n % 3 == 0).0);
     /// ```
-    fn any<F>(&mut self, f: F) -> bool
+    fn any<F>(self, f: F) -> (bool, Self::IntoIter)
     where
         Self: Sized,
         F: FnMut(Self::Item) -> bool,
     {
-        let mut fun = f;
-
-        loop {
-            match self.next() {
-                None => {
-                    return false;
-                }
-                Some(i) => {
-                    if fun(i) {
-                        return true;
-                    }
-                }
-            }
-        }
+        let mut iter = self.into_iter();
+        (iter.any(f), iter)
     }
 
     /// Takes two iterators and creates a new non-empty iterator over both in sequence.
@@ -214,10 +198,7 @@ pub trait NonEmptyIterator: IntoIterator {
     where
         Self: Sized,
     {
-        // Differs from the implementation of `Iterator::count` to absolutely
-        // ensure that `count` returns at least 1.
-        let (_, rest) = self.first();
-        NonZeroUsize::MIN.saturating_add(rest.into_iter().count())
+        unsafe { NonZeroUsize::new_unchecked(self.into_iter().count()) }
     }
 
     /// Creates a non-empty iterator which gives the current iteration count as
@@ -236,10 +217,7 @@ pub trait NonEmptyIterator: IntoIterator {
     where
         Self: Sized,
     {
-        Enumerate {
-            iter: self,
-            count: 0,
-        }
+        Enumerate { iter: self }
     }
 
     /// Creates an iterator which uses a closure to determine if an element
@@ -302,17 +280,15 @@ pub trait NonEmptyIterator: IntoIterator {
     /// assert_eq!(nev![1, 2, 3], r);
     /// ```
     #[inline]
-    fn flat_map<U, V, F>(self, f: F) -> FlatMap<Self, V, F>
+    fn flat_map<U, F>(self, f: F) -> FlatMap<Self, F>
     where
         Self: Sized,
         F: FnMut(Self::Item) -> U,
-        U: IntoNonEmptyIterator<IntoIter = V, Item = V::Item>,
-        V: NonEmptyIterator,
+        U: IntoNonEmptyIterator,
     {
         FlatMap {
             iter: self.into_nonempty_iter(),
             f,
-            curr: None,
         }
     }
 
@@ -337,16 +313,12 @@ pub trait NonEmptyIterator: IntoIterator {
     /// let r = n.into_nonempty_iter().fold(0, |acc, x| acc + x);
     /// assert_eq!(10, r);
     /// ```
-    fn fold<B, F>(mut self, init: B, mut f: F) -> B
+    fn fold<B, F>(self, init: B, f: F) -> B
     where
         Self: Sized,
         F: FnMut(B, Self::Item) -> B,
     {
-        let mut accum = init;
-        while let Some(x) = self.next() {
-            accum = f(accum, x);
-        }
-        accum
+        self.into_iter().fold(init, f)
     }
 
     /// Takes a closure and creates a non-empty iterator which calls that
@@ -371,7 +343,9 @@ pub trait NonEmptyIterator: IntoIterator {
         Self: Sized,
         F: FnMut(Self::Item) -> U,
     {
-        Map { iter: self, f }
+        Map {
+            iter: self.into_iter().map(f),
+        }
     }
 
     /// Returns the maximum element of a non-empty iterator.
@@ -401,7 +375,7 @@ pub trait NonEmptyIterator: IntoIterator {
         Self: Sized,
         F: Fn(&Self::Item, &Self::Item) -> Ordering,
     {
-        let (first, iter) = self.first();
+        let (first, iter) = self.next();
 
         iter.into_iter()
             .fold(first, |acc, item| match compare(&acc, &item) {
@@ -465,7 +439,7 @@ pub trait NonEmptyIterator: IntoIterator {
         Self: Sized,
         F: Fn(&Self::Item, &Self::Item) -> Ordering,
     {
-        let (first, iter) = self.first();
+        let (first, iter) = self.next();
 
         iter.into_iter()
             .fold(first, |acc, item| match compare(&acc, &item) {
@@ -518,11 +492,11 @@ pub trait NonEmptyIterator: IntoIterator {
     /// let n = nev![0,1,2,3,4,5,6];
     /// assert_eq!(None, n.iter().nth(100));
     /// ```
-    fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        for _ in 0..n {
-            self.next()?;
-        }
-        self.next()
+    fn nth(self, n: usize) -> Option<Self::Item>
+    where
+        Self: Sized,
+    {
+        self.into_iter().nth(n)
     }
 
     /// Skip the first `n` elements.
@@ -596,20 +570,18 @@ pub trait NonEmptyIterator: IntoIterator {
     ///
     /// ```
     /// use nonempty_collections::*;
-    /// use nonempty_collections::NEVec;
+    /// use core::num::NonZeroUsize;
     ///
-    /// let n: NEVec<_> = nev![1,2,3].iter().map(|n| n * 2).take(2).collect();
+    /// let n: NEVec<_> = nev![1,2,3].iter().map(|n| n * 2).take(NonZeroUsize::new(2).unwrap()).collect();
     /// assert_eq!(nev![2,4], n);
     /// ```
-    fn take(self, n: usize) -> Take<Self>
+    fn take(self, n: NonZeroUsize) -> Take<Self>
     where
         Self: Sized,
     {
-        if n == 0 {
-            panic!("Cannot take 0 elements from a non-empty iterator!");
+        Take {
+            iter: self.into_iter().take(n.get()),
         }
-
-        Take { iter: self, n }
     }
 
     /// Iterates over all initial elements that pass a given predicate.
@@ -666,7 +638,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// let r = a.into_nonempty_iter().zip(b).map(|(av, bv)| av + bv).collect();
     /// assert_eq!(nev![5, 7, 9], r);
     /// ```
-    fn zip<U>(self, other: U) -> Zip<Self, U::IntoIter>
+    fn zip<U>(self, other: U) -> Zip<Self, U::IntoNEIter>
     where
         Self: Sized,
         U: IntoNonEmptyIterator,
@@ -699,8 +671,7 @@ pub trait NonEmptyIterator: IntoIterator {
         Self: Sized,
         F: FnMut(Self::Item, Self::Item) -> Self::Item,
     {
-        let (head, rest) = self.first();
-        rest.into_iter().fold(head, f)
+        self.into_iter().reduce(f).unwrap()
     }
 }
 
@@ -717,11 +688,7 @@ impl<T> FromNonEmptyIterator<T> for Vec<T> {
     where
         I: IntoNonEmptyIterator<Item = T>,
     {
-        let (head, rest) = iter.into_nonempty_iter().first();
-
-        let mut v = vec![head];
-        v.extend(rest);
-        v
+        iter.into_nonempty_iter().into_iter().collect()
     }
 }
 
@@ -730,12 +697,7 @@ impl<T: Eq + Hash> FromNonEmptyIterator<T> for HashSet<T> {
     where
         I: IntoNonEmptyIterator<Item = T>,
     {
-        let (head, rest) = iter.into_nonempty_iter().first();
-
-        let mut s = HashSet::new();
-        s.insert(head);
-        s.extend(rest);
-        s
+        iter.into_nonempty_iter().into_iter().collect()
     }
 }
 
@@ -747,7 +709,7 @@ where
     where
         I: IntoNonEmptyIterator<Item = Result<A, E>>,
     {
-        let (head, rest) = iter.into_nonempty_iter().first();
+        let (head, rest) = iter.into_nonempty_iter().next();
         let head: A = head?;
 
         let mut buf = NEVec::new(head);
@@ -763,31 +725,25 @@ where
 }
 
 impl<I: NonEmptyIterator> IntoNonEmptyIterator for I {
-    type Item = I::Item;
+    type IntoNEIter = I;
 
-    type IntoIter = I;
-
-    fn into_nonempty_iter(self) -> Self::IntoIter {
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
         self
     }
 }
 
 /// Conversion into a [`NonEmptyIterator`].
-pub trait IntoNonEmptyIterator {
-    /// The type of the elements being iterated over.
-    type Item;
-
+pub trait IntoNonEmptyIterator: IntoIterator {
     /// Which kind of [`NonEmptyIterator`] are we turning this into?
-    type IntoIter: NonEmptyIterator<Item = Self::Item>;
+    type IntoNEIter: NonEmptyIterator<Item = Self::Item>;
 
     /// Creates a [`NonEmptyIterator`] from a value.
-    fn into_nonempty_iter(self) -> Self::IntoIter;
+    fn into_nonempty_iter(self) -> Self::IntoNEIter;
 }
 
 /// Similar to [`std::iter::Map`], but with additional non-emptiness guarantees.
-pub struct Map<I, F> {
-    iter: I,
-    f: F,
+pub struct Map<I: NonEmptyIterator, F> {
+    iter: std::iter::Map<I::IntoIter, F>,
 }
 
 impl<U, I, F> NonEmptyIterator for Map<I, F>
@@ -809,10 +765,10 @@ where
 {
     type Item = U;
 
-    type IntoIter = std::iter::Map<<I::IntoIter as IntoIterator>::IntoIter, F>;
+    type IntoIter = std::iter::Map<I::IntoIter, F>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.iter.map(self.f)
+        self.iter
     }
 }
 
@@ -849,7 +805,6 @@ where
 /// See also [`std::iter::Enumerate`].
 pub struct Enumerate<I> {
     iter: I,
-    count: usize,
 }
 
 impl<I> NonEmptyIterator for Enumerate<I> where I: NonEmptyIterator {}
@@ -870,30 +825,30 @@ where
 /// A non-empty iterator that only iterates over the first `n` iterations.
 ///
 /// See also [`Iterator::take`].
-pub struct Take<I> {
-    iter: I,
-    n: NonZeroUsize,
+pub struct Take<I: NonEmptyIterator> {
+    iter: std::iter::Take<I::IntoIter>,
 }
 
 impl<I> NonEmptyIterator for Take<I> where I: NonEmptyIterator {}
 
 /// ```
 /// use nonempty_collections::*;
+/// use core::num::NonZeroUsize;
 ///
 /// let v = nev![1,2,3];
-/// let r = v.iter().take(1).into_iter().count();
+/// let r = v.iter().take(NonZeroUsize::new(1).unwrap()).into_iter().count();
 /// assert_eq!(1, r);
 /// ```
 impl<I> IntoIterator for Take<I>
 where
-    I: IntoIterator,
+    I: NonEmptyIterator,
 {
     type Item = I::Item;
 
     type IntoIter = std::iter::Take<I::IntoIter>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.iter.into_iter().take(self.n.get())
+        self.iter
     }
 }
 
@@ -944,7 +899,7 @@ impl<T> IntoIterator for Once<T> {
 
     type IntoIter = std::option::IntoIter<T>;
 
-    fn into_iter(mut self) -> Self::IntoIter {
+    fn into_iter(self) -> Self::IntoIter {
         self.once
     }
 }
@@ -1010,18 +965,16 @@ where
 /// Flatten nested, non-empty structures.
 ///
 /// See also [`std::iter::FlatMap`].
-pub struct FlatMap<I, U, F> {
+pub struct FlatMap<I, F> {
     iter: I,
     f: F,
-    curr: Option<U>,
 }
 
-impl<I, U, V, F> NonEmptyIterator for FlatMap<I, U, F>
+impl<I, U, F> NonEmptyIterator for FlatMap<I, F>
 where
     I: NonEmptyIterator,
-    F: FnMut(I::Item) -> V,
-    U: NonEmptyIterator,
-    V: IntoNonEmptyIterator<IntoIter = U, Item = U::Item> + IntoIterator<Item = U::Item>,
+    F: FnMut(I::Item) -> U,
+    U: IntoNonEmptyIterator,
 {
 }
 
@@ -1032,16 +985,15 @@ where
 /// let r: Vec<_> = v.into_nonempty_iter().flat_map(|n| nev![n]).into_iter().collect();
 /// assert_eq!(vec![1, 2, 3], r);
 /// ```
-impl<I, U, V, F> IntoIterator for FlatMap<I, U, F>
+impl<I, U, F> IntoIterator for FlatMap<I, F>
 where
     I: IntoIterator,
-    F: FnMut(I::Item) -> V,
-    U: IntoIterator,
-    V: IntoIterator<Item = U::Item>,
+    F: FnMut(I::Item) -> U,
+    U: IntoNonEmptyIterator,
 {
     type Item = U::Item;
 
-    type IntoIter = std::iter::FlatMap<I::IntoIter, V, F>;
+    type IntoIter = std::iter::FlatMap<I::IntoIter, U, F>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter.into_iter().flat_map(self.f)
@@ -1143,22 +1095,5 @@ where
     /// returns `None`.
     fn try_into_nonempty_iter(self) -> Option<Self::IntoIter> {
         self.into_iter().to_nonempty_iter()
-    }
-}
-
-/// A wrapper type for easy derivation of [`IntoIterator`] for anything
-/// that's already [`NonEmptyIterator`].
-pub struct IntoIteratorProxy<T> {
-    pub(crate) iter: T,
-}
-
-impl<T> Iterator for IntoIteratorProxy<T>
-where
-    T: NonEmptyIterator,
-{
-    type Item = T::Item;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
     }
 }
