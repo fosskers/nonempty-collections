@@ -97,7 +97,7 @@ impl<T, const C: usize> IntoIterator for ArrayNonEmptyIterator<T, C> {
     type IntoIter = core::array::IntoIter<T, C>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.iter.into_iter()
+        self.iter
     }
 }
 
@@ -156,12 +156,12 @@ mod test {
     #[test]
     fn test_iter() {
         let iter = [1, 2, 3, 4].into_nonempty_iter();
-        let (first, rest) = iter.first();
+        let (first, rest) = iter.next();
         assert_eq!(1, first);
         assert_eq!(vec![2, 3, 4], rest.into_iter().collect::<Vec<_>>());
 
         let iter = [1].into_nonempty_iter();
-        let (first, rest) = iter.first();
+        let (first, rest) = iter.next();
         assert_eq!(1, first);
         assert_eq!(0, rest.into_iter().count());
 
