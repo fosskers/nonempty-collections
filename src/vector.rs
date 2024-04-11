@@ -820,6 +820,7 @@ impl<'a, T> IntoIterator for IterMut<'a, T> {
 }
 
 /// An owned non-empty iterator over values from an [`NEVec`].
+#[derive(Debug)]
 pub struct IntoIter<T> {
     inner: std::vec::IntoIter<T>,
 }
@@ -837,11 +838,9 @@ impl<T> IntoIterator for IntoIter<T> {
 }
 
 impl<T> IntoNonEmptyIterator for NEVec<T> {
-    type Item = T;
+    type IntoNEIter = IntoIter<T>;
 
-    type IntoIter = IntoIter<T>;
-
-    fn into_nonempty_iter(self) -> Self::IntoIter {
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
         IntoIter {
             inner: self.inner.into_iter(),
         }
