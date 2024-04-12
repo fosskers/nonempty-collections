@@ -173,6 +173,7 @@ where
     /// let n = NESet::from_set(s);
     /// assert_eq!(Some(nes![1, 2, 3]), n);
     /// ```
+    #[must_use]
     pub fn from_set(set: HashSet<T>) -> Option<NESet<T>> {
         if set.is_empty() {
             None
@@ -340,14 +341,14 @@ where
     ///
     /// Panics if the new allocation size overflows `usize`.
     pub fn reserve(&mut self, additional: usize) {
-        self.inner.reserve(additional)
+        self.inner.reserve(additional);
     }
 
     /// Shrinks the capacity of the set as much as possible. It will drop down
     /// as much as possible while maintaining the internal rules and possibly
     /// leaving some space in accordance with the resize policy.
     pub fn shrink_to_fit(&mut self) {
-        self.inner.shrink_to_fit()
+        self.inner.shrink_to_fit();
     }
 
     /// Visits the values representing the union, i.e., all the values in `self`

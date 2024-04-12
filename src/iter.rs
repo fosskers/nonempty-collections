@@ -1,10 +1,6 @@
 //! Non-empty iterators.
 
-<<<<<<< HEAD
 use crate::nev;
-use crate::NEVec;
-=======
->>>>>>> b36ef13 (apply consistent formatting)
 use core::fmt;
 use std::cell::RefCell;
 use std::cmp::Ordering;
@@ -753,27 +749,7 @@ impl<T> FromNonEmptyIterator<T> for Vec<T> {
     }
 }
 
-impl<K, V> FromNonEmptyIterator<(K, V)> for HashMap<K, V>
-where
-    K: Eq + Hash,
-{
-    fn from_nonempty_iter<I>(iter: I) -> Self
-    where
-        I: IntoNonEmptyIterator<Item = (K, V)>,
-    {
-        let ((head_key, head_val), rest) = iter.into_nonempty_iter().first();
-
-        let mut hm = HashMap::new();
-        hm.insert(head_key, head_val);
-        hm.extend(rest);
-        hm
-    }
-}
-
-impl<T> FromNonEmptyIterator<T> for HashSet<T>
-where
-    T: Eq + Hash,
-{
+impl<T: Eq + Hash, S: BuildHasher + Default> FromNonEmptyIterator<T> for HashSet<T, S> {
     fn from_nonempty_iter<I>(iter: I) -> Self
     where
         I: IntoNonEmptyIterator<Item = T>,

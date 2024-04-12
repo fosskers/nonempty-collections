@@ -37,6 +37,25 @@ unused_results = "allow"
 dead_code = "warn"
 unused = "warn"
 
+[lints.rustdoc]
+broken_intra_doc_links = "deny"
+missing_crate_level_docs = "warn"
+
+[lints.clippy]
+cargo = "warn"
+complexity = "warn"
+correctness = "deny"
+perf = "warn"
+style = "warn"
+suspicious = "deny"
+todo = "warn"
+
+missing_const_for_fn = "warn"
+
+### Pedantic
+pedantic = { level = "warn", priority = -1 } # setting a lower priority for the group to allow individual overrides
+module_name_repetitions = "allow" # naming is hard enough already
+iter_not_returning_iterator = "allow" # allow this because this is the point of this crate
 
 [package.metadata.docs.rs]
 all-features = true

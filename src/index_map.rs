@@ -3,9 +3,6 @@
 //! Unlike `HashMap` and [`crate::NEMap`], these feature a predictable iteration
 //! order.
 
-#![deny(clippy::correctness, clippy::suspicious)]
-#![warn(clippy::complexity, clippy::perf, clippy::style, clippy::pedantic)]
-#![allow(clippy::module_name_repetitions)]
 use std::fmt;
 use std::fmt::Debug;
 use std::fmt::Formatter;
@@ -71,7 +68,6 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     }
 
     /// An iterator visiting all elements in their order.
-    #[allow(clippy::iter_not_returning_iterator)]
     pub fn iter(&self) -> Iter<'_, K, V> {
         Iter {
             iter: self.inner.iter(),
@@ -79,7 +75,6 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     }
 
     /// An iterator visiting all elements in their order.
-    #[allow(clippy::iter_not_returning_iterator)]
     pub fn iter_mut(&mut self) -> IterMut<'_, K, V> {
         IterMut {
             iter: self.inner.iter_mut(),
@@ -115,7 +110,6 @@ impl<K, V, S> NEIndexMap<K, V, S> {
 
     /// A `NEIndexMap` is never empty.
     #[deprecated(note = "A NEIndexMap is never empty.")]
-    #[allow(clippy::unused_self)]
     pub const fn is_empty(&self) -> bool {
         false
     }
