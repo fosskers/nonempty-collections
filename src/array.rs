@@ -33,7 +33,7 @@ use crate::NonEmptyIterator;
 ///
 /// ```
 /// # use nonempty_collections::*;
-/// assert_eq!(NESlice::new(&1, &[2]), [1, 2].as_nonempty_slice());
+/// assert_eq!(NESlice::from_slice(&[1, 2]), Some([1, 2].as_nonempty_slice()));
 /// ```
 ///
 /// Get the length of an array as a [`NonZeroUsize`]:
@@ -117,11 +117,9 @@ macro_rules! impl_nonempty_iter_for_arrays {
     ($($i:literal),+ $(,)?) => {
         $(
             impl<T> IntoNonEmptyIterator for [T; $i] {
-                type Item = T;
+                type IntoNEIter = ArrayNonEmptyIterator<T, $i>;
 
-                type IntoIter = ArrayNonEmptyIterator<T, $i>;
-
-                fn into_nonempty_iter(self) -> Self::IntoIter {
+                fn into_nonempty_iter(self) -> Self::IntoNEIter {
                     ArrayNonEmptyIterator {
                         iter: self.into_iter(),
                     }
