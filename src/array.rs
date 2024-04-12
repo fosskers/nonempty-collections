@@ -19,6 +19,7 @@
 //!
 //! These extensions are only provided for arrays up to size 32.
 
+use core::fmt;
 use std::num::NonZeroUsize;
 
 use crate::impl_nonempty_iter_for_arrays;
@@ -102,6 +103,12 @@ impl<T, const C: usize> IntoIterator for ArrayNonEmptyIterator<T, C> {
 }
 
 impl<T, const C: usize> NonEmptyIterator for ArrayNonEmptyIterator<T, C> {}
+
+impl<T: fmt::Debug, const C: usize> fmt::Debug for ArrayNonEmptyIterator<T, C> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.iter.fmt(f)
+    }
+}
 
 // NOTE 2024-04-05 This must never be implemented for 0.
 //

@@ -789,7 +789,7 @@ pub struct Iter<'a, T: 'a> {
     iter: std::slice::Iter<'a, T>,
 }
 
-impl<'a, T> NonEmptyIterator for Iter<'a, T> {}
+impl<T> NonEmptyIterator for Iter<'_, T> {}
 
 impl<'a, T> IntoIterator for Iter<'a, T> {
     type Item = &'a T;
@@ -807,7 +807,7 @@ pub struct IterMut<'a, T: 'a> {
     inner: std::slice::IterMut<'a, T>,
 }
 
-impl<'a, T> NonEmptyIterator for IterMut<'a, T> {}
+impl<T> NonEmptyIterator for IterMut<'_, T> {}
 
 impl<'a, T> IntoIterator for IterMut<'a, T> {
     type Item = &'a mut T;
@@ -891,8 +891,15 @@ impl<T> std::ops::IndexMut<usize> for NEVec<T> {
 impl<T> TryFrom<Vec<T>> for NEVec<T> {
     type Error = crate::Error;
 
-    fn try_from(vec: Vec<T>) -> Result<Self, Self::Error> {
-        NEVec::from_vec(vec).ok_or(crate::Error::Empty)
+    use std::{convert::TryFrom, fmt};
+
+    use super::NEVec;
+
+    /// Encoding/decoding errors.
+    #[derive(Debug, Copy, Clone)]
+    pub enum Error {
+        /// There was nothing to decode.
+        Empty,
     }
 }
 
@@ -958,7 +965,7 @@ mod tests {
         use serde::{Deserialize, Serialize};
 
         #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-        pub struct SimpleSerializable(pub i32);
+        struct SimpleSerializable(i32);
 
         #[test]
         fn test_simple_round_trip() -> Result<(), Box<dyn std::error::Error>> {

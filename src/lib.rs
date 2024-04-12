@@ -121,8 +121,7 @@
 //! * `serde`: `serde` support.
 //! * `indexmap`: support for non-empty [`IndexMap`](https://docs.rs/indexmap/latest/indexmap/)
 
-#![warn(missing_docs)]
-
+pub mod array;
 #[cfg(feature = "indexmap")]
 pub mod index_map;
 
