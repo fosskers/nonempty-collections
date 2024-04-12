@@ -1,6 +1,7 @@
 //! Non-empty Slices.
 
 use crate::iter::{IntoNonEmptyIterator, NonEmptyIterator};
+use core::fmt;
 use std::iter::FilterMap;
 use std::num::NonZeroUsize;
 use std::slice::Chunks;
@@ -108,7 +109,7 @@ pub struct Iter<'a, T: 'a> {
     iter: std::slice::Iter<'a, T>,
 }
 
-impl<'a, T> NonEmptyIterator for Iter<'a, T> {}
+impl<T> NonEmptyIterator for Iter<'_, T> {}
 
 impl<'a, T> IntoIterator for Iter<'a, T> {
     type Item = &'a T;
@@ -127,7 +128,7 @@ pub struct NEChunks<'a, T> {
 
 type SliceFilter<'a, T> = fn(&'a [T]) -> Option<NESlice<'a, T>>;
 
-impl<'a, T> NonEmptyIterator for NEChunks<'a, T> {}
+impl<T> NonEmptyIterator for NEChunks<'_, T> {}
 
 impl<'a, T> IntoIterator for NEChunks<'a, T> {
     type Item = NESlice<'a, T>;
@@ -136,6 +137,12 @@ impl<'a, T> IntoIterator for NEChunks<'a, T> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner.filter_map(|x| NESlice::from_slice(x))
+    }
+}
+
+impl<T: fmt::Debug> fmt::Debug for NEChunks<'_, T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
     }
 }
 

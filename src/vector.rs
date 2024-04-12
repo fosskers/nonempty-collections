@@ -729,7 +729,7 @@ pub struct Iter<'a, T: 'a> {
     iter: std::slice::Iter<'a, T>,
 }
 
-impl<'a, T> NonEmptyIterator for Iter<'a, T> {}
+impl<T> NonEmptyIterator for Iter<'_, T> {}
 
 impl<'a, T> IntoIterator for Iter<'a, T> {
     type Item = &'a T;
@@ -747,7 +747,7 @@ pub struct IterMut<'a, T: 'a> {
     inner: std::slice::IterMut<'a, T>,
 }
 
-impl<'a, T> NonEmptyIterator for IterMut<'a, T> {}
+impl<T> NonEmptyIterator for IterMut<'_, T> {}
 
 impl<'a, T> IntoIterator for IterMut<'a, T> {
     type Item = &'a mut T;
@@ -837,7 +837,7 @@ pub mod serialize {
     use super::NEVec;
 
     /// Encoding/decoding errors.
-    #[derive(Debug)]
+    #[derive(Debug, Copy, Clone)]
     pub enum Error {
         /// There was nothing to decode.
         Empty,
@@ -898,7 +898,7 @@ mod tests {
         use serde::{Deserialize, Serialize};
 
         #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-        pub struct SimpleSerializable(pub i32);
+        struct SimpleSerializable(i32);
 
         #[test]
         fn test_simple_round_trip() -> Result<(), Box<dyn std::error::Error>> {

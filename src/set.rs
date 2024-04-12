@@ -2,6 +2,7 @@
 
 use crate::iter::NonEmptyIterator;
 use crate::{FromNonEmptyIterator, IntoNonEmptyIterator};
+use core::fmt;
 use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::hash::{BuildHasher, Hash};
@@ -466,7 +467,7 @@ impl<'a, T: 'a> IntoIterator for Iter<'a, T> {
     }
 }
 
-impl<'a, T> NonEmptyIterator for Iter<'a, T> {}
+impl<T> NonEmptyIterator for Iter<'_, T> {}
 
 /// An owned non-empty iterator over the values of an [`NESet`].
 pub struct IntoIter<T> {
@@ -484,6 +485,12 @@ impl<T> IntoIterator for IntoIter<T> {
 }
 
 impl<T> NonEmptyIterator for IntoIter<T> {}
+
+impl<T: fmt::Debug> fmt::Debug for IntoIter<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.iter.fmt(f)
+    }
+}
 
 impl<'a, T> IntoIterator for &'a NESet<T> {
     type Item = &'a T;
@@ -513,11 +520,21 @@ where
     }
 }
 
-impl<'a, T, S> NonEmptyIterator for Union<'a, T, S>
+impl<T, S> NonEmptyIterator for Union<'_, T, S>
 where
     T: Eq + Hash,
     S: BuildHasher,
 {
+}
+
+impl<T, S> fmt::Debug for Union<'_, T, S>
+where
+    T: fmt::Debug + Eq + Hash,
+    S: BuildHasher,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
+    }
 }
 
 impl<T, S> From<NESet<T, S>> for HashSet<T, S>

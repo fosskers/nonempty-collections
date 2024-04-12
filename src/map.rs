@@ -1,6 +1,7 @@
 //! Non-empty [`HashMap`]s.
 
 use crate::{FromNonEmptyIterator, IntoNonEmptyIterator, NonEmptyIterator};
+use core::fmt;
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::hash::{BuildHasher, Hash};
@@ -388,7 +389,7 @@ pub struct Iter<'a, K: 'a, V: 'a> {
     iter: std::collections::hash_map::Iter<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for Iter<'a, K, V> {}
+impl<K, V> NonEmptyIterator for Iter<'_, K, V> {}
 
 impl<'a, K, V> IntoIterator for Iter<'a, K, V> {
     type Item = (&'a K, &'a V);
@@ -400,12 +401,18 @@ impl<'a, K, V> IntoIterator for Iter<'a, K, V> {
     }
 }
 
+impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for Iter<'_, K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.iter.fmt(f)
+    }
+}
+
 /// A non-empty iterator over mutable values of an [`NEMap`].
 pub struct IterMut<'a, K: 'a, V: 'a> {
     iter: std::collections::hash_map::IterMut<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for IterMut<'a, K, V> {}
+impl<K, V> NonEmptyIterator for IterMut<'_, K, V> {}
 
 impl<'a, K, V> IntoIterator for IterMut<'a, K, V> {
     type Item = (&'a K, &'a mut V);
@@ -414,6 +421,12 @@ impl<'a, K, V> IntoIterator for IterMut<'a, K, V> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
+    }
+}
+
+impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for IterMut<'_, K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.iter.fmt(f)
     }
 }
 
@@ -434,12 +447,18 @@ impl<K, V> IntoIterator for IntoIter<K, V> {
     }
 }
 
+impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for IntoIter<K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.iter.fmt(f)
+    }
+}
+
 /// A non-empty iterator over the keys of an [`NEMap`].
 pub struct Keys<'a, K: 'a, V: 'a> {
     inner: std::collections::hash_map::Keys<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for Keys<'a, K, V> {}
+impl<K, V> NonEmptyIterator for Keys<'_, K, V> {}
 
 impl<'a, K, V> IntoIterator for Keys<'a, K, V> {
     type Item = &'a K;
@@ -451,12 +470,18 @@ impl<'a, K, V> IntoIterator for Keys<'a, K, V> {
     }
 }
 
+impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for Keys<'_, K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
 /// A non-empty iterator over the values of an [`NEMap`].
 pub struct Values<'a, K: 'a, V: 'a> {
     inner: std::collections::hash_map::Values<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for Values<'a, K, V> {}
+impl<K, V> NonEmptyIterator for Values<'_, K, V> {}
 
 impl<'a, K, V> IntoIterator for Values<'a, K, V> {
     type Item = &'a V;
@@ -465,6 +490,12 @@ impl<'a, K, V> IntoIterator for Values<'a, K, V> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner
+    }
+}
+
+impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for Values<'_, K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
     }
 }
 

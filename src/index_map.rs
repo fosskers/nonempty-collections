@@ -163,7 +163,7 @@ impl<K, V, S> NEIndexMap<K, V, S> {
 }
 
 impl<K: Debug, V: Debug, S> Debug for NEIndexMap<K, V, S> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_map().entries(self.iter()).finish()
     }
 }
@@ -431,7 +431,7 @@ pub struct Iter<'a, K: 'a, V: 'a> {
     iter: indexmap::map::Iter<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for Iter<'a, K, V> {}
+impl<K, V> NonEmptyIterator for Iter<'_, K, V> {}
 
 impl<'a, K, V> IntoIterator for Iter<'a, K, V> {
     type Item = (&'a K, &'a V);
@@ -463,7 +463,7 @@ pub struct IterMut<'a, K: 'a, V: 'a> {
     iter: indexmap::map::IterMut<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for IterMut<'a, K, V> {}
+impl<K, V> NonEmptyIterator for IterMut<'_, K, V> {}
 
 impl<'a, K, V> IntoIterator for IterMut<'a, K, V> {
     type Item = (&'a K, &'a mut V);
@@ -472,6 +472,12 @@ impl<'a, K, V> IntoIterator for IterMut<'a, K, V> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
+    }
+}
+
+impl<K: Debug, V: Debug> Debug for IterMut<'_, K, V> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        self.iter.fmt(f)
     }
 }
 
@@ -511,7 +517,7 @@ pub struct Keys<'a, K: 'a, V: 'a> {
     inner: indexmap::map::Keys<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for Keys<'a, K, V> {}
+impl<K, V> NonEmptyIterator for Keys<'_, K, V> {}
 
 impl<'a, K, V> IntoIterator for Keys<'a, K, V> {
     type Item = &'a K;
@@ -552,7 +558,7 @@ pub struct Values<'a, K: 'a, V: 'a> {
     inner: indexmap::map::Values<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for Values<'a, K, V> {}
+impl<K, V> NonEmptyIterator for Values<'_, K, V> {}
 
 impl<'a, K, V> IntoIterator for Values<'a, K, V> {
     type Item = &'a V;
@@ -584,7 +590,7 @@ pub struct ValuesMut<'a, K: 'a, V: 'a> {
     inner: indexmap::map::ValuesMut<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for ValuesMut<'a, K, V> {}
+impl<K, V> NonEmptyIterator for ValuesMut<'_, K, V> {}
 
 impl<'a, K, V> IntoIterator for ValuesMut<'a, K, V> {
     type Item = &'a mut V;
@@ -593,6 +599,12 @@ impl<'a, K, V> IntoIterator for ValuesMut<'a, K, V> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner
+    }
+}
+
+impl<K: Debug, V: Debug> Debug for ValuesMut<'_, K, V> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
     }
 }
 
