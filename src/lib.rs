@@ -64,7 +64,8 @@
 //! And if necessary, you're free to convert to and from `Vec`:
 //!
 //! ```
-//! use nonempty_collections::{NEVec, nev};
+//! use nonempty_collections::nev;
+//! use nonempty_collections::NEVec;
 //!
 //! let l: NEVec<u32> = nev![42, 36, 58, 9001];
 //! let v: Vec<u32> = l.into();
@@ -81,8 +82,10 @@
 //!
 //! - Functions like `map` preserve non-emptiness.
 //! - Functions like `max` always have a result.
-//! - A non-empty Iterator chain can be `collect`ed back into a non-empty structure.
-//! - You can chain many operations together without having to double-check for emptiness.
+//! - A non-empty Iterator chain can be `collect`ed back into a non-empty
+//!   structure.
+//! - You can chain many operations together without having to double-check for
+//!   emptiness.
 //!
 //! ```
 //! use nonempty_collections::*;
