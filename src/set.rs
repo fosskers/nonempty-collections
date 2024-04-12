@@ -8,7 +8,6 @@ use crate::{FromNonEmptyIterator, IntoIteratorExt, IntoNonEmptyIterator};
 use std::borrow::Borrow;
 use std::collections::HashSet;
 use std::hash::{BuildHasher, Hash};
-use std::iter::{Chain, Once, Skip};
 use std::num::NonZeroUsize;
 
 /// Like the [`crate::nev!`] macro, but for Sets. A nice short-hand for
@@ -23,14 +22,12 @@ use std::num::NonZeroUsize;
 #[macro_export]
 macro_rules! nes {
     ($h:expr, $( $x:expr ),*) => {{
-        let mut tail = std::collections::HashSet::new();
-        tail.insert($h);
-        $( tail.insert($x); )*
-        tail.remove(&$h);
-        $crate::NESet { head: $h, tail }
+        let mut set = $crate::NESet::new($h);
+        $( set.insert($x); )*
+        set
     }};
     ($h:expr) => {
-        $crate::NESet { head: $h, tail: std::collections::HashSet::new() }
+        $crate::NESet::new($h)
     }
 }
 
@@ -49,13 +46,12 @@ macro_rules! nes {
 /// assert_eq!(nev![&1,&2,&3,&4], v);
 /// ```
 ///
-/// With `NESet`, the first element can always be accessed in constant time.
 ///
 /// ```
 /// use nonempty_collections::nes;
 ///
 /// let s = nes!["Fëanor", "Fingolfin", "Finarfin"];
-/// assert_eq!("Fëanor", s.head);
+/// assert!(s.contains(&"Fëanor"));
 /// ```
 ///
 /// # Conversion
@@ -102,29 +98,24 @@ macro_rules! nes {
 )]
 #[derive(Debug, Clone)]
 pub struct NESet<T, S = std::collections::hash_map::RandomState> {
-    /// An element of the non-empty `HashSet`. Always exists.
-    pub head: T,
-
-    /// The remaining elements, perhaps empty.
-    pub tail: HashSet<T, S>,
+    inner: HashSet<T, S>,
 }
 
 impl<T, S> NESet<T, S> {
     /// Returns the number of elements the set can hold without reallocating.
     pub fn capacity(&self) -> usize {
-        self.tail.capacity() + 1
+        self.inner.capacity()
     }
 
     /// Returns a reference to the set's `BuildHasher`.
     pub fn hasher(&self) -> &S {
-        self.tail.hasher()
+        self.inner.hasher()
     }
 
     /// An iterator visiting all elements in arbitrary order.
     pub fn iter(&self) -> Iter<'_, T> {
         Iter {
-            head: &self.head,
-            iter: std::iter::once(&self.head).chain(self.tail.iter()),
+            iter: self.inner.iter(),
         }
     }
 
@@ -137,7 +128,7 @@ impl<T, S> NESet<T, S> {
     /// assert_eq!(3, s.len().get());
     /// ```
     pub fn len(&self) -> NonZeroUsize {
-        NonZeroUsize::MIN.saturating_add(self.tail.len())
+        unsafe { NonZeroUsize::new_unchecked(self.inner.len()) }
     }
 
     /// A `NESet` is never empty.
@@ -151,11 +142,15 @@ impl<T> NESet<T>
 where
     T: Eq + Hash,
 {
+    /// Creates a new `NESet` with a single element.
+    pub fn new(value: T) -> Self {
+        let mut inner = HashSet::new();
+        inner.insert(value);
+        Self { inner }
+    }
+
     /// Attempt a conversion from a [`HashSet`], consuming the given `HashSet`.
     /// Will fail if the `HashSet` is empty.
-    ///
-    /// Slightly inefficient, as it requires a reallocation of the "tail"
-    /// `HashSet` after the initial `head` has been extracted.
     ///
     /// ```
     /// use nonempty_collections::{nes, NESet};
@@ -170,11 +165,11 @@ where
     /// assert_eq!(Some(nes![1,2,3]), n);
     /// ```
     pub fn from_set(set: HashSet<T>) -> Option<NESet<T>> {
-        let mut iter = set.into_iter();
-        iter.next().map(|head| {
-            let tail: HashSet<_> = iter.collect();
-            NESet { head, tail }
-        })
+        if set.is_empty() {
+            None
+        } else {
+            Some(NESet { inner: set })
+        }
     }
 }
 
@@ -197,7 +192,7 @@ where
         T: Borrow<Q>,
         Q: Eq + Hash + ?Sized,
     {
-        self.tail.contains(value) || value == self.head.borrow()
+        self.inner.contains(value)
     }
 
     /// Visits the values representing the difference, i.e., the values that are
@@ -212,11 +207,11 @@ where
     /// v.sort();
     /// assert_eq!(vec![&1, &2], v);
     /// ```
-    pub fn difference<'a>(&'a self, other: &'a NESet<T, S>) -> Difference<'a, T, S> {
-        Difference {
-            iter: self.iter(),
-            other,
-        }
+    pub fn difference<'a>(
+        &'a self,
+        other: &'a NESet<T, S>,
+    ) -> std::collections::hash_set::Difference<'a, T, S> {
+        self.inner.difference(&other.inner)
     }
 
     /// Returns a reference to the value in the set, if any, that is equal to
@@ -237,9 +232,7 @@ where
         T: Borrow<Q>,
         Q: Eq + Hash,
     {
-        self.tail
-            .get(value)
-            .or_else(|| (value == self.head.borrow()).then_some(&self.head))
+        self.inner.get(value)
     }
 
     /// Adds a value to the set.
@@ -256,11 +249,7 @@ where
     /// assert_eq!(true, s.insert(4));
     /// ```
     pub fn insert(&mut self, value: T) -> bool {
-        if self.contains(&value) {
-            false
-        } else {
-            self.tail.insert(value)
-        }
+        self.inner.insert(value)
     }
 
     /// Visits the values representing the interesection, i.e., the values that
@@ -275,11 +264,11 @@ where
     /// v.sort();
     /// assert_eq!(vec![&3], v);
     /// ```
-    pub fn intersection<'a>(&'a self, other: &'a NESet<T, S>) -> Intersection<'a, T, S> {
-        Intersection {
-            iter: self.iter(),
-            other,
-        }
+    pub fn intersection<'a>(
+        &'a self,
+        other: &'a NESet<T, S>,
+    ) -> std::collections::hash_set::Intersection<'a, T, S> {
+        self.inner.intersection(&other.inner)
     }
 
     /// Returns `true` if `self` has no elements in common with `other`.
@@ -293,11 +282,7 @@ where
     /// assert!(s0.is_disjoint(&s1));
     /// ```
     pub fn is_disjoint(&self, other: &NESet<T, S>) -> bool {
-        if self.len() <= other.len() {
-            self.iter().all(|v| !other.contains(v))
-        } else {
-            other.iter().all(|v| !self.contains(v))
-        }
+        self.inner.is_disjoint(&other.inner)
     }
 
     /// Returns `true` if the set is a subset of another, i.e., `other` contains
@@ -312,8 +297,8 @@ where
     /// assert!(sub.is_subset(&sup));
     /// assert!(!sup.is_subset(&sub));
     /// ```
-    pub fn is_subset(&self, other: &NESet<T>) -> bool {
-        self.iter().all(|t| other.contains(t))
+    pub fn is_subset(&self, other: &NESet<T, S>) -> bool {
+        self.inner.is_subset(&other.inner)
     }
 
     /// Returns `true` if the set is a superset of another, i.e., `self`
@@ -328,26 +313,14 @@ where
     /// assert!(sup.is_superset(&sub));
     /// assert!(!sub.is_superset(&sup));
     /// ```
-    pub fn is_superset(&self, other: &NESet<T>) -> bool {
-        other.iter().all(|t| self.contains(t))
-    }
-
-    /// Creates a new `NESet` with a single element.
-    pub fn new(value: T) -> NESet<T> {
-        NESet {
-            head: value,
-            tail: HashSet::new(),
-        }
+    pub fn is_superset(&self, other: &NESet<T, S>) -> bool {
+        self.inner.is_superset(&other.inner)
     }
 
     /// Adds a value to the set, replacing the existing value, if any, that is
     /// equal to the given one. Returns the replaced value.
     pub fn replace(&mut self, value: T) -> Option<T> {
-        if value == self.head {
-            Some(std::mem::replace(&mut self.head, value))
-        } else {
-            self.tail.replace(value)
-        }
+        self.inner.replace(value)
     }
 
     /// Reserves capacity for at least `additional` more elements to be inserted
@@ -358,14 +331,14 @@ where
     ///
     /// Panics if the new allocation size overflows `usize`.
     pub fn reserve(&mut self, additional: usize) {
-        self.tail.reserve(additional)
+        self.inner.reserve(additional)
     }
 
     /// Shrinks the capacity of the set as much as possible. It will drop down
     /// as much as possible while maintaining the internal rules and possibly
     /// leaving some space in accordance with the resize policy.
     pub fn shrink_to_fit(&mut self) {
-        self.tail.shrink_to_fit()
+        self.inner.shrink_to_fit()
     }
 
     /// Visits the values representing the union, i.e., all the values in `self`
@@ -383,45 +356,30 @@ where
     /// assert_eq!(nev![&1, &2, &3, &4, &5], v);
     /// ```
     pub fn union<'a>(&'a self, other: &'a NESet<T, S>) -> Union<'a, T, S> {
-        if self.len() >= other.len() {
-            Union {
-                orig: self,
-                orig_iter: self.iter(),
-                other,
-                other_iter: other.iter(),
-            }
-        } else {
-            Union {
-                orig: other,
-                orig_iter: other.iter(),
-                other: self,
-                other_iter: self.iter(),
-            }
+        Union {
+            inner: self.inner.union(&other.inner),
         }
     }
 
     /// Creates a new `NESet` with a single element and specified capacity.
     pub fn with_capacity(capacity: usize, value: T) -> NESet<T> {
-        NESet {
-            head: value,
-            tail: HashSet::with_capacity(capacity),
-        }
+        let mut inner = HashSet::with_capacity(capacity);
+        inner.insert(value);
+        NESet { inner }
     }
 
     /// See [`HashSet::with_capacity_and_hasher`].
     pub fn with_capacity_and_hasher(capacity: usize, hasher: S, value: T) -> NESet<T, S> {
-        NESet {
-            head: value,
-            tail: HashSet::with_capacity_and_hasher(capacity, hasher),
-        }
+        let mut inner = HashSet::with_capacity_and_hasher(capacity, hasher);
+        inner.insert(value);
+        NESet { inner }
     }
 
     /// See [`HashSet::with_hasher`].
     pub fn with_hasher(hasher: S, value: T) -> NESet<T, S> {
-        NESet {
-            head: value,
-            tail: HashSet::with_hasher(hasher),
-        }
+        let mut inner = HashSet::with_hasher(hasher);
+        inner.insert(value);
+        NESet { inner }
     }
 }
 
@@ -454,14 +412,23 @@ where
 {
 }
 
-impl<T, S> IntoNonEmptyIterator for NESet<T, S> {
+impl<T, S> IntoIterator for NESet<T, S> {
     type Item = T;
 
-    type IntoIter =
-        crate::iter::Chain<crate::iter::Once<T>, std::collections::hash_set::IntoIter<Self::Item>>;
+    type IntoIter = std::collections::hash_set::IntoIter<T>;
 
-    fn into_nonempty_iter(self) -> Self::IntoIter {
-        crate::iter::once(self.head).chain(self.tail)
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner.into_iter()
+    }
+}
+
+impl<T, S> IntoNonEmptyIterator for NESet<T, S> {
+    type IntoNEIter = IntoIter<T>;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        IntoIter {
+            iter: self.inner.into_iter(),
+        }
     }
 }
 
@@ -489,96 +456,62 @@ where
     where
         I: IntoNonEmptyIterator<Item = T>,
     {
-        let (head, rest) = iter.into_nonempty_iter().first();
-
-        let mut tail = rest.into_iter().collect::<HashSet<T, S>>();
-        tail.remove(&head);
-
-        NESet { head, tail }
+        NESet {
+            inner: iter.into_nonempty_iter().into_iter().collect(),
+        }
     }
 }
 
 /// A non-empty iterator over the values of an [`NESet`].
 #[derive(Debug)]
 pub struct Iter<'a, T: 'a> {
-    head: &'a T,
-    iter: Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>,
+    iter: std::collections::hash_set::Iter<'a, T>,
 }
 
 impl<'a, T: 'a> IntoIterator for Iter<'a, T> {
     type Item = &'a T;
 
-    type IntoIter = Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>;
+    type IntoIter = std::collections::hash_set::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
     }
 }
 
-impl<T> IntoIterator for NESet<T> {
+impl<'a, T> NonEmptyIterator for Iter<'a, T> {}
+
+/// An owned non-empty iterator over the values of an [`NESet`].
+pub struct IntoIter<T> {
+    iter: std::collections::hash_set::IntoIter<T>,
+}
+
+impl<T> IntoIterator for IntoIter<T> {
     type Item = T;
-    type IntoIter = Chain<Once<T>, std::collections::hash_set::IntoIter<Self::Item>>;
+
+    type IntoIter = std::collections::hash_set::IntoIter<T>;
 
     fn into_iter(self) -> Self::IntoIter {
-        std::iter::once(self.head).chain(self.tail)
+        self.iter
     }
 }
+
+impl<T> NonEmptyIterator for IntoIter<T> {}
 
 impl<'a, T> IntoIterator for &'a NESet<T> {
     type Item = &'a T;
-    type IntoIter = Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>;
+    type IntoIter = std::collections::hash_set::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
-        std::iter::once(&self.head).chain(self.tail.iter())
-    }
-}
-
-impl<'a, T> NonEmptyIterator for Iter<'a, T> {
-    type Item = &'a T;
-
-    type IntoIter = Skip<Chain<Once<&'a T>, std::collections::hash_set::Iter<'a, T>>>;
-
-    fn first(self) -> (Self::Item, Self::IntoIter) {
-        (self.head, self.iter.skip(1))
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
-}
-
-/// A iterator producing elements in the difference of two [`NESet`]s.
-pub struct Difference<'a, T: 'a, S: 'a> {
-    iter: Iter<'a, T>,
-    other: &'a NESet<T, S>,
-}
-
-impl<'a, T, S> Iterator for Difference<'a, T, S>
-where
-    T: Eq + Hash,
-    S: BuildHasher,
-{
-    type Item = &'a T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            let elt = self.iter.next()?;
-            if !self.other.contains(elt) {
-                return Some(elt);
-            }
-        }
+        self.inner.iter()
     }
 }
 
 /// A non-empty iterator producing elements in the union of two [`NESet`]s.
 pub struct Union<'a, T: 'a, S: 'a> {
-    orig: &'a NESet<T, S>,
-    orig_iter: Iter<'a, T>,
-    other: &'a NESet<T, S>,
-    other_iter: Iter<'a, T>,
+    inner: std::collections::hash_set::Union<'a, T, S>,
 }
 
-impl<'a, T, S> NonEmptyIterator for Union<'a, T, S>
+impl<'a, T, S> IntoIterator for Union<'a, T, S>
 where
     T: Eq + Hash,
     S: BuildHasher,
@@ -587,49 +520,16 @@ where
 
     type IntoIter = std::collections::hash_set::Union<'a, T, S>;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.orig_iter.next() {
-            Some(i) => Some(i),
-            None => loop {
-                let i = self.other_iter.next()?;
-                if !self.orig.contains(i) {
-                    return Some(i);
-                }
-            },
-        }
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner
     }
-
-    fn first(self) -> (Self::Item, Self::IntoIter) {
-        (&self.orig.head, self.orig.tail.union(&self.other.tail))
-    }
-
-    // #[inline]
-    // fn size_hint(&self) -> (usize, Option<usize>) {
-    //     self.iter.size_hint()
-    // }
 }
 
-/// A iterator producing elements in the intersection of two [`NESet`]s.
-pub struct Intersection<'a, T: 'a, S: 'a> {
-    iter: Iter<'a, T>,
-    other: &'a NESet<T, S>,
-}
-
-impl<'a, T, S> Iterator for Intersection<'a, T, S>
+impl<'a, T, S> NonEmptyIterator for Union<'a, T, S>
 where
     T: Eq + Hash,
     S: BuildHasher,
 {
-    type Item = &'a T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            let elt = self.iter.next()?;
-            if self.other.contains(elt) {
-                return Some(elt);
-            }
-        }
-    }
 }
 
 impl<T, S> From<NESet<T, S>> for HashSet<T, S>
@@ -647,9 +547,7 @@ where
     /// assert_eq!(vec![1,2,3], v);
     /// ```
     fn from(s: NESet<T, S>) -> Self {
-        let mut set = s.tail;
-        set.insert(s.head);
-        set
+        s.inner
     }
 }
 
