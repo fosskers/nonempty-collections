@@ -1,15 +1,18 @@
 //! Non-empty Slices.
 
-use crate::iter::{IntoNonEmptyIterator, NonEmptyIterator};
 use core::fmt;
 use std::iter::FilterMap;
 use std::num::NonZeroUsize;
 use std::slice::Chunks;
 
+use crate::iter::IntoNonEmptyIterator;
+use crate::iter::NonEmptyIterator;
+
 /// A non-empty slice. Like [`crate::NEVec`], but guaranteed to have borrowed
 /// contents.
 ///
-/// [`NESlice::from_slice`] is the simplest way to construct this from borrowed data.
+/// [`NESlice::from_slice`] is the simplest way to construct this from borrowed
+/// data.
 ///
 /// Unfortunately there is no macro for this, but if you want one, just use
 /// `nev!` and handle the ownership manually. Also consider
@@ -62,19 +65,27 @@ impl<'a, T> NESlice<'a, T> {
     /// at a time, starting at the beginning of the `NESlice`.
     ///
     /// ```
-    /// use nonempty_collections::*;
     /// use std::num::NonZeroUsize;
     ///
-    /// let v = nev![1,2,3,4,5,6];
+    /// use nonempty_collections::*;
+    ///
+    /// let v = nev![1, 2, 3, 4, 5, 6];
     /// let s = v.as_nonempty_slice();
     /// let n = NonZeroUsize::new(2).unwrap();
     /// let r = s.nonempty_chunks(n).collect::<NEVec<_>>();
     ///
-    /// let a = nev![1,2];
-    /// let b = nev![3,4];
-    /// let c = nev![5,6];
+    /// let a = nev![1, 2];
+    /// let b = nev![3, 4];
+    /// let c = nev![5, 6];
     ///
-    /// assert_eq!(r, nev![a.as_nonempty_slice(), b.as_nonempty_slice(), c.as_nonempty_slice()]);
+    /// assert_eq!(
+    ///     r,
+    ///     nev![
+    ///         a.as_nonempty_slice(),
+    ///         b.as_nonempty_slice(),
+    ///         c.as_nonempty_slice()
+    ///     ]
+    /// );
     /// ```
     pub fn nonempty_chunks(&'a self, chunk_size: NonZeroUsize) -> NEChunks<'a, T> {
         NEChunks {
@@ -150,7 +161,11 @@ impl<T: fmt::Debug> fmt::Debug for NEChunks<'_, T> {
 mod tests {
     use std::num::NonZeroUsize;
 
-    use crate::{nev, slice::NEChunks, NESlice, NEVec, NonEmptyIterator};
+    use crate::nev;
+    use crate::slice::NEChunks;
+    use crate::NESlice;
+    use crate::NEVec;
+    use crate::NonEmptyIterator;
 
     #[test]
     fn test_from_conversion() {
@@ -173,7 +188,8 @@ mod tests {
 
     #[test]
     fn test_into_nonempty_iter() {
-        use crate::{IntoNonEmptyIterator, NonEmptyIterator};
+        use crate::IntoNonEmptyIterator;
+        use crate::NonEmptyIterator;
         let slice = [0, 1, 2, 3];
         let nonempty = NESlice::from_slice(&slice).unwrap();
         for (i, n) in nonempty.into_nonempty_iter().enumerate() {

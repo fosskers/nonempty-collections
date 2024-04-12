@@ -1,21 +1,27 @@
 //! Non-empty Vectors.
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
-use crate::iter::{FromNonEmptyIterator, IntoNonEmptyIterator, NonEmptyIterator};
-use crate::slice::NEChunks;
 use std::cmp::Ordering;
 use std::num::NonZeroUsize;
 
-/// Like the [`vec!`] macro, but enforces at least one argument. A nice short-hand
-/// for constructing [`NEVec`] values.
+#[cfg(feature = "serde")]
+use serde::Deserialize;
+#[cfg(feature = "serde")]
+use serde::Serialize;
+
+use crate::iter::FromNonEmptyIterator;
+use crate::iter::IntoNonEmptyIterator;
+use crate::iter::NonEmptyIterator;
+use crate::slice::NEChunks;
+
+/// Like the [`vec!`] macro, but enforces at least one argument. A nice
+/// short-hand for constructing [`NEVec`] values.
 ///
 /// ```
-/// use nonempty_collections::{NEVec, nev};
+/// use nonempty_collections::nev;
+/// use nonempty_collections::NEVec;
 ///
 /// let v = nev![1, 2, 3];
-/// assert_eq!(v.into_iter().collect::<Vec<_>>(), vec![1,2,3]);
+/// assert_eq!(v.into_iter().collect::<Vec<_>>(), vec![1, 2, 3]);
 ///
 /// let v = nev![1];
 /// assert_eq!(v.into_iter().collect::<Vec<_>>(), vec![1]);
@@ -46,7 +52,7 @@ macro_rules! nev {
 /// use nonempty_collections::nev;
 ///
 /// let s = nev!["Fëanor", "Fingolfin", "Finarfin"];
-/// assert_eq!(&"Fëanor", s.first());      // There is always a first element.
+/// assert_eq!(&"Fëanor", s.first()); // There is always a first element.
 /// assert_eq!(&"Finarfin", s.last()); // There is always a last element.
 /// ```
 #[cfg_attr(
@@ -261,7 +267,8 @@ impl<T> NEVec<T> {
     /// # Example use
     ///
     /// ```
-    /// use nonempty_collections::{nev, NEVec};
+    /// use nonempty_collections::nev;
+    /// use nonempty_collections::NEVec;
     ///
     /// let v_vec = NEVec::from_slice(&[1, 2, 3, 4, 5]);
     /// assert_eq!(v_vec, Some(nev![1, 2, 3, 4, 5]));
@@ -293,7 +300,8 @@ impl<T> NEVec<T> {
     /// # Example Use
     ///
     /// ```
-    /// use nonempty_collections::{nev, NEVec};
+    /// use nonempty_collections::nev;
+    /// use nonempty_collections::NEVec;
     ///
     /// let v_vec = NEVec::from_vec(vec![1, 2, 3, 4, 5]);
     /// assert_eq!(v_vec, Some(nev![1, 2, 3, 4, 5]));
@@ -395,12 +403,15 @@ impl<T> NEVec<T> {
     /// use nonempty_collections::nev;
     ///
     /// let v = nev![0, 1, 1, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
-    /// assert_eq!(v.binary_search(&0),   Ok(0));
-    /// assert_eq!(v.binary_search(&13),  Ok(9));
-    /// assert_eq!(v.binary_search(&4),   Err(7));
+    /// assert_eq!(v.binary_search(&0), Ok(0));
+    /// assert_eq!(v.binary_search(&13), Ok(9));
+    /// assert_eq!(v.binary_search(&4), Err(7));
     /// assert_eq!(v.binary_search(&100), Err(13));
     /// let r = v.binary_search(&1);
-    /// assert!(match r { Ok(1..=4) => true, _ => false, });
+    /// assert!(match r {
+    ///     Ok(1..=4) => true,
+    ///     _ => false,
+    /// });
     /// ```
     ///
     /// If you want to insert an item to a sorted non-empty vector, while
@@ -455,7 +466,10 @@ impl<T> NEVec<T> {
     /// assert_eq!(v.binary_search_by(|probe| probe.cmp(&seek)), Err(13));
     /// let seek = 1;
     /// let r = v.binary_search_by(|probe| probe.cmp(&seek));
-    /// assert!(match r { Ok(1..=4) => true, _ => false, });
+    /// assert!(match r {
+    ///     Ok(1..=4) => true,
+    ///     _ => false,
+    /// });
     /// ```
     pub fn binary_search_by<'a, F>(&'a self, f: F) -> Result<usize, usize>
     where
@@ -486,17 +500,30 @@ impl<T> NEVec<T> {
     /// use nonempty_collections::nev;
     ///
     /// let v = nev![
-    ///     (0, 0), (2, 1), (4, 1), (5, 1), (3, 1),
-    ///     (1, 2), (2, 3), (4, 5), (5, 8), (3, 13),
-    ///     (1, 21), (2, 34), (4, 55)
+    ///     (0, 0),
+    ///     (2, 1),
+    ///     (4, 1),
+    ///     (5, 1),
+    ///     (3, 1),
+    ///     (1, 2),
+    ///     (2, 3),
+    ///     (4, 5),
+    ///     (5, 8),
+    ///     (3, 13),
+    ///     (1, 21),
+    ///     (2, 34),
+    ///     (4, 55)
     /// ];
     ///
-    /// assert_eq!(v.binary_search_by_key(&0, |&(a,b)| b),  Ok(0));
-    /// assert_eq!(v.binary_search_by_key(&13, |&(a,b)| b),  Ok(9));
-    /// assert_eq!(v.binary_search_by_key(&4, |&(a,b)| b),   Err(7));
-    /// assert_eq!(v.binary_search_by_key(&100, |&(a,b)| b), Err(13));
-    /// let r = v.binary_search_by_key(&1, |&(a,b)| b);
-    /// assert!(match r { Ok(1..=4) => true, _ => false, });
+    /// assert_eq!(v.binary_search_by_key(&0, |&(a, b)| b), Ok(0));
+    /// assert_eq!(v.binary_search_by_key(&13, |&(a, b)| b), Ok(9));
+    /// assert_eq!(v.binary_search_by_key(&4, |&(a, b)| b), Err(7));
+    /// assert_eq!(v.binary_search_by_key(&100, |&(a, b)| b), Err(13));
+    /// let r = v.binary_search_by_key(&1, |&(a, b)| b);
+    /// assert!(match r {
+    ///     Ok(1..=4) => true,
+    ///     _ => false,
+    /// });
     /// ```
     pub fn binary_search_by_key<'a, B, F>(&'a self, b: &B, mut f: F) -> Result<usize, usize>
     where
@@ -513,13 +540,13 @@ impl<T> NEVec<T> {
     /// ```
     /// use nonempty_collections::nev;
     ///
-    /// let mut n = nev![5,4,3,2,1];
+    /// let mut n = nev![5, 4, 3, 2, 1];
     /// n.sort();
-    /// assert_eq!(nev![1,2,3,4,5], n);
+    /// assert_eq!(nev![1, 2, 3, 4, 5], n);
     ///
     /// // Naturally, sorting a sorted result should be the same.
     /// n.sort();
-    /// assert_eq!(nev![1,2,3,4,5], n);
+    /// assert_eq!(nev![1, 2, 3, 4, 5], n);
     /// ```
     pub fn sort(&mut self)
     where
@@ -593,8 +620,8 @@ impl<T> NEVec<T> {
         crate::NESlice::from_slice_unchecked(self.inner.as_slice())
     }
 
-    /// Removes all but the first of consecutive elements in the vector that resolve to the same
-    /// key.
+    /// Removes all but the first of consecutive elements in the vector that
+    /// resolve to the same key.
     ///
     /// If the vector is sorted, this removes all duplicates.
     ///
@@ -616,12 +643,13 @@ impl<T> NEVec<T> {
         self.dedup_by(|a, b| key(a) == key(b))
     }
 
-    /// Removes all but the first of consecutive elements in the vector satisfying a given equality
-    /// relation.
+    /// Removes all but the first of consecutive elements in the vector
+    /// satisfying a given equality relation.
     ///
-    /// The `same_bucket` function is passed references to two elements from the vector and
-    /// must determine if the elements compare equal. The elements are passed in opposite order
-    /// from their order in the slice, so if `same_bucket(a, b)` returns `true`, `a` is removed.
+    /// The `same_bucket` function is passed references to two elements from the
+    /// vector and must determine if the elements compare equal. The
+    /// elements are passed in opposite order from their order in the slice,
+    /// so if `same_bucket(a, b)` returns `true`, `a` is removed.
     ///
     /// If the vector is sorted, this removes all duplicates.
     ///
@@ -646,18 +674,26 @@ impl<T> NEVec<T> {
     /// at a time, starting at the beginning of the `NEVec`.
     ///
     /// ```
-    /// use nonempty_collections::*;
     /// use std::num::NonZeroUsize;
     ///
-    /// let v = nev![1,2,3,4,5,6];
+    /// use nonempty_collections::*;
+    ///
+    /// let v = nev![1, 2, 3, 4, 5, 6];
     /// let n = NonZeroUsize::new(2).unwrap();
     /// let r = v.nonempty_chunks(n).collect::<NEVec<_>>();
     ///
-    /// let a = nev![1,2];
-    /// let b = nev![3,4];
-    /// let c = nev![5,6];
+    /// let a = nev![1, 2];
+    /// let b = nev![3, 4];
+    /// let c = nev![5, 6];
     ///
-    /// assert_eq!(r, nev![a.as_nonempty_slice(), b.as_nonempty_slice(), c.as_nonempty_slice()]);
+    /// assert_eq!(
+    ///     r,
+    ///     nev![
+    ///         a.as_nonempty_slice(),
+    ///         b.as_nonempty_slice(),
+    ///         c.as_nonempty_slice()
+    ///     ]
+    /// );
     /// ```
     pub fn nonempty_chunks(&self, chunk_size: NonZeroUsize) -> NEChunks<'_, T> {
         NEChunks {
@@ -665,17 +701,18 @@ impl<T> NEVec<T> {
         }
     }
 
-    /// Returns the index of the partition point according to the given predicate
-    /// (the index of the first element of the second partition).
+    /// Returns the index of the partition point according to the given
+    /// predicate (the index of the first element of the second partition).
     ///
-    /// The vector is assumed to be partitioned according to the given predicate.
-    /// This means that all elements for which the predicate returns true are at the start of the vector
-    /// and all elements for which the predicate returns false are at the end.
-    /// For example, `[7, 15, 3, 5, 4, 12, 6]` is partitioned under the predicate `x % 2 != 0`
+    /// The vector is assumed to be partitioned according to the given
+    /// predicate. This means that all elements for which the predicate
+    /// returns true are at the start of the vector and all elements for
+    /// which the predicate returns false are at the end. For example, `[7,
+    /// 15, 3, 5, 4, 12, 6]` is partitioned under the predicate `x % 2 != 0`
     /// (all odd numbers are at the start, all even at the end).
     ///
-    /// If this vector is not partitioned, the returned result is unspecified and meaningless,
-    /// as this method performs a kind of binary search.
+    /// If this vector is not partitioned, the returned result is unspecified
+    /// and meaningless, as this method performs a kind of binary search.
     ///
     /// See also [`NEVec::binary_search`], [`NEVec::binary_search_by`], and
     /// [`NEVec::binary_search_by_key`].
@@ -891,7 +928,8 @@ impl<T> std::ops::IndexMut<usize> for NEVec<T> {
 impl<T> TryFrom<Vec<T>> for NEVec<T> {
     type Error = crate::Error;
 
-    use std::{convert::TryFrom, fmt};
+    use std::convert::TryFrom;
+    use std::fmt;
 
     use super::NEVec;
 
@@ -961,8 +999,10 @@ mod tests {
 
     #[cfg(feature = "serde")]
     mod serialize {
+        use serde::Deserialize;
+        use serde::Serialize;
+
         use crate::NEVec;
-        use serde::{Deserialize, Serialize};
 
         #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
         struct SimpleSerializable(i32);
@@ -987,7 +1027,8 @@ mod tests {
 
     #[test]
     fn test_result_collect() {
-        use crate::{IntoNonEmptyIterator, NonEmptyIterator};
+        use crate::IntoNonEmptyIterator;
+        use crate::NonEmptyIterator;
 
         let nonempty = nev![2, 4, 8];
         let output = nonempty

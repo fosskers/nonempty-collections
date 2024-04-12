@@ -11,21 +11,22 @@ use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::hash::BuildHasher;
 use std::hash::Hash;
+use std::num::NonZeroUsize;
+
+use indexmap::indexmap;
+use indexmap::Equivalent;
+use indexmap::IndexMap;
 
 use crate::FromNonEmptyIterator;
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
-use indexmap::indexmap;
-use indexmap::Equivalent;
-use indexmap::IndexMap;
-use std::num::NonZeroUsize;
 
 /// Short-hand for constructing [`NEIndexMap`] values.
 ///
 /// ```
 /// use nonempty_collections::ne_indexmap;
 ///
-/// let m = ne_indexmap!{"elves" => 3000, "orcs" => 10000};
+/// let m = ne_indexmap! {"elves" => 3000, "orcs" => 10000};
 /// assert_eq!(2, m.len().get());
 /// ```
 #[macro_export]
@@ -50,7 +51,7 @@ macro_rules! ne_indexmap {
 /// ```
 /// use nonempty_collections::*;
 ///
-/// let m = ne_indexmap!{"Netherlands" => 18, "Canada" => 40};
+/// let m = ne_indexmap! {"Netherlands" => 18, "Canada" => 40};
 /// assert_eq!(2, m.len().get());
 /// ```
 #[derive(Clone)]
@@ -91,7 +92,7 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let m = ne_indexmap!{"Duke" => "Leto", "Doctor" => "Yueh", "Planetologist" => "Kynes"};
+    /// let m = ne_indexmap! {"Duke" => "Leto", "Doctor" => "Yueh", "Planetologist" => "Kynes"};
     /// let v = m.keys().collect::<NEVec<_>>();
     /// assert_eq!(nev![&"Duke", &"Doctor", &"Planetologist"], v);
     /// ```
@@ -105,7 +106,7 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let m = ne_indexmap!{"a" => 1, "b" => 2};
+    /// let m = ne_indexmap! {"a" => 1, "b" => 2};
     /// assert_eq!(2, m.len().get());
     /// ```
     pub fn len(&self) -> NonZeroUsize {
@@ -198,7 +199,7 @@ where
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let m = ne_indexmap!{"Paul" => ()};
+    /// let m = ne_indexmap! {"Paul" => ()};
     /// assert!(m.contains_key("Paul"));
     /// assert!(!m.contains_key("Atreides"));
     /// ```
@@ -215,7 +216,7 @@ where
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let m = ne_indexmap!{"Arrakis" => 3};
+    /// let m = ne_indexmap! {"Arrakis" => 3};
     /// assert_eq!(Some(&3), m.get("Arrakis"));
     /// assert_eq!(None, m.get("Caladan"));
     /// ```
@@ -232,7 +233,7 @@ where
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let m = ne_indexmap!{"Year" => 1963, "Pages" => 896};
+    /// let m = ne_indexmap! {"Year" => 1963, "Pages" => 896};
     /// assert_eq!(Some((&"Year", &1963)), m.get_key_value(&"Year"));
     /// assert_eq!(Some((&"Pages", &896)), m.get_key_value(&"Pages"));
     /// assert_eq!(None, m.get_key_value(&"Title"));
@@ -250,7 +251,7 @@ where
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let mut m = ne_indexmap!{"Mentat" => 3, "Bene Gesserit" => 14};
+    /// let mut m = ne_indexmap! {"Mentat" => 3, "Bene Gesserit" => 14};
     /// let v = m.get_mut(&"Mentat");
     /// assert_eq!(Some(&mut 3), v);
     /// *v.unwrap() += 1;
@@ -274,7 +275,7 @@ where
     ///
     /// ```
     /// use nonempty_collections::*;
-    /// let m = ne_indexmap!{"Title" => "Dune", "Author" => "Frank Herbert", "Language" => "English"};
+    /// let m = ne_indexmap! {"Title" => "Dune", "Author" => "Frank Herbert", "Language" => "English"};
     ///
     /// assert_eq!(Some(0), m.get_index_of(&"Title"));
     /// assert_eq!(Some(1), m.get_index_of(&"Author"));
@@ -298,13 +299,19 @@ where
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let mut m = ne_indexmap!{"Duke" => "Leto", "Doctor" => "Yueh"};
+    /// let mut m = ne_indexmap! {"Duke" => "Leto", "Doctor" => "Yueh"};
     /// assert_eq!(None, m.insert("Lady", "Jessica"));
-    /// assert_eq!(vec!["Duke", "Doctor", "Lady"], m.keys().copied().collect::<Vec<_>>());
+    /// assert_eq!(
+    ///     vec!["Duke", "Doctor", "Lady"],
+    ///     m.keys().copied().collect::<Vec<_>>()
+    /// );
     ///
     /// // Spoiler alert: there is a different duke at some point
     /// assert_eq!(Some("Leto"), m.insert("Duke", "Paul"));
-    /// assert_eq!(vec!["Paul", "Yueh", "Jessica"], m.values().copied().collect::<Vec<_>>());
+    /// assert_eq!(
+    ///     vec!["Paul", "Yueh", "Jessica"],
+    ///     m.values().copied().collect::<Vec<_>>()
+    /// );
     /// ```
     pub fn insert(&mut self, k: K, v: V) -> Option<V> {
         self.inner.insert(k, v)
@@ -364,10 +371,10 @@ where
     S: BuildHasher,
 {
     /// ```
-    /// use nonempty_collections::*;
     /// use indexmap::IndexMap;
+    /// use nonempty_collections::*;
     ///
-    /// let m: IndexMap<&str, usize> = ne_indexmap!{"population" => 1000}.into();
+    /// let m: IndexMap<&str, usize> = ne_indexmap! {"population" => 1000}.into();
     /// assert!(m.contains_key("population"));
     /// ```
     fn from(m: NEIndexMap<K, V, S>) -> Self {
@@ -400,7 +407,7 @@ impl<K, V, S> IntoNonEmptyIterator for NEIndexMap<K, V, S> {
 ///
 /// let v = nev![('a', 1), ('b', 2), ('c', 3), ('a', 4)];
 /// let m0 = v.into_nonempty_iter().collect::<NEIndexMap<_, _>>();
-/// let m1 = ne_indexmap!{'a' => 4, 'b' => 2, 'c' => 3};
+/// let m1 = ne_indexmap! {'a' => 4, 'b' => 2, 'c' => 3};
 /// assert_eq!(m0, m1);
 /// ```
 impl<K, V, S> FromNonEmptyIterator<(K, V)> for NEIndexMap<K, V, S>
@@ -509,7 +516,7 @@ impl<K: Debug, V: Debug> Debug for IntoIter<K, V> {
 /// ```
 /// use nonempty_collections::*;
 ///
-/// let m = ne_indexmap!{"elves" => 3000, "orcs" => 10000};
+/// let m = ne_indexmap! {"elves" => 3000, "orcs" => 10000};
 /// let v = m.keys().copied().collect::<NEVec<_>>();
 /// assert_eq!(nev!["elves", "orcs"], v);
 /// ```
@@ -549,7 +556,7 @@ impl<K: Debug, V: Debug> Debug for Keys<'_, K, V> {
 /// ```
 /// use nonempty_collections::*;
 ///
-/// let m = ne_indexmap!{"elves" => 3000, "orcs" => 10000};
+/// let m = ne_indexmap! {"elves" => 3000, "orcs" => 10000};
 /// let mut v = m.values().copied().collect::<NEVec<_>>();
 /// v.sort();
 /// assert_eq!(nev![3000, 10000], v);

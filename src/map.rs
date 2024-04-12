@@ -1,14 +1,22 @@
 //! Non-empty [`HashMap`]s.
 
+<<<<<<< HEAD
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::{FromNonEmptyIterator, IntoNonEmptyIterator, NonEmptyIterator};
+=======
+>>>>>>> b36ef13 (apply consistent formatting)
 use core::fmt;
 use std::borrow::Borrow;
 use std::collections::HashMap;
-use std::hash::{BuildHasher, Hash};
+use std::hash::BuildHasher;
+use std::hash::Hash;
 use std::num::NonZeroUsize;
+
+use crate::FromNonEmptyIterator;
+use crate::IntoNonEmptyIterator;
+use crate::NonEmptyIterator;
 
 /// Like the [`crate::nev!`] macro, but for Maps. A nice short-hand for
 /// constructing [`NEMap`] values.
@@ -143,8 +151,8 @@ impl<K, V, S> NEMap<K, V, S> {
     // /// ```
     // /// use nonempty_collections::nem;
     // ///
-    // /// let mut m = nem!["Valmar" => 10000, "Tirion" => 10000, "Alqualondë" => 10000];
-    // ///
+    // /// let mut m = nem!["Valmar" => 10000, "Tirion" => 10000, "Alqualondë" =>
+    // 10000]; ///
     // /// for v in m.values_mut() {
     // ///     *v += 1000;
     // /// }
@@ -553,7 +561,8 @@ impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for Values<'_, K, V> {
 // impl<'a, K, V> NonEmptyIterator for ValuesMut<'a, K, V> {
 //     type Item = &'a mut V;
 
-//     type Iter = Skip<Chain<Once<&'a mut V>, std::collections::hash_map::IterMut<'a, K, V>>>;
+//     type Iter = Skip<Chain<Once<&'a mut V>,
+// std::collections::hash_map::IterMut<'a, K, V>>>;
 
 //     fn first(self) -> (Self::Item, Self::Iter) {
 //         (self.head_val, self.inner.skip(1))

@@ -8,8 +8,13 @@ use crate::{FromNonEmptyIterator, IntoNonEmptyIterator};
 use core::fmt;
 use std::borrow::Borrow;
 use std::collections::HashSet;
-use std::hash::{BuildHasher, Hash};
+use std::hash::BuildHasher;
+use std::hash::Hash;
 use std::num::NonZeroUsize;
+
+use crate::iter::NonEmptyIterator;
+use crate::FromNonEmptyIterator;
+use crate::IntoNonEmptyIterator;
 
 /// Like the [`crate::nev!`] macro, but for Sets. A nice short-hand for
 /// constructing [`NESet`] values.
@@ -41,10 +46,10 @@ macro_rules! nes {
 /// ```
 /// use nonempty_collections::*;
 ///
-/// let s = nes![1,1,2,2,3,3,4,4];
+/// let s = nes![1, 1, 2, 2, 3, 3, 4, 4];
 /// let mut v: NEVec<_> = s.iter().collect();
 /// v.sort();
-/// assert_eq!(nev![&1,&2,&3,&4], v);
+/// assert_eq!(nev![&1, &2, &3, &4], v);
 /// ```
 ///
 ///
@@ -64,14 +69,15 @@ macro_rules! nes {
 /// [`From`] instance. This will always succeed.
 ///
 /// ```
-/// use nonempty_collections::nes;
 /// use std::collections::HashSet;
 ///
-/// let n0 = nes![1,2,3];
+/// use nonempty_collections::nes;
+///
+/// let n0 = nes![1, 2, 3];
 /// let s0 = HashSet::from(n0);
 ///
 /// // Or just use `Into`.
-/// let n1 = nes![1,2,3];
+/// let n1 = nes![1, 2, 3];
 /// let s1: HashSet<_> = n1.into();
 /// ```
 ///
@@ -125,7 +131,7 @@ impl<T, S> NESet<T, S> {
     /// ```
     /// use nonempty_collections::nes;
     ///
-    /// let s = nes![1,2,3];
+    /// let s = nes![1, 2, 3];
     /// assert_eq!(3, s.len().get());
     /// ```
     pub fn len(&self) -> NonZeroUsize {
@@ -154,8 +160,10 @@ where
     /// Will fail if the `HashSet` is empty.
     ///
     /// ```
-    /// use nonempty_collections::{nes, NESet};
     /// use std::collections::HashSet;
+    ///
+    /// use nonempty_collections::nes;
+    /// use nonempty_collections::NESet;
     ///
     /// let mut s = HashSet::new();
     /// s.insert(1);
@@ -163,7 +171,7 @@ where
     /// s.insert(3);
     ///
     /// let n = NESet::from_set(s);
-    /// assert_eq!(Some(nes![1,2,3]), n);
+    /// assert_eq!(Some(nes![1, 2, 3]), n);
     /// ```
     pub fn from_set(set: HashSet<T>) -> Option<NESet<T>> {
         if set.is_empty() {
@@ -184,7 +192,7 @@ where
     /// ```
     /// use nonempty_collections::nes;
     ///
-    /// let s = nes![1,2,3];
+    /// let s = nes![1, 2, 3];
     /// assert!(s.contains(&3));
     /// assert!(!s.contains(&10));
     /// ```
@@ -202,8 +210,8 @@ where
     /// ```
     /// use nonempty_collections::nes;
     ///
-    /// let s0 = nes![1,2,3];
-    /// let s1 = nes![3,4,5];
+    /// let s0 = nes![1, 2, 3];
+    /// let s1 = nes![3, 4, 5];
     /// let mut v: Vec<_> = s0.difference(&s1).collect();
     /// v.sort();
     /// assert_eq!(vec![&1, &2], v);
@@ -224,7 +232,7 @@ where
     /// ```
     /// use nonempty_collections::nes;
     ///
-    /// let s = nes![1,2,3];
+    /// let s = nes![1, 2, 3];
     /// assert_eq!(Some(&3), s.get(&3));
     /// assert_eq!(None, s.get(&10));
     /// ```
@@ -245,7 +253,7 @@ where
     /// ```
     /// use nonempty_collections::nes;
     ///
-    /// let mut s = nes![1,2,3];
+    /// let mut s = nes![1, 2, 3];
     /// assert_eq!(false, s.insert(2));
     /// assert_eq!(true, s.insert(4));
     /// ```
@@ -259,8 +267,8 @@ where
     /// ```
     /// use nonempty_collections::nes;
     ///
-    /// let s0 = nes![1,2,3];
-    /// let s1 = nes![3,4,5];
+    /// let s0 = nes![1, 2, 3];
+    /// let s1 = nes![3, 4, 5];
     /// let mut v: Vec<_> = s0.intersection(&s1).collect();
     /// v.sort();
     /// assert_eq!(vec![&3], v);
@@ -278,8 +286,8 @@ where
     /// ```
     /// use nonempty_collections::nes;
     ///
-    /// let s0 = nes![1,2,3];
-    /// let s1 = nes![4,5,6];
+    /// let s0 = nes![1, 2, 3];
+    /// let s1 = nes![4, 5, 6];
     /// assert!(s0.is_disjoint(&s1));
     /// ```
     pub fn is_disjoint(&self, other: &NESet<T, S>) -> bool {
@@ -292,8 +300,8 @@ where
     /// ```
     /// use nonempty_collections::nes;
     ///
-    /// let sub = nes![1,2,3];
-    /// let sup = nes![1,2,3,4];
+    /// let sub = nes![1, 2, 3];
+    /// let sup = nes![1, 2, 3, 4];
     ///
     /// assert!(sub.is_subset(&sup));
     /// assert!(!sup.is_subset(&sub));
@@ -308,8 +316,8 @@ where
     /// ```
     /// use nonempty_collections::nes;
     ///
-    /// let sub = nes![1,2,3];
-    /// let sup = nes![1,2,3,4];
+    /// let sub = nes![1, 2, 3];
+    /// let sup = nes![1, 2, 3, 4];
     ///
     /// assert!(sup.is_superset(&sub));
     /// assert!(!sub.is_superset(&sup));
@@ -350,8 +358,8 @@ where
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let s0 = nes![1,2,3];
-    /// let s1 = nes![3,4,5];
+    /// let s0 = nes![1, 2, 3];
+    /// let s1 = nes![3, 4, 5];
     /// let mut v: NEVec<_> = s0.union(&s1).collect();
     /// v.sort();
     /// assert_eq!(nev![&1, &2, &3, &4, &5], v);
@@ -392,10 +400,10 @@ where
     /// ```
     /// use nonempty_collections::nes;
     ///
-    /// let s0 = nes![1,2,3];
-    /// let s1 = nes![1,2,3];
-    /// let s2 = nes![1,2];
-    /// let s3 = nes![1,2,3,4];
+    /// let s0 = nes![1, 2, 3];
+    /// let s1 = nes![1, 2, 3];
+    /// let s2 = nes![1, 2];
+    /// let s3 = nes![1, 2, 3, 4];
     ///
     /// assert!(s0 == s1);
     /// assert!(s0 != s2);
@@ -446,7 +454,10 @@ where
     S: BuildHasher + Default,
 {
     /// ```
-    /// use nonempty_collections::{nes, nev, FromNonEmptyIterator, NESet};
+    /// use nonempty_collections::nes;
+    /// use nonempty_collections::nev;
+    /// use nonempty_collections::FromNonEmptyIterator;
+    /// use nonempty_collections::NESet;
     ///
     /// let v = nev![1, 1, 2, 3, 2];
     /// let s = NESet::from_nonempty_iter(v);
@@ -555,13 +566,14 @@ where
     S: BuildHasher,
 {
     /// ```
-    /// use nonempty_collections::nes;
     /// use std::collections::HashSet;
     ///
-    /// let s: HashSet<_> = nes![1,2,3].into();
+    /// use nonempty_collections::nes;
+    ///
+    /// let s: HashSet<_> = nes![1, 2, 3].into();
     /// let mut v: Vec<_> = s.into_iter().collect();
     /// v.sort();
-    /// assert_eq!(vec![1,2,3], v);
+    /// assert_eq!(vec![1, 2, 3], v);
     /// ```
     fn from(s: NESet<T, S>) -> Self {
         s.inner

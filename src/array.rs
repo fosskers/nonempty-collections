@@ -34,7 +34,10 @@ use crate::NonEmptyIterator;
 ///
 /// ```
 /// # use nonempty_collections::*;
-/// assert_eq!(NESlice::from_slice(&[1, 2]), Some([1, 2].as_nonempty_slice()));
+/// assert_eq!(
+///     NESlice::from_slice(&[1, 2]),
+///     Some([1, 2].as_nonempty_slice())
+/// );
 /// ```
 ///
 /// Get the length of an array as a [`NonZeroUsize`]:
@@ -69,8 +72,9 @@ pub trait NonEmptyArrayExt<T> {
 /// Use non-zero length arrays anywhere an [`IntoNonEmptyIterator`] is expected.
 ///
 /// ```
-/// use nonempty_collections::*;
 /// use std::num::NonZeroUsize;
+///
+/// use nonempty_collections::*;
 ///
 /// fn is_one<T>(iter: impl IntoNonEmptyIterator<Item = T>) {
 ///     assert_eq!(NonZeroUsize::MIN, iter.into_nonempty_iter().count());
