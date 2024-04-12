@@ -3,6 +3,7 @@
 use core::fmt;
 use std::cmp::Ordering;
 use std::collections::HashSet;
+use std::hash::BuildHasher;
 use std::hash::Hash;
 use std::iter::Peekable;
 use std::iter::Product;
@@ -716,7 +717,7 @@ impl<T> FromNonEmptyIterator<T> for Vec<T> {
     }
 }
 
-impl<T: Eq + Hash> FromNonEmptyIterator<T> for HashSet<T> {
+impl<T: Eq + Hash, S: BuildHasher + Default> FromNonEmptyIterator<T> for HashSet<T, S> {
     fn from_nonempty_iter<I>(iter: I) -> Self
     where
         I: IntoNonEmptyIterator<Item = T>,
@@ -738,7 +739,7 @@ where
 
         let mut buf = NEVec::new(head);
 
-        for item in rest.into_iter() {
+        for item in rest {
             let item: A = item?;
             buf.push(item);
         }

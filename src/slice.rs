@@ -24,13 +24,15 @@ pub struct NESlice<'a, T> {
 
 impl<'a, T> NESlice<'a, T> {
     /// Get the first element. Never fails.
+    #[must_use]
     pub const fn first(&self) -> &T {
         &self.inner[0]
     }
 
     /// Using `from_slice` gives a proof that the input slice is non-empty in
     /// the `Some` branch.
-    pub fn from_slice(slice: &'a [T]) -> Option<Self> {
+    #[must_use]
+    pub const fn from_slice(slice: &'a [T]) -> Option<Self> {
         if slice.is_empty() {
             None
         } else {
@@ -38,11 +40,13 @@ impl<'a, T> NESlice<'a, T> {
         }
     }
 
-    pub(crate) fn from_slice_unchecked(slice: &'a [T]) -> Self {
+    #[must_use]
+    pub(crate) const fn from_slice_unchecked(slice: &'a [T]) -> Self {
         NESlice { inner: slice }
     }
 
     /// Get the length of the slice.
+    #[must_use]
     pub fn len(&self) -> NonZeroUsize {
         debug_assert!(!self.inner.is_empty());
         unsafe { NonZeroUsize::new_unchecked(self.inner.len()) }
@@ -50,11 +54,13 @@ impl<'a, T> NESlice<'a, T> {
 
     /// No, this slice is not empty.
     #[deprecated(note = "A NESlice is never empty.")]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         false
     }
 
     /// Generates a standard iterator.
+    #[must_use]
     pub fn iter(&self) -> Iter<'_, T> {
         Iter {
             iter: self.inner.iter(),
@@ -87,6 +93,7 @@ impl<'a, T> NESlice<'a, T> {
     ///     ]
     /// );
     /// ```
+    #[must_use]
     pub fn nonempty_chunks(&'a self, chunk_size: NonZeroUsize) -> NEChunks<'a, T> {
         NEChunks {
             inner: self.inner.chunks(chunk_size.get()),
@@ -189,10 +196,10 @@ mod tests {
     fn test_into_nonempty_iter() {
         use crate::IntoNonEmptyIterator;
         use crate::NonEmptyIterator;
-        let slice = [0, 1, 2, 3];
+        let slice = [0usize, 1, 2, 3];
         let nonempty = NESlice::from_slice(&slice).unwrap();
         for (i, n) in nonempty.into_nonempty_iter().enumerate() {
-            assert_eq!(i as i32, *n);
+            assert_eq!(i, *n);
         }
     }
 

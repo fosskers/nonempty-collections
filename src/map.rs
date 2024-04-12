@@ -274,7 +274,7 @@ where
     /// as much as possible while maintaining the internal rules and possibly
     /// leaving some space in accordance with the resize policy.
     pub fn shrink_to_fit(&mut self) {
-        self.inner.shrink_to_fit()
+        self.inner.shrink_to_fit();
     }
 
     /// Creates a new `NEMap` with a single element and specified capacity.
