@@ -28,7 +28,7 @@
 //! let v: NEVec<u32> = nev![1, 2, 3];
 //! let s: NESet<u32> = nes![1, 2, 2, 3]; // 1 2 3
 //! let m: NEMap<&str, bool> = nem!["a" => true, "b" => false];
-//! assert_eq!(1, v.head);
+//! assert_eq!(&1, v.first());
 //! assert_eq!(3, s.len().get());
 //! assert!(m.get("a").unwrap());
 //! ```
@@ -40,9 +40,12 @@
 //! use nonempty_collections::nev;
 //!
 //! let v = nev![1];
+//! ```
 //!
-//! // Doesn't compile!
-//! // let v = nev![];
+//! A value must be provided:
+//!
+//! ```compile_fail
+//! let v = nev![]; // Doesn't compile!
 //! ```
 //!
 //! Like `Vec`, you can also construct a [`NEVec`] the old fashioned way with
@@ -51,8 +54,8 @@
 //! ```
 //! use nonempty_collections::NEVec;
 //!
-//! let mut l = NEVec { head: 42, tail: vec![36, 58] };
-//! assert_eq!(l.head, 42);
+//! let mut l = NEVec::from_vec(vec![42, 36, 58]).unwrap();
+//! assert_eq!(&42, l.first());
 //!
 //! l.push(9001);
 //! assert_eq!(l.last(), &9001);
@@ -85,7 +88,7 @@
 //! use nonempty_collections::*;
 //!
 //! let v: NEVec<_> = nev![1, 2, 3].into_nonempty_iter().map(|n| n + 1).collect();
-//! assert_eq!(2, v.head);
+//! assert_eq!(&2, v.first());
 //! ```
 //!
 //! Consider also [`IteratorExt::to_nonempty_iter`] for converting any given
