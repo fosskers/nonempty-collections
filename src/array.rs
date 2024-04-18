@@ -92,6 +92,7 @@ pub trait NonEmptyArrayExt<T> {
 ///
 /// is_one([]); // Doesn't compile because it is empty.
 /// ```
+#[derive(Clone)]
 pub struct ArrayNonEmptyIterator<T, const C: usize> {
     iter: core::array::IntoIter<T, C>,
 }

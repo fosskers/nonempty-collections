@@ -389,6 +389,7 @@ where
 }
 
 /// A non-empty iterator over the entries of an [`NEMap`].
+
 pub struct Iter<'a, K: 'a, V: 'a> {
     iter: std::collections::hash_map::Iter<'a, K, V>,
 }
