@@ -132,6 +132,7 @@ pub mod map;
 pub mod set;
 pub mod slice;
 pub mod vector;
+pub mod vec2;
 
 pub use array::ArrayNonEmptyIterator;
 pub use array::NonEmptyArrayExt;
