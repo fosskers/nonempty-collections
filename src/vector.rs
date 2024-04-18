@@ -1,6 +1,9 @@
 //! Non-empty Vectors.
 
+use core::fmt;
 use std::cmp::Ordering;
+use std::fmt::Debug;
+use std::fmt::Formatter;
 use std::num::NonZeroUsize;
 
 #[cfg(feature = "serde")]
@@ -846,7 +849,6 @@ impl<T> FromNonEmptyIterator<T> for NEVec<T> {
 }
 
 /// A non-empty iterator over the values of an [`NEVec`].
-#[derive(Debug)]
 pub struct Iter<'a, T: 'a> {
     iter: std::slice::Iter<'a, T>,
 }
@@ -860,6 +862,21 @@ impl<'a, T> IntoIterator for Iter<'a, T> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
+    }
+}
+
+// FIXME(#26925) Remove in favor of `#[derive(Clone)]` (see https://github.com/rust-lang/rust/issues/26925 for more info)
+impl<T> Clone for Iter<'_, T> {
+    fn clone(&self) -> Self {
+        Iter {
+            iter: self.iter.clone(),
+        }
+    }
+}
+
+impl<T: Debug> Debug for Iter<'_, T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        self.iter.fmt(f)
     }
 }
 
@@ -882,7 +899,7 @@ impl<'a, T> IntoIterator for IterMut<'a, T> {
 }
 
 /// An owned non-empty iterator over values from an [`NEVec`].
-#[derive(Debug)]
+#[derive(Clone)]
 pub struct IntoIter<T> {
     inner: std::vec::IntoIter<T>,
 }
@@ -896,6 +913,12 @@ impl<T> IntoIterator for IntoIter<T> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner
+    }
+}
+
+impl<T: Debug> Debug for IntoIter<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
     }
 }
 

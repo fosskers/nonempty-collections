@@ -811,6 +811,7 @@ pub trait IntoNonEmptyIterator: IntoIterator {
 }
 
 /// Similar to [`std::iter::Map`], but with additional non-emptiness guarantees.
+#[derive(Clone)]
 pub struct Map<I: NonEmptyIterator, F> {
     iter: std::iter::Map<I::IntoIter, F>,
 }
@@ -854,6 +855,7 @@ where
 /// An iterator that clones the elements of an underlying iterator.
 ///
 /// See also [`std::iter::Cloned`].
+#[derive(Clone)]
 pub struct Cloned<I> {
     iter: I,
 }
@@ -888,6 +890,7 @@ where
 /// An iterator that yields the current count and the element during iteration.
 ///
 /// See also [`std::iter::Enumerate`].
+#[derive(Clone)]
 pub struct Enumerate<I> {
     iter: I,
 }
@@ -916,6 +919,7 @@ impl<I: fmt::Debug> fmt::Debug for Enumerate<I> {
 /// A non-empty iterator that only iterates over the first `n` iterations.
 ///
 /// See also [`Iterator::take`].
+#[derive(Clone)]
 pub struct Take<I: NonEmptyIterator> {
     iter: std::iter::Take<I::IntoIter>,
 }
@@ -959,6 +963,7 @@ where
 }
 
 /// A non-empty iterator that links two iterators together, in a chain.
+#[derive(Clone)]
 pub struct Chain<A, B> {
     inner: std::iter::Chain<A, B>,
 }
@@ -995,6 +1000,7 @@ where
 }
 
 /// A non-empty iterator that yields an element exactly once.
+#[derive(Clone)]
 pub struct Once<T> {
     inner: std::iter::Once<T>,
 }
@@ -1029,6 +1035,7 @@ impl<T: fmt::Debug> fmt::Debug for Once<T> {
 /// iterator.
 ///
 /// See also [`std::iter::Copied`].
+#[derive(Clone)]
 pub struct Copied<I> {
     iter: std::iter::Copied<I>,
 }
@@ -1066,6 +1073,7 @@ where
 /// A non-empty iterator that "zips up" its sources.
 ///
 /// See also [`std::iter::Zip`].
+#[derive(Clone)]
 pub struct Zip<A, B> {
     inner: std::iter::Zip<A, B>,
 }
@@ -1304,6 +1312,18 @@ where
     }
 }
 
+impl<I: Clone, U, F: Clone> Clone for FlatMap<I, U, F>
+where
+    U: Clone + IntoIterator,
+    U::IntoIter: Clone,
+{
+    fn clone(&self) -> Self {
+        FlatMap {
+            inner: self.inner.clone(),
+        }
+    }
+}
+
 /// Convenience trait extending [`Iterator`].
 pub trait IteratorExt {
     /// The type of the elements being iterated over.
@@ -1357,6 +1377,7 @@ where
 }
 
 /// An adapter for regular iterators that are known to be non-empty.
+#[derive(Clone)]
 pub struct NonEmptyIterAdapter<I> {
     inner: I,
 }
