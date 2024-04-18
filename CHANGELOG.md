@@ -24,6 +24,7 @@
  - `NonEmptyIterAdapter`
  - Extension to `either::Either` (behind optional `either` feature)
  - Benchmarks for `Vec` versus `NEVec`.
+ - `Index<usize> for NESlice`
  - Strict lint configuration
 
 ## 0.2.5 (2024-04-09)
