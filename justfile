@@ -17,7 +17,7 @@ lint strict="":
         --all-features \
         --quiet \
         -- {{ if strict != "" { "-D warnings" } else { "" } }}
-    cargo doc --all --no-deps --document-private-items --quiet
+    cargo doc --all --no-deps --document-private-items --all-features --quiet
 
 test:
     cargo test --workspace --all-features
