@@ -3,6 +3,7 @@
 use core::fmt;
 use std::iter::FilterMap;
 use std::num::NonZeroUsize;
+use std::ops::Index;
 use std::slice::Chunks;
 
 use crate::iter::IntoNonEmptyIterator;
@@ -118,6 +119,14 @@ impl<'a, T> IntoNonEmptyIterator for NESlice<'a, T> {
         Iter {
             iter: self.inner.iter(),
         }
+    }
+}
+
+impl<T> Index<usize> for NESlice<'_, T> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.inner[index]
     }
 }
 
