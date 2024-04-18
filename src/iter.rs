@@ -61,6 +61,8 @@ pub trait NonEmptyIterator: IntoIterator {
     ///
     /// See also [`Iterator::all`].
     ///
+    /// # Examples
+    ///
     /// ```
     /// use nonempty_collections::*;
     ///
@@ -73,8 +75,7 @@ pub trait NonEmptyIterator: IntoIterator {
         Self: Sized,
         F: FnMut(Self::Item) -> bool,
     {
-        let mut iter = self.into_iter();
-        iter.all(f)
+        self.into_iter().all(f)
     }
 
     /// Tests if any element of the iterator matches a predicate.
@@ -84,6 +85,8 @@ pub trait NonEmptyIterator: IntoIterator {
     /// this `NonEmptyIterator`.
     ///
     /// See also [`Iterator::any`].
+    ///
+    /// # Examples
     ///
     /// ```
     /// use nonempty_collections::*;
@@ -97,8 +100,32 @@ pub trait NonEmptyIterator: IntoIterator {
         Self: Sized,
         F: FnMut(Self::Item) -> bool,
     {
-        let mut iter = self.into_iter();
-        iter.any(f)
+        self.into_iter().any(f)
+    }
+
+    /// Searches for an element of an iterator that satisfies a predicate.
+    ///
+    /// Because this function always advances the iterator at least once, the
+    /// non-empty guarantee is invalidated. Therefore, this function consumes
+    /// this `NonEmptyIterator`.
+    ///
+    /// See also [`Iterator::find`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let n = nev![1, 3, 5, 7, 9, 10];
+    /// assert_eq!(Some(&10), n.iter().find(|n| n % 2 == 0));
+    /// assert_eq!(None, n.iter().find(|n| n > 10));
+    /// ```
+    fn find<P>(self, predicate: P) -> Option<Self::Item>
+    where
+        Self: Sized,
+        P: FnMut(&Self::Item) -> bool,
+    {
+        self.into_iter().find(predicate)
     }
 
     /// Takes two iterators and creates a new non-empty iterator over both in

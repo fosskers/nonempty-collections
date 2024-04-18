@@ -26,6 +26,7 @@
  - Benchmarks for `Vec` versus `NEVec`.
  - `Index<usize> for NESlice`
  - Strict lint configuration
+ - `NonEmptyIterator::find()`
 
 ## 0.2.9 (2024-08-26)
 
