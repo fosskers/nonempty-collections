@@ -125,6 +125,8 @@
 //! * `indexmap`: support for non-empty [`IndexMap`](https://docs.rs/indexmap/latest/indexmap/)
 
 pub mod array;
+#[cfg(feature = "either")]
+pub mod either_ext;
 #[cfg(feature = "indexmap")]
 pub mod index_map;
 pub mod iter;
