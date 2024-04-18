@@ -18,6 +18,7 @@
 #### Changed
 - `FromNonEmptyIterator<T>` is now implemented for `HashSet<T, S>` instead of only `HashSet<T>` (with the default hasher).
 - All public types now implement `Debug`
+- Fixes bug in `PartialEq for NEIndexMap` previously, maps with unequal lengths would be considered equal if the longer map would contain the same values as the longer map.
 
 #### Added
  - `NonEmptyIterAdapter`
