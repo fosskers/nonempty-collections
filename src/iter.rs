@@ -86,8 +86,8 @@ pub trait NonEmptyIterator: IntoIterator {
     /// use nonempty_collections::*;
     ///
     /// let n = nev![1, 1, 1, 2, 1, 1];
-    /// assert!(n.iter().any(|n| n % 2 == 0).0);
-    /// assert!(!n.iter().any(|n| n % 3 == 0).0);
+    /// assert!(n.iter().any(|n| n % 2 == 0));
+    /// assert!(!n.iter().any(|n| n % 3 == 0));
     /// ```
     fn any<F>(self, f: F) -> bool
     where
