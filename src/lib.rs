@@ -134,7 +134,6 @@ pub mod map;
 pub mod set;
 pub mod slice;
 pub mod vector;
-pub mod vec2;
 
 #[cfg(feature = "indexmap")]
 pub use index_map::NEIndexMap;
