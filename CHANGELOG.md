@@ -22,6 +22,7 @@
 
 #### Added
  - `NonEmptyIterAdapter`
+ - Extension to `either::Either` (behind optional `either` feature)
  - Benchmarks for `Vec` versus `NEVec`.
  - Strict lint configuration
 
