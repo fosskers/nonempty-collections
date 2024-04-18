@@ -1,5 +1,29 @@
 # `nonempty-collections`
 
+## Unreleased
+
+#### Breaking changes
+- `NonEmptyIterator` is now bounded by `IntoIterator` and has default implementations of all methods.
+- `NonEmptyIterator::first()` is renamed to `next()` and the old implementation of `next()` is removed.
+- `NonEmptyIterator::all()` now consumes self
+- `NonEmptyIterator::any()` now consumes self
+- `NonEmptyIterator::nth()` now consumes self
+- `NonEmptyIterator::take()` -> `NonEmptyIterator::take(NonZeroUsize)` and doesn't panic anymore
+- `truncate(usize)` -> `truncate(NonZeroUsize)`
+- Removed: `NESlice::new(&T, &[T])`
+- `NEVec::new()` is no longer `const`
+- `first()` is no longer `const`
+- non-empty maps and sets now behave similarly to their possibly empty counter parts: when created from an iterator with duplicates, the last occurence is kept.
+
+#### Changed
+- `FromNonEmptyIterator<T>` is now implemented for `HashSet<T, S>` instead of only `HashSet<T>` (with the default hasher).
+- All public types now implement `Debug`
+
+#### Added
+ - `NonEmptyIterAdapter`
+ - Benchmarks for `Vec` versus `NEVec`.
+ - Strict lint configuration
+
 ## 0.2.9 (2024-08-26)
 
 #### Added
@@ -29,6 +53,7 @@
 #### Fixed
 
 - Ownership issues in `nem!` when using non-Copy types.
+=======
 
 ## 0.2.5 (2024-04-09)
 

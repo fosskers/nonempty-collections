@@ -38,6 +38,10 @@ pub fn once<T>(value: T) -> Once<T> {
 }
 
 /// An [`Iterator`] that is guaranteed to have at least one item.
+///
+/// By implementing `NonEmptyIterator` for a type the implementor is responsible
+/// for ensuring that non-emptiness holds. Not holding up the non-emptiness
+/// invariant may lead to panics and/or undefined behavior.
 pub trait NonEmptyIterator: IntoIterator {
     /// Advances this non-empty iterator, this consumes the iterator and returns
     /// the first item and a possibly empty iterator.
@@ -52,9 +56,8 @@ pub trait NonEmptyIterator: IntoIterator {
     /// Tests if every element of the iterator matches a predicate.
     ///
     /// Because this function always advances the iterator at least once, the
-    /// non-empty guarantee is invalidated. Therefore, the function returns a
-    /// bool and a potentially empty iterator that contains the remaining
-    /// elements.
+    /// non-empty guarantee is invalidated. Therefore, this function consumes
+    /// this `NonEmptyIterator`.
     ///
     /// See also [`Iterator::all`].
     ///
@@ -62,18 +65,23 @@ pub trait NonEmptyIterator: IntoIterator {
     /// use nonempty_collections::*;
     ///
     /// let n = nev![2, 2, 2];
-    /// assert!(n.iter().all(|n| n % 2 == 0).0);
+    /// assert!(n.iter().all(|n| n % 2 == 0));
+    /// assert!(n.iter().into_iter().all(|n| n % 2 == 0));
     /// ```
-    fn all<F>(self, f: F) -> (bool, Self::IntoIter)
+    fn all<F>(self, f: F) -> bool
     where
         Self: Sized,
         F: FnMut(Self::Item) -> bool,
     {
         let mut iter = self.into_iter();
-        (iter.all(f), iter)
+        iter.all(f)
     }
 
     /// Tests if any element of the iterator matches a predicate.
+    ///
+    /// Because this function always advances the iterator at least once, the
+    /// non-empty guarantee is invalidated. Therefore, this function consumes
+    /// this `NonEmptyIterator`.
     ///
     /// See also [`Iterator::any`].
     ///
@@ -84,13 +92,13 @@ pub trait NonEmptyIterator: IntoIterator {
     /// assert!(n.iter().any(|n| n % 2 == 0).0);
     /// assert!(!n.iter().any(|n| n % 3 == 0).0);
     /// ```
-    fn any<F>(self, f: F) -> (bool, Self::IntoIter)
+    fn any<F>(self, f: F) -> bool
     where
         Self: Sized,
         F: FnMut(Self::Item) -> bool,
     {
         let mut iter = self.into_iter();
-        (iter.any(f), iter)
+        iter.any(f)
     }
 
     /// Takes two iterators and creates a new non-empty iterator over both in
@@ -525,6 +533,10 @@ pub trait NonEmptyIterator: IntoIterator {
     }
 
     /// Returns the `n`th element of the iterator.
+    ///
+    /// This function consumes this `NonEmptyIterator`. [`Self::next()`] can be
+    /// used for getting the first element and a reference to an iterator
+    /// over the remaining elements.
     ///
     /// See also [`Iterator::nth`].
     ///
