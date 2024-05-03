@@ -563,6 +563,8 @@ impl<T> NEVec<T> {
     ///
     /// See also [`slice::sort`].
     ///
+    /// # Examples
+    ///
     /// ```
     /// use nonempty_collections::nev;
     ///
@@ -570,7 +572,7 @@ impl<T> NEVec<T> {
     /// n.sort();
     /// assert_eq!(nev![1, 2, 3, 4, 5], n);
     ///
-    /// // Naturally, sorting a sorted result should be the same.
+    /// // Naturally, sorting a sorted result should remain the same.
     /// n.sort();
     /// assert_eq!(nev![1, 2, 3, 4, 5], n);
     /// ```
@@ -581,64 +583,29 @@ impl<T> NEVec<T> {
         self.inner.sort();
     }
 
-    /// Like [`NEVec::sort`], but sorts the `NEVec` with a given comparison
-    /// function.
-    ///
-    /// See also [`slice::sort_by`].
-    ///
-    /// ```
-    /// use nonempty_collections::nev;
-    ///
-    /// let mut n = nev!["Sirion", "Gelion", "Narog"];
-    /// n.sort_by(|a, b| b.cmp(&a));
-    /// assert_eq!(nev!["Sirion", "Narog", "Gelion"], n);
-    /// ```
-    pub fn sort_by<F>(&mut self, mut compare: F)
-    where
-        F: FnMut(&T, &T) -> Ordering,
-    {
-        if self.tail.is_empty().not() {
-            let zero: &T = &self.tail[0];
-
-            let (ix, smallest) =
-                self.tail
-                    .iter()
-                    .enumerate()
-                    .fold((0, zero), |(ix, smallest), (ix_curr, curr)| {
-                        if matches!(compare(curr, smallest), Ordering::Less) {
-                            (ix_curr, curr)
-                        } else {
-                            (ix, smallest)
-                        }
-                    });
-
-            if matches!(compare(&self.head, smallest), Ordering::Greater) {
-                std::mem::swap(&mut self.head, self.tail.index_mut(ix));
-            }
-
-            self.tail.sort_by(compare);
-        }
-    }
-
-    /// Like [`NEVec::sort`], but sorts the `NEVec` after first transforming
-    /// each element into something easily comparable. Beware of expensive key
-    /// functions, as the results of each call are not cached.
+    /// Sorts the `NEVec` in place using a key extraction function.
     ///
     /// See also [`slice::sort_by_key`].
     ///
+    /// # Examples
+    ///
     /// ```
     /// use nonempty_collections::nev;
     ///
-    /// let mut n = nev![-5i32, 4, 1, -3, 2];
-    /// n.sort_by_key(|k| k.abs());
+    /// let mut n = nev![-5, 4, -3, 2, 1];
+    /// n.sort_by_key(|x| x * x);
+    /// assert_eq!(nev![1, 2, -3, 4, -5], n);
+    ///
+    /// // Naturally, sorting a sorted result should remain the same.
+    /// n.sort_by_key(|x| x * x);
     /// assert_eq!(nev![1, 2, -3, 4, -5], n);
     /// ```
-    pub fn sort_by_key<K, F>(&mut self, mut f: F)
+    pub fn sort_by_key<K, F>(&mut self, f: F)
     where
         F: FnMut(&T) -> K,
         K: Ord,
     {
-        self.sort_by(|a, b| f(a).cmp(&f(b)));
+        self.inner.sort_by_key(f);
     }
 
     /// Yields a `NESlice`.
