@@ -102,6 +102,26 @@ impl<'a, T> NESlice<'a, T> {
     }
 }
 
+impl<'a, T> IntoNonEmptyIterator for NESlice<'a, T> {
+    type IntoNEIter = Iter<'a, T>;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        Iter {
+            iter: self.inner.iter(),
+        }
+    }
+}
+
+impl<'a, T> IntoNonEmptyIterator for &'a NESlice<'a, T> {
+    type IntoNEIter = Iter<'a, T>;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        Iter {
+            iter: self.inner.iter(),
+        }
+    }
+}
+
 impl<'a, T> IntoIterator for NESlice<'a, T> {
     type Item = &'a T;
 
@@ -112,13 +132,13 @@ impl<'a, T> IntoIterator for NESlice<'a, T> {
     }
 }
 
-impl<'a, T> IntoNonEmptyIterator for NESlice<'a, T> {
-    type IntoNEIter = Iter<'a, T>;
+impl<'a, T> IntoIterator for &'a NESlice<'a, T> {
+    type Item = &'a T;
 
-    fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        Iter {
-            iter: self.inner.iter(),
-        }
+    type IntoIter = std::slice::Iter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner.iter()
     }
 }
 

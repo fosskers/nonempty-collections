@@ -422,6 +422,24 @@ where
 {
 }
 
+impl<T, S> IntoNonEmptyIterator for NESet<T, S> {
+    type IntoNEIter = IntoIter<T>;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        IntoIter {
+            iter: self.inner.into_iter(),
+        }
+    }
+}
+
+impl<'a, T, S> IntoNonEmptyIterator for &'a NESet<T, S> {
+    type IntoNEIter = Iter<'a, T>;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        self.iter()
+    }
+}
+
 impl<T, S> IntoIterator for NESet<T, S> {
     type Item = T;
 
@@ -432,13 +450,13 @@ impl<T, S> IntoIterator for NESet<T, S> {
     }
 }
 
-impl<T, S> IntoNonEmptyIterator for NESet<T, S> {
-    type IntoNEIter = IntoIter<T>;
+impl<'a, T, S> IntoIterator for &'a NESet<T, S> {
+    type Item = &'a T;
 
-    fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        IntoIter {
-            iter: self.inner.into_iter(),
-        }
+    type IntoIter = std::collections::hash_set::Iter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner.iter()
     }
 }
 
@@ -513,15 +531,6 @@ impl<T> NonEmptyIterator for IntoIter<T> {}
 impl<T: fmt::Debug> fmt::Debug for IntoIter<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.iter.fmt(f)
-    }
-}
-
-impl<'a, T> IntoIterator for &'a NESet<T> {
-    type Item = &'a T;
-    type IntoIter = std::collections::hash_set::Iter<'a, T>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.inner.iter()
     }
 }
 

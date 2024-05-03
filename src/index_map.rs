@@ -376,6 +376,24 @@ where
     }
 }
 
+impl<K, V, S> IntoNonEmptyIterator for NEIndexMap<K, V, S> {
+    type IntoNEIter = IntoIter<K, V>;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        IntoIter {
+            iter: self.inner.into_iter(),
+        }
+    }
+}
+
+impl<'a, K, V, S> IntoNonEmptyIterator for &'a NEIndexMap<K, V, S> {
+    type IntoNEIter = Iter<'a, K, V>;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        self.iter()
+    }
+}
+
 impl<K, V, S> IntoIterator for NEIndexMap<K, V, S> {
     type Item = (K, V);
 
@@ -386,13 +404,13 @@ impl<K, V, S> IntoIterator for NEIndexMap<K, V, S> {
     }
 }
 
-impl<K, V, S> IntoNonEmptyIterator for NEIndexMap<K, V, S> {
-    type IntoNEIter = IntoIter<K, V>;
+impl<'a, K, V, S> IntoIterator for &'a NEIndexMap<K, V, S> {
+    type Item = (&'a K, &'a V);
 
-    fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        IntoIter {
-            iter: self.inner.into_iter(),
-        }
+    type IntoIter = indexmap::map::Iter<'a, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner.iter()
     }
 }
 

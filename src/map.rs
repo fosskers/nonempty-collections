@@ -361,6 +361,24 @@ where
     }
 }
 
+impl<K, V, S> IntoNonEmptyIterator for NEMap<K, V, S> {
+    type IntoNEIter = IntoIter<K, V>;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        IntoIter {
+            iter: self.inner.into_iter(),
+        }
+    }
+}
+
+impl<'a, K, V, S> IntoNonEmptyIterator for &'a NEMap<K, V, S> {
+    type IntoNEIter = Iter<'a, K, V>;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        self.iter()
+    }
+}
+
 impl<K, V, S> IntoIterator for NEMap<K, V, S> {
     type Item = (K, V);
 
@@ -371,6 +389,7 @@ impl<K, V, S> IntoIterator for NEMap<K, V, S> {
     }
 }
 
+<<<<<<< HEAD
 impl<K, V, S> TryFrom<HashMap<K, V, S>> for NEMap<K, V, S>
 where
     // FIXME: 2024-07-19 Fix the lower clone, thereby removing the need for `Clone` here.
@@ -407,11 +426,15 @@ where
 
 impl<K, V, S> IntoNonEmptyIterator for NEMap<K, V, S> {
     type IntoNEIter = IntoIter<K, V>;
+=======
+impl<'a, K, V, S> IntoIterator for &'a NEMap<K, V, S> {
+    type Item = (&'a K, &'a V);
+>>>>>>> 224fa6f (add impl IntoNonEmptyIterator for borrowed collections)
 
-    fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        IntoIter {
-            iter: self.inner.into_iter(),
-        }
+    type IntoIter = std::collections::hash_map::Iter<'a, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner.iter()
     }
 }
 

@@ -138,6 +138,14 @@ macro_rules! impl_nonempty_iter_for_arrays {
                 }
             }
 
+            impl<'a, T> IntoNonEmptyIterator for &'a [T; $i] {
+                type IntoNEIter = $crate::slice::Iter<'a,T>;
+
+                fn into_nonempty_iter(self) -> Self::IntoNEIter {
+                    self.as_nonempty_slice().into_nonempty_iter()
+                }
+            }
+
             impl<T> NonEmptyArrayExt<T> for [T; $i] {
                 fn as_nonempty_slice(&self) -> $crate::NESlice<'_, T> {
                     // This should never panic because a slice with length > 0
