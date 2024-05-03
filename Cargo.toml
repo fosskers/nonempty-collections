@@ -34,6 +34,7 @@ single_use_lifetimes = "warn"
 unreachable_pub = "warn"
 unsafe_code = "allow"
 unstable_features = "deny"
+unused = { level = "warn", priority = -1 }
 unused_crate_dependencies = "allow"    # too many false positives
 unused_extern_crates = "allow"         # too many false positives
 unused_import_braces = "warn"
@@ -42,19 +43,18 @@ unused_macro_rules = "warn"
 unused_qualifications = "warn"
 unused_results = "allow"
 dead_code = "warn"
-unused = "warn"
 
 [lints.rustdoc]
 broken_intra_doc_links = "deny"
 missing_crate_level_docs = "warn"
 
 [lints.clippy]
-cargo = "warn"
-complexity = "warn"
-correctness = "deny"
-perf = "warn"
-style = "warn"
-suspicious = "deny"
+cargo = { level = "warn", priority = -1 }
+complexity = { level = "warn", priority = -1 }
+correctness = { level = "deny", priority = -1 }
+perf = { level = "warn", priority = -1 }
+style = { level = "warn", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
 todo = "warn"
 
 missing_const_for_fn = "warn"

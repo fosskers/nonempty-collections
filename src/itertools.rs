@@ -43,10 +43,7 @@ pub trait NonEmptyItertools: NonEmptyIterator {
         <J::IntoNEIter as IntoIterator>::IntoIter: Clone,
     {
         Product {
-            inner: Itertools::cartesian_product(
-                self.into_iter(),
-                other.into_nonempty_iter().into_iter(),
-            ),
+            inner: Itertools::cartesian_product(self.into_iter(), other.into_nonempty_iter()),
         }
     }
 
