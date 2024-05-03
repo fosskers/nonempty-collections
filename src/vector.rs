@@ -872,6 +872,14 @@ impl<T> IntoNonEmptyIterator for NEVec<T> {
     }
 }
 
+impl<'a, T> IntoNonEmptyIterator for &'a NEVec<T> {
+    type IntoNEIter = Iter<'a, T>;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        self.iter()
+    }
+}
+
 impl<T> IntoIterator for NEVec<T> {
     type Item = T;
     type IntoIter = std::vec::IntoIter<Self::Item>;
