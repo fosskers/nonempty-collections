@@ -114,8 +114,8 @@ pub trait NonEmptyIterator: IntoIterator {
     /// use nonempty_collections::*;
     ///
     /// let n = nev![1, 3, 5, 7, 9, 10];
-    /// assert_eq!(Some(&10), n.iter().find(|n| n % 2 == 0));
-    /// assert_eq!(None, n.iter().find(|n| n > 10));
+    /// assert_eq!(Some(&10), n.iter().find(|n| *n % 2 == 0));
+    /// assert_eq!(None, n.iter().find(|n| **n > 10));
     /// ```
     fn find<P>(self, predicate: P) -> Option<Self::Item>
     where
