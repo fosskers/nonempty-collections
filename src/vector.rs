@@ -563,6 +563,8 @@ impl<T> NEVec<T> {
     ///
     /// See also [`slice::sort`].
     ///
+    /// # Examples
+    ///
     /// ```
     /// use nonempty_collections::nev;
     ///
@@ -570,7 +572,7 @@ impl<T> NEVec<T> {
     /// n.sort();
     /// assert_eq!(nev![1, 2, 3, 4, 5], n);
     ///
-    /// // Naturally, sorting a sorted result should be the same.
+    /// // Naturally, sorting a sorted result should remain the same.
     /// n.sort();
     /// assert_eq!(nev![1, 2, 3, 4, 5], n);
     /// ```
@@ -579,6 +581,31 @@ impl<T> NEVec<T> {
         T: Ord,
     {
         self.inner.sort();
+    }
+
+    /// Sorts the `NEVec` in place using a key extraction function.
+    ///
+    /// See also [`slice::sort_by_key`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    ///
+    /// let mut n = nev![-5, 4, -3, 2, 1];
+    /// n.sort_by_key(|x| x * x);
+    /// assert_eq!(nev![1, 2, -3, 4, -5], n);
+    ///
+    /// // Naturally, sorting a sorted result should remain the same.
+    /// n.sort_by_key(|x| x * x);
+    /// assert_eq!(nev![1, 2, -3, 4, -5], n);
+    /// ```
+    pub fn sort_by_key<K, F>(&mut self, f: F)
+    where
+        F: FnMut(&T) -> K,
+        K: Ord,
+    {
+        self.inner.sort_by_key(f);
     }
 
     /// Yields a `NESlice`.
