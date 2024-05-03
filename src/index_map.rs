@@ -158,7 +158,7 @@ impl<K, V, S> NEIndexMap<K, V, S> {
 }
 
 impl<K: Debug, V: Debug, S> Debug for NEIndexMap<K, V, S> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_map().entries(self.iter()).finish()
     }
 }
@@ -232,9 +232,9 @@ where
     /// assert_eq!(Some((&"Pages", &896)), m.get_key_value(&"Pages"));
     /// assert_eq!(None, m.get_key_value(&"Title"));
     /// ```
-    pub fn get_key_value<Q: ?Sized>(&self, key: &Q) -> Option<(&K, &V)>
+    pub fn get_key_value<Q>(&self, key: &Q) -> Option<(&K, &V)>
     where
-        Q: Hash + Equivalent<K>,
+        Q: Hash + Equivalent<K> + ?Sized,
     {
         self.inner.get_key_value(key)
     }
@@ -258,9 +258,9 @@ where
     ///
     /// assert_eq!(None, m.get_mut(&"Sandworm"));
     /// ```
-    pub fn get_mut<Q: ?Sized>(&mut self, key: &Q) -> Option<&mut V>
+    pub fn get_mut<Q>(&mut self, key: &Q) -> Option<&mut V>
     where
-        Q: Hash + Equivalent<K>,
+        Q: Hash + Equivalent<K> + ?Sized,
     {
         self.inner.get_mut(key)
     }
@@ -275,9 +275,9 @@ where
     /// assert_eq!(Some(1), m.get_index_of(&"Author"));
     /// assert_eq!(None, m.get_index_of(&"Genre"));
     /// ````
-    pub fn get_index_of<Q: ?Sized>(&self, key: &Q) -> Option<usize>
+    pub fn get_index_of<Q>(&self, key: &Q) -> Option<usize>
     where
-        Q: Hash + Equivalent<K>,
+        Q: Hash + Equivalent<K> + ?Sized,
     {
         self.inner.get_index_of(key)
     }

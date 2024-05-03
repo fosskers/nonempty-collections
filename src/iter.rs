@@ -183,7 +183,11 @@ pub trait NonEmptyIterator: IntoIterator {
     fn cloned<'a, T>(self) -> Cloned<Self>
     where
         Self: Sized + NonEmptyIterator<Item = &'a T>,
+<<<<<<< HEAD
         T: Clone + 'a,
+=======
+        T: 'a + Clone,
+>>>>>>> 226fb5e (fix lints)
     {
         Cloned { iter: self }
     }
@@ -218,10 +222,14 @@ pub trait NonEmptyIterator: IntoIterator {
     /// let n1 = n0.iter().copied().collect();
     /// assert_eq!(n0, n1);
     /// ```
-    fn copied<'a, T: 'a>(self) -> Copied<Self::IntoIter>
+    fn copied<'a, T>(self) -> Copied<Self::IntoIter>
     where
         Self: Sized + NonEmptyIterator<Item = &'a T>,
+<<<<<<< HEAD
         T: Copy + 'a,
+=======
+        T: 'a + Copy,
+>>>>>>> 226fb5e (fix lints)
     {
         Copied {
             iter: self.into_iter().copied(),
