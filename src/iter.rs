@@ -183,11 +183,7 @@ pub trait NonEmptyIterator: IntoIterator {
     fn cloned<'a, T>(self) -> Cloned<Self>
     where
         Self: Sized + NonEmptyIterator<Item = &'a T>,
-<<<<<<< HEAD
-        T: Clone + 'a,
-=======
         T: 'a + Clone,
->>>>>>> 226fb5e (fix lints)
     {
         Cloned { iter: self }
     }
@@ -225,11 +221,7 @@ pub trait NonEmptyIterator: IntoIterator {
     fn copied<'a, T>(self) -> Copied<Self::IntoIter>
     where
         Self: Sized + NonEmptyIterator<Item = &'a T>,
-<<<<<<< HEAD
-        T: Copy + 'a,
-=======
         T: 'a + Copy,
->>>>>>> 226fb5e (fix lints)
     {
         Copied {
             iter: self.into_iter().copied(),

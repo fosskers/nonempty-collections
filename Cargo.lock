@@ -143,6 +143,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d26c52dbd32dccf2d10cac7725f8eae5296885fb5703b261f7d0a0739ec807ab"
 
 [[package]]
+name = "maplit"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e2e65a1a2e43cfcb47a895c4c8b10d1f4a61097f9f254f183aee60cad9c651d"
+
+[[package]]
 name = "nonempty-collections"
 version = "0.2.9"
 dependencies = [
@@ -150,6 +156,7 @@ dependencies = [
  "either",
  "indexmap",
  "itertools",
+ "maplit",
  "serde",
  "serde_json",
 ]
