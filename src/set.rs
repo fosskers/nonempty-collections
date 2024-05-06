@@ -89,7 +89,7 @@ macro_rules! nes {
 ///
 /// As these methods are all "mutate-in-place" style and are difficult to
 /// reconcile with the non-emptiness guarantee.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct NESet<T, S = std::collections::hash_map::RandomState> {
     inner: HashSet<T, S>,
 }
@@ -480,7 +480,6 @@ where
 }
 
 /// A non-empty iterator over the values of an [`NESet`].
-#[derive(Debug)]
 pub struct Iter<'a, T: 'a> {
     iter: std::collections::hash_set::Iter<'a, T>,
 }
@@ -496,6 +495,12 @@ impl<'a, T: 'a> IntoIterator for Iter<'a, T> {
 }
 
 impl<T> NonEmptyIterator for Iter<'_, T> {}
+
+impl<T: fmt::Debug> fmt::Debug for Iter<'_, T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.iter.fmt(f)
+    }
+}
 
 /// An owned non-empty iterator over the values of an [`NESet`].
 pub struct IntoIter<T> {
@@ -573,5 +578,30 @@ where
     /// ```
     fn from(s: NESet<T, S>) -> Self {
         s.inner
+    }
+}
+
+impl<T: fmt::Debug, S> fmt::Debug for NESet<T, S> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use maplit::hashset;
+
+    #[test]
+    fn debug_impl() {
+        let expected = format!("{:?}", hashset! {0,1,2});
+        let actual = format!("{:?}", nes! {0,1,2});
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn iter_debug_impl() {
+        let expected = format!("{:?}", hashset! {0}.iter());
+        let actual = format!("{:?}", nes! {0}.iter());
+        assert_eq!(expected, actual);
     }
 }

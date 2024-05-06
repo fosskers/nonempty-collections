@@ -40,7 +40,7 @@ macro_rules! nem {
 /// let m = nem!["elves" => 3000, "orcs" => 10000];
 /// assert_eq!(2, m.len().get());
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct NEMap<K, V, S = std::collections::hash_map::RandomState> {
     inner: HashMap<K, V, S>,
 }
@@ -522,6 +522,12 @@ impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for Values<'_, K, V> {
     }
 }
 
+impl<K: fmt::Debug, V: fmt::Debug, S> fmt::Debug for NEMap<K, V, S> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
 // /// A non-empty iterator over mutable values of an [`NEMap`].
 // pub struct ValuesMut<'a, K: 'a, V: 'a> {
 //     inner: IterMut<'a, K, V>,
@@ -541,3 +547,15 @@ impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for Values<'_, K, V> {
 //         self.inner.next().map(|(_, v)| v)
 //     }
 // }
+
+#[cfg(test)]
+mod test {
+    use maplit::hashmap;
+
+    #[test]
+    fn debug_impl() {
+        let expected = format!("{:?}", hashmap! {0 => 10, 1 => 11, 2 => 12});
+        let actual = format!("{:?}", nem! {0 => 10, 1 => 11, 2 => 12});
+        assert_eq!(expected, actual);
+    }
+}

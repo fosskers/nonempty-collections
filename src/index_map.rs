@@ -667,4 +667,11 @@ mod test {
             map.keys().copied().collect::<Vec<_>>()
         );
     }
+
+    #[test]
+    fn debug_impl() {
+        let expected = format!("{:?}", indexmap! {0 => 10, 1 => 11, 2 => 12});
+        let actual = format!("{:?}", ne_indexmap! {0 => 10, 1 => 11, 2 => 12});
+        assert_eq!(expected, actual);
+    }
 }

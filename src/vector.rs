@@ -65,7 +65,7 @@ macro_rules! nev {
     serde(into = "Vec<T>", try_from = "Vec<T>")
 )]
 #[allow(clippy::unsafe_derive_deserialize)] // the non-empty invariant is enforced by the deserialize implementation
-#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NEVec<T> {
     inner: Vec<T>,
 }
@@ -948,6 +948,12 @@ impl<T> std::ops::IndexMut<usize> for NEVec<T> {
     }
 }
 
+impl<T: Debug> Debug for NEVec<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
 #[cfg(feature = "serde")]
 pub mod serialize {
     //! Serde support for [`NEVec`].
@@ -1079,8 +1085,15 @@ mod tests {
     fn test_as_slice() {
         let nonempty = NEVec::from((0, vec![1, 2, 3]));
         assert_eq!(
+            crate::NESlice::from_slice(&[0, 1, 2, 3]).unwrap(),
             nonempty.as_nonempty_slice(),
-            crate::NESlice::from_slice(&[0, 1, 2, 3]).unwrap()
         );
+    }
+
+    #[test]
+    fn debug_impl() {
+        let actual = format!("{:?}", nev![0, 1, 2, 3]);
+        let expected = format!("{:?}", vec![0, 1, 2, 3]);
+        assert_eq!(expected, actual);
     }
 }

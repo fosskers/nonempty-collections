@@ -19,6 +19,7 @@ itertools = { version = "^0.12", optional = true, features = ["use_alloc"] }
 [dev-dependencies]
 serde_json = "1"
 divan = "0.1.14"
+maplit = "1.0.2"
 
 [[bench]]
 name = "vec"
