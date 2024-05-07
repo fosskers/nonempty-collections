@@ -620,4 +620,9 @@ mod serde_tests {
         let bad = serde_json::from_str::<NEMap<usize, char>>(&j);
         assert!(bad.is_err());
     }
+    fn debug_impl() {
+        let expected = format!("{:?}", hashmap! {0 => 10});
+        let actual = format!("{:?}", nem! {0 => 10});
+        assert_eq!(expected, actual);
+    }
 }
