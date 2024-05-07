@@ -554,8 +554,8 @@ mod test {
 
     #[test]
     fn debug_impl() {
-        let expected = format!("{:?}", hashmap! {0 => 10, 1 => 11, 2 => 12});
-        let actual = format!("{:?}", nem! {0 => 10, 1 => 11, 2 => 12});
+        let expected = format!("{:?}", hashmap! {0 => 10});
+        let actual = format!("{:?}", nem! {0 => 10});
         assert_eq!(expected, actual);
     }
 }

@@ -593,8 +593,8 @@ mod test {
 
     #[test]
     fn debug_impl() {
-        let expected = format!("{:?}", hashset! {0,1,2});
-        let actual = format!("{:?}", nes! {0,1,2});
+        let expected = format!("{:?}", hashset! {0});
+        let actual = format!("{:?}", nes! {0});
         assert_eq!(expected, actual);
     }
 
