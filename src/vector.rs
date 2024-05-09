@@ -23,7 +23,7 @@ use crate::slice::NEChunks;
 /// use nonempty_collections::nev;
 /// use nonempty_collections::NEVec;
 ///
-/// let v = nev![1, 2, 3];
+/// let v = nev![1, 2, 3,];
 /// assert_eq!(v.into_iter().collect::<Vec<_>>(), vec![1, 2, 3]);
 ///
 /// let v = nev![1];
@@ -36,7 +36,7 @@ use crate::slice::NEChunks;
 /// Consider also [`crate::nem!`] and [`crate::nes!`].
 #[macro_export]
 macro_rules! nev {
-    ($h:expr, $( $x:expr ),*) => {{
+    ($h:expr, $( $x:expr ),* $(,)?) => {{
         let mut v = $crate::NEVec::new($h);
         $( v.push($x); )*
         v

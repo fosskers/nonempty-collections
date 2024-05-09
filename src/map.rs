@@ -17,12 +17,12 @@ use crate::NonEmptyIterator;
 /// ```
 /// use nonempty_collections::nem;
 ///
-/// let m = nem!["elves" => 3000, "orcs" => 10000];
+/// let m = nem!{"elves" => 3000, "orcs" => 10000};
 /// assert_eq!(2, m.len().get());
 /// ```
 #[macro_export]
 macro_rules! nem {
-    ($hk:expr => $hv:expr, $( $xk:expr => $xv:expr ),*) => {{
+    ($hk:expr => $hv:expr, $( $xk:expr => $xv:expr ),* $(,)?) => {{
         let mut map = $crate::NEMap::new($hk, $hv);
         $( map.insert($xk, $xv); )*
         map
