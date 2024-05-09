@@ -22,12 +22,12 @@ use crate::IntoNonEmptyIterator;
 /// ```
 /// use nonempty_collections::nes;
 ///
-/// let s = nes![1, 2, 2, 3];
+/// let s = nes![1, 2, 2, 3,];
 /// assert_eq!(3, s.len().get());
 /// ```
 #[macro_export]
 macro_rules! nes {
-    ($h:expr, $( $x:expr ),*) => {{
+    ($h:expr, $( $x:expr ),* $(,)?) => {{
         let mut set = $crate::NESet::new($h);
         $( set.insert($x); )*
         set
