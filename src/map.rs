@@ -17,7 +17,7 @@ use crate::NonEmptyIterator;
 /// ```
 /// use nonempty_collections::nem;
 ///
-/// let m = nem!{"elves" => 3000, "orcs" => 10000};
+/// let m = nem! {"elves" => 3000, "orcs" => 10000};
 /// assert_eq!(2, m.len().get());
 /// ```
 #[macro_export]

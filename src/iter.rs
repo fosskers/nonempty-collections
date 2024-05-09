@@ -41,7 +41,8 @@ pub fn once<T>(value: T) -> Once<T> {
 /// invariant may lead to panics and/or undefined behavior.
 pub trait NonEmptyIterator: IntoIterator {
     /// Advances this non-empty iterator, this consumes the iterator and returns
-    /// the first item and a possibly empty iterator.
+    /// the first item and a possibly empty iterator containing the rest of the
+    /// elements.
     fn next(self) -> (Self::Item, Self::IntoIter)
     where
         Self: Sized,
