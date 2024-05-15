@@ -21,12 +21,16 @@
 - Fixes bug in `PartialEq for NEIndexMap` previously, maps with unequal lengths would be considered equal if the longer map would contain the same values as the longer map.
 
 #### Added
- - `NonEmptyIterAdapter`
- - Extension to `either::Either` (behind optional `either` feature)
- - Benchmarks for `Vec` versus `NEVec`.
+ - New feature `either`: adds `NEEither` an extension to `either::Either`.
+ - New feature `itertools`: adds a new `NonEmptyItertools` trait that is an extension of the `NonEmptyIterator` similar to how `Itertools` extends `Iterator`. So far, `cartesian_product()`, `sorted_by_key()`, and `all_unique()` are implemented. 
+ - `NonEmptyIterator::find()` the equivalent of `Iterator::find()`.
+ - `IntoNonEmptyIterator for &[T; $i] where $i > 0`
  - `Index<usize> for NESlice`
  - Strict lint configuration
- - `NonEmptyIterator::find()`
+ - The rust version to which the library is build is now pinned.
+ - A [`justfile`](https://github.com/casey/just) that allows to run pre-configured commands to check the codebase. E.g. `just lint` or `just test`.
+ - Benchmarks for `Vec` versus `NEVec`.
+
 
 ## 0.2.9 (2024-08-26)
 
