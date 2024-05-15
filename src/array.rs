@@ -185,4 +185,19 @@ mod test {
 
         assert_eq!(33, [1, -2, 33, 4].into_nonempty_iter().max());
     }
+
+    #[test]
+    fn test_iter_ref() {
+        let iter = (&[1, 2, 3, 4]).into_nonempty_iter();
+        let (first, rest) = iter.next();
+        assert_eq!(&1, first);
+        assert_eq!(vec![&2, &3, &4], rest.into_iter().collect::<Vec<_>>());
+
+        let iter = (&[1]).into_nonempty_iter();
+        let (first, rest) = iter.next();
+        assert_eq!(&1, first);
+        assert_eq!(0, rest.into_iter().count());
+
+        assert_eq!(&33, (&[1, -2, 33, 4]).into_nonempty_iter().max());
+    }
 }
