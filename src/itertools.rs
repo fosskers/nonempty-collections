@@ -20,10 +20,11 @@ use crate::NonEmptyIterator;
 /// A [`NonEmptyIterator`] blanket implementation that provides extra adaptors
 /// and methods, similar to [`Itertools`](https://docs.rs/itertools/) for `Iterator`.
 pub trait NonEmptyItertools: NonEmptyIterator {
-    /// Return an iterator adaptor that iterates over the cartesian product of
-    /// the element sets of two iterators `self` and `J`.
+    /// Return a non-empty iterator adaptor that iterates over the non-empty
+    /// cartesian product of the element sets of two iterators `self` and
+    /// `J`.
     ///
-    /// Iterator element type is `(Self::Item, J::Item)`.
+    /// `NonEmptyIterator`element type is `(Self::Item, J::Item)`.
     ///
     /// ```
     /// use nonempty_collections::*;
