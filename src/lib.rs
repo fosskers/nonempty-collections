@@ -126,7 +126,7 @@
 
 pub mod array;
 #[cfg(feature = "either")]
-pub mod either_ext;
+pub mod either;
 #[cfg(feature = "indexmap")]
 pub mod index_map;
 
@@ -142,7 +142,7 @@ pub mod vector;
 pub use array::ArrayNonEmptyIterator;
 pub use array::NonEmptyArrayExt;
 #[cfg(feature = "either")]
-pub use either_ext::NEEither;
+pub use either::NEEither;
 #[cfg(feature = "indexmap")]
 pub use index_map::NEIndexMap;
 
