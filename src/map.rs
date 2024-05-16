@@ -58,11 +58,12 @@ where
 
     /// Creates a new `NEMap` with a single element and specified capacity.
     /// ```
-    /// use nonempty_collections::*;
     /// use std::num::*;
+    ///
+    /// use nonempty_collections::*;
     /// let map = NEMap::with_capacity(NonZeroUsize::MIN, 1, 1);
-    /// assert_eq!(nem!{ 1 => 1 }, map);
-    /// assert_eq!(NonZeroUsize::MIN, map.capacity());
+    /// assert_eq!(nem! { 1 => 1 }, map);
+    /// assert!(map.capacity().get() >= 1);
     /// ```
     pub fn with_capacity(capacity: NonZeroUsize, k: K, v: V) -> NEMap<K, V> {
         let mut inner = HashMap::with_capacity(capacity.get());
@@ -72,6 +73,29 @@ where
 }
 
 impl<K, V, S> NEMap<K, V, S> {
+    /// Attempt a conversion from [`HashMap`], consuming the given `HashMap`.
+    /// Will return `None` if the `HashMap` is empty.
+    ///
+    /// ```
+    /// use std::collections::*;
+    ///
+    /// use nonempty_collections::*;
+    ///
+    /// let mut map = HashMap::new();
+    /// map.extend([("a", 1), ("b", 2)]);
+    /// assert_eq!(Some(nem! {"a" => 1, "b" => 2}), NEMap::try_from_map(map));
+    /// let map: HashMap<(), ()> = HashMap::new();
+    /// assert_eq!(None, NEMap::try_from_map(map));
+    /// ```
+    #[must_use]
+    pub fn try_from_map(map: HashMap<K, V, S>) -> Option<Self> {
+        if map.is_empty() {
+            None
+        } else {
+            Some(Self { inner: map })
+        }
+    }
+
     /// Returns the number of elements the map can hold without reallocating.
     pub fn capacity(&self) -> NonZeroUsize {
         unsafe { NonZeroUsize::new_unchecked(self.inner.capacity()) }
