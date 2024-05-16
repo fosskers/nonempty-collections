@@ -58,6 +58,32 @@ pub struct NEMap<K, V, S = std::collections::hash_map::RandomState> {
     inner: HashMap<K, V, S>,
 }
 
+impl<K, V> NEMap<K, V>
+where
+    K: Eq + Hash,
+{
+    /// Creates a new `NEMap` with a single element.
+    pub fn new(k: K, v: V) -> NEMap<K, V> {
+        let mut inner = HashMap::new();
+        inner.insert(k, v);
+        NEMap { inner }
+    }
+
+    /// Creates a new `NEMap` with a single element and specified capacity.
+    /// ```
+    /// use nonempty_collections::*;
+    /// use std::num::*;
+    /// let map = NEMap::with_capacity(NonZeroUsize::MIN, 1, 1);
+    /// assert_eq!(nem!{ 1 => 1 }, map);
+    /// assert_eq!(NonZeroUsize::MIN, map.capacity());
+    /// ```
+    pub fn with_capacity(capacity: NonZeroUsize, k: K, v: V) -> NEMap<K, V> {
+        let mut inner = HashMap::with_capacity(capacity.get());
+        inner.insert(k, v);
+        NEMap { inner }
+    }
+}
+
 impl<K, V, S> NEMap<K, V, S> {
     /// Returns the number of elements the map can hold without reallocating.
     pub fn capacity(&self) -> NonZeroUsize {
@@ -160,17 +186,6 @@ impl<K, V, S> NEMap<K, V, S> {
     //         head_val: todo!(),
     //     }
     // }
-}
-impl<K, V> NEMap<K, V>
-where
-    K: Eq + Hash,
-{
-    /// Creates a new `NEMap` with a single element.
-    pub fn new(k: K, v: V) -> NEMap<K, V> {
-        let mut inner = HashMap::new();
-        inner.insert(k, v);
-        NEMap { inner }
-    }
 }
 
 impl<K, V, S> NEMap<K, V, S>
@@ -288,13 +303,6 @@ where
     /// leaving some space in accordance with the resize policy.
     pub fn shrink_to_fit(&mut self) {
         self.inner.shrink_to_fit()
-    }
-
-    /// Creates a new `NEMap` with a single element and specified capacity.
-    pub fn with_capacity(capacity: NonZeroUsize, k: K, v: V) -> NEMap<K, V> {
-        let mut inner = HashMap::with_capacity(capacity.get());
-        inner.insert(k, v);
-        NEMap { inner }
     }
 
     /// See [`HashMap::with_capacity_and_hasher`].
