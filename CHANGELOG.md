@@ -26,6 +26,7 @@
  - `NonEmptyIterator::find()` the equivalent of `Iterator::find()`.
  - `IntoNonEmptyIterator for &[T; $i] where $i > 0`
  - `Index<usize> for NESlice`
+ - Aliases `ne_vec` for `nev`, `ne_hashset` for `nes`, and `ne_hashmap` for `nem`.
  - Strict lint configuration
  - The rust version to which the library is build is now pinned.
  - A [`justfile`](https://github.com/casey/just) that allows to run pre-configured commands to check the codebase. E.g. `just lint` or `just test`.
