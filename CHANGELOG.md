@@ -10,6 +10,8 @@
 - `NonEmptyIterator::nth()` now consumes self
 - `NonEmptyIterator::take()` -> `NonEmptyIterator::take(NonZeroUsize)` and doesn't panic anymore
 - `truncate(usize)` -> `truncate(NonZeroUsize)`
+- `with_capacity()`, `with_capacity_and_hasher()` now take a `NonZeroUsize` instead of a `usize`.
+- `capacity()` now returns a `NonZeroUsize` instead of `usize`.
 - Removed: `NESlice::new(&T, &[T])`
 - `NEVec::new()` is no longer `const`
 - `first()` is no longer `const`
@@ -18,7 +20,7 @@
 #### Changed
 - `FromNonEmptyIterator<T>` is now implemented for `HashSet<T, S>` instead of only `HashSet<T>` (with the default hasher).
 - All public types now implement `Debug`
-- Fixes bug in `PartialEq for NEIndexMap` previously, maps with unequal lengths would be considered equal if the longer map would contain the same values as the longer map.
+- Fixes bug in `PartialEq for NEIndexMap` previously, maps with unequal lengths would be considered equal if the shorter map would contain the same values as the longer map.
 
 #### Added
  - New feature `either`: adds `NEEither` an extension to `either::Either`.

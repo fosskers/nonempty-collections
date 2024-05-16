@@ -30,7 +30,7 @@ use crate::NonEmptyIterator;
 macro_rules! ne_indexmap {
     ($hk:expr => $hv:expr, $( $xk:expr => $xv:expr,)+) => { $crate::ne_indexmap!{$hk => $hv, $($xk => $xv),+} };
     ($hk:expr => $hv:expr, $( $xk:expr => $xv:expr ),*) => {{
-        const CAP: usize = <[()]>::len(&[$({ stringify!($xk); }),*]);
+        const CAP: NonZeroUsize = NonZeroUsize::MIN.saturating_add(<[()]>::len(&[$({ stringify!($xk); }),*]));
         let mut map = $crate::index_map::NEIndexMap::with_capacity(CAP, $hk, $hv);
         $( map.insert($xk, $xv); )*
         map
@@ -58,8 +58,8 @@ pub struct NEIndexMap<K, V, S = std::collections::hash_map::RandomState> {
 
 impl<K, V, S> NEIndexMap<K, V, S> {
     /// Returns the number of elements the map can hold without reallocating.
-    pub fn capacity(&self) -> usize {
-        self.inner.capacity()
+    pub fn capacity(&self) -> NonZeroUsize {
+        unsafe { NonZeroUsize::new_unchecked(self.inner.capacity()) }
     }
 
     /// Returns a reference to the map's `BuildHasher`.
@@ -176,8 +176,8 @@ where
 
     /// Creates a new `NEIndexMap` with a single element and specified
     /// heap capacity.
-    pub fn with_capacity(capacity: usize, k: K, v: V) -> NEIndexMap<K, V> {
-        let mut inner = IndexMap::with_capacity(capacity);
+    pub fn with_capacity(capacity: NonZeroUsize, k: K, v: V) -> NEIndexMap<K, V> {
+        let mut inner = IndexMap::with_capacity(capacity.get());
         inner.insert(k, v);
         Self { inner }
     }
@@ -318,8 +318,13 @@ where
 
     /// Creates a new `NEIndexMap` with a single element and specified
     /// heap capacity and hasher.
-    pub fn with_capacity_and_hasher(capacity: usize, hasher: S, k: K, v: V) -> NEIndexMap<K, V, S> {
-        let mut inner = IndexMap::with_capacity_and_hasher(capacity, hasher);
+    pub fn with_capacity_and_hasher(
+        capacity: NonZeroUsize,
+        hasher: S,
+        k: K,
+        v: V,
+    ) -> NEIndexMap<K, V, S> {
+        let mut inner = IndexMap::with_capacity_and_hasher(capacity.get(), hasher);
         inner.insert(k, v);
         Self { inner }
     }

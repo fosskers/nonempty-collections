@@ -60,8 +60,8 @@ pub struct NEMap<K, V, S = std::collections::hash_map::RandomState> {
 
 impl<K, V, S> NEMap<K, V, S> {
     /// Returns the number of elements the map can hold without reallocating.
-    pub fn capacity(&self) -> usize {
-        self.inner.capacity()
+    pub fn capacity(&self) -> NonZeroUsize {
+        unsafe { NonZeroUsize::new_unchecked(self.inner.capacity()) }
     }
 
     /// Returns a reference to the map's `BuildHasher`.
@@ -291,15 +291,20 @@ where
     }
 
     /// Creates a new `NEMap` with a single element and specified capacity.
-    pub fn with_capacity(capacity: usize, k: K, v: V) -> NEMap<K, V> {
-        let mut inner = HashMap::with_capacity(capacity);
+    pub fn with_capacity(capacity: NonZeroUsize, k: K, v: V) -> NEMap<K, V> {
+        let mut inner = HashMap::with_capacity(capacity.get());
         inner.insert(k, v);
         NEMap { inner }
     }
 
     /// See [`HashMap::with_capacity_and_hasher`].
-    pub fn with_capacity_and_hasher(capacity: usize, hasher: S, k: K, v: V) -> NEMap<K, V, S> {
-        let mut inner = HashMap::with_capacity_and_hasher(capacity, hasher);
+    pub fn with_capacity_and_hasher(
+        capacity: NonZeroUsize,
+        hasher: S,
+        k: K,
+        v: V,
+    ) -> NEMap<K, V, S> {
+        let mut inner = HashMap::with_capacity_and_hasher(capacity.get(), hasher);
         inner.insert(k, v);
         NEMap { inner }
     }
