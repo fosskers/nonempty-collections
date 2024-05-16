@@ -77,8 +77,8 @@ impl<T> NEVec<T> {
     }
 
     /// Creates a new `NEVec` with a single element and specified capacity.
-    pub fn with_capacity(capacity: usize, head: T) -> Self {
-        let mut inner = Vec::with_capacity(capacity);
+    pub fn with_capacity(capacity: NonZeroUsize, head: T) -> Self {
+        let mut inner = Vec::with_capacity(capacity.get());
         inner.push(head);
         NEVec { inner }
     }
@@ -172,8 +172,8 @@ impl<T> NEVec<T> {
 
     /// Get the capacity of the list.
     #[must_use]
-    pub fn capacity(&self) -> usize {
-        self.inner.capacity()
+    pub fn capacity(&self) -> NonZeroUsize {
+        unsafe { NonZeroUsize::new_unchecked(self.inner.capacity()) }
     }
 
     /// Get the last element. Never fails.

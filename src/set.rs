@@ -96,8 +96,8 @@ pub struct NESet<T, S = std::collections::hash_map::RandomState> {
 
 impl<T, S> NESet<T, S> {
     /// Returns the number of elements the set can hold without reallocating.
-    pub fn capacity(&self) -> usize {
-        self.inner.capacity()
+    pub fn capacity(&self) -> NonZeroUsize {
+        unsafe { NonZeroUsize::new_unchecked(self.inner.capacity()) }
     }
 
     /// Returns a reference to the set's `BuildHasher`.
@@ -358,15 +358,15 @@ where
     }
 
     /// Creates a new `NESet` with a single element and specified capacity.
-    pub fn with_capacity(capacity: usize, value: T) -> NESet<T> {
-        let mut inner = HashSet::with_capacity(capacity);
+    pub fn with_capacity(capacity: NonZeroUsize, value: T) -> NESet<T> {
+        let mut inner = HashSet::with_capacity(capacity.get());
         inner.insert(value);
         NESet { inner }
     }
 
     /// See [`HashSet::with_capacity_and_hasher`].
-    pub fn with_capacity_and_hasher(capacity: usize, hasher: S, value: T) -> NESet<T, S> {
-        let mut inner = HashSet::with_capacity_and_hasher(capacity, hasher);
+    pub fn with_capacity_and_hasher(capacity: NonZeroUsize, hasher: S, value: T) -> NESet<T, S> {
+        let mut inner = HashSet::with_capacity_and_hasher(capacity.get(), hasher);
         inner.insert(value);
         NESet { inner }
     }
