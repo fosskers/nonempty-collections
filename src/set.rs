@@ -160,6 +160,23 @@ where
         inner.insert(value);
         Self { inner }
     }
+
+    /// Creates a new `NESet` with a single element and specified capacity.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    /// use std::num::NonZeroUsize;
+    /// use std::hash::RandomState;
+    /// let set = NESet::with_capacity(NonZeroUsize::MIN, "hello");
+    /// assert_eq!(nes! {"hello"}, set);
+    /// assert!(set.capacity().get() >= 1);
+    /// ```
+    #[must_use]
+    pub fn with_capacity(capacity: NonZeroUsize, value: T) -> NESet<T> {
+        let mut inner = HashSet::with_capacity(capacity.get());
+        inner.insert(value);
+        NESet { inner }
+    }
 }
 
 impl<T, S> NESet<T, S>
@@ -379,14 +396,6 @@ where
         Union {
             inner: self.inner.union(&other.inner),
         }
-    }
-
-    /// Creates a new `NESet` with a single element and specified capacity.
-    #[must_use]
-    pub fn with_capacity(capacity: NonZeroUsize, value: T) -> NESet<T> {
-        let mut inner = HashSet::with_capacity(capacity.get());
-        inner.insert(value);
-        NESet { inner }
     }
 
     /// See [`HashSet::with_capacity_and_hasher`].
