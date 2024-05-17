@@ -11,11 +11,13 @@
 //! check `is_empty()` or pattern matching before proceeding, or erroring if you
 //! can't. So overall, code, type signatures, and logic become cleaner.
 //!
-//! Consider that unlike `Vec`, [`NEVec::first`] and [`NEVec::last`] don't
+//! Consider that unlike `Vec`, [`NEVec::first()`] and [`NEVec::last()`] don't
 //! return in `Option`; they always succeed.
 //!
-//! Alongside [`NEVec`] are its cousins [`NESlice`], [`NEMap`], and [`NESet`],
-//! which are all guaranteed to contain at least one item.
+//! Alongside [`NEVec`](crate::vector::NEVec) are its cousins
+//! [`NESlice`](crate::slice::NESlice), [`NEMap`](crate::map::NEMap), and
+//! [`NESet`](crate::set::NESet), which are all guaranteed to contain at least
+//! one item.
 //!
 //! # Examples
 //!
@@ -48,13 +50,13 @@
 //! let v = nev![]; // Doesn't compile!
 //! ```
 //!
-//! Like `Vec`, you can also construct a [`NEVec`] the old fashioned way with
-//! [`NEVec::new`] or its constructor:
+//! Like `Vec`, you can also construct a [`NEVec`](crate::vector::NEVec) the old
+//! fashioned way with [`NEVec::new()`] or its constructor:
 //!
 //! ```
 //! use nonempty_collections::NEVec;
 //!
-//! let mut l = NEVec::try_from_vec(vec![42, 36, 58]).unwrap();
+//! let mut l = NEVec::from_vec(vec![42, 36, 58]).unwrap();
 //! assert_eq!(&42, l.first());
 //!
 //! l.push(9001);
@@ -71,18 +73,19 @@
 //! let v: Vec<u32> = l.into();
 //! assert_eq!(v, vec![42, 36, 58, 9001]);
 //!
-//! let u: Option<NEVec<u32>> = NEVec::try_from_vec(v);
+//! let u: Option<NEVec<u32>> = NEVec::from_vec(v);
 //! assert_eq!(Some(nev![42, 36, 58, 9001]), u);
 //! ```
 //!
 //! # Iterators
 //!
-//! This library extends the notion of non-emptiness to Iterators, and provides
-//! the [`NonEmptyIterator`] trait. This has some interesting consequences:
+//! This library extends the notion of non-emptiness to iterators, and provides
+//! the [`NonEmptyIterator`](crate::iter::NonEmptyIterator) trait. This has some
+//! interesting consequences:
 //!
 //! - Functions like `map` preserve non-emptiness.
 //! - Functions like `max` always have a result.
-//! - A non-empty Iterator chain can be `collect`ed back into a non-empty
+//! - A non-empty iterator chain can be `collect`ed back into a non-empty
 //!   structure.
 //! - You can chain many operations together without having to double-check for
 //!   emptiness.
@@ -94,15 +97,15 @@
 //! assert_eq!(&2, v.first());
 //! ```
 //!
-//! Consider also [`IntoIteratorExt::try_into_nonempty_iter`] for converting any
+//! Consider also [`IntoIteratorExt::try_into_nonempty_iter`](crate::iter::IntoIteratorExt::try_into_nonempty_iter) for converting any
 //! given [`Iterator`] and [`IntoIterator`] into a non-empty one, if it contains
 //! at least one item.
 //!
 //! # Arrays
 //!
 //! Since fixed-size arrays are by definition already not empty, they aren't
-//! given a special wrapper type like [`crate::NEVec`]. Instead, we enable them
-//! to be easily iterated over in a compatible way:
+//! given a special wrapper type like [`NEVec`](crate::vector::NEVec). Instead,
+//! we enable them to be easily iterated over in a compatible way:
 //!
 //! ```
 //! use nonempty_collections::*;
@@ -111,21 +114,22 @@
 //! let v: NEVec<_> = a.into_nonempty_iter().map(|n| n + 1).collect();
 //! assert_eq!(nev![2, 3, 4, 5], v);
 //! ```
-//! See [`NonEmptyArrayExt`] for more conversions.
+//! See [`NonEmptyArrayExt`](crate::array::NonEmptyArrayExt) for more
+//! conversions.
 //!
 //! # Caveats
 //!
 //! Since `NEVec`, `NEMap`, and `NESet` must have a least one element, it is not
-//! possible to implement the [`FromIterator`] trait for them. We can't know, in
-//! general, if any given standard-library [`Iterator`] actually contains
-//! something.
+//! possible to implement the [`FromIterator`] trait for them. We can't
+//! know, in general, if any given standard-library [`Iterator`] actually
+//! contains something.
 //!
 //! # Features
 //!
 //! * `serde`: `serde` support.
-//! * `indexmap`: support for non-empty [`IndexMap`](https://docs.rs/indexmap/latest/indexmap/).
-//! * `itertools`: support for non-empty variants of [`itertools`](https://docs.rs/itertools/latest/itertools/).
-//! * `either`: adds [`NEEither`] a non-empty variant of `Either` from the [`either` crate](https://docs.rs/either/latest/either/).
+//! * `indexmap`: adds [`NEIndexMap`](crate::index_map::NEIndexMap) a non-empty [`IndexMap`](https://docs.rs/indexmap/latest/indexmap/).
+//! * `itertools`: adds [`NonEmptyItertools`](crate::itertools::NonEmptyItertools) a non-empty variant of [`itertools`](https://docs.rs/itertools/latest/itertools/).
+//! * `either`: adds [`NEEither`](crate::either::NEEither) a non-empty variant of `Either` from the [`either` crate](https://docs.rs/either/latest/either/).
 
 pub mod array;
 #[cfg(feature = "either")]
