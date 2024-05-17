@@ -274,13 +274,13 @@ impl<T> NEVec<T> {
         }
     }
 
-    /// Creates a new non-empty vec by cloning the elements from the slice if it
+    /// Creates a new non-empty vec by cloning the elments from the slice if it
     /// is non-empty, returns `None` otherwise.
     ///
     /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is
-    /// `NEVec` before proceeding with a computation. Using `try_from_slice`
-    /// will give us a proof that we have a `NEVec` in the `Some` branch,
-    /// otherwise it allows the caller to handle the `None` case.
+    /// `NEVec` before proceeding with a computation. Using `from_slice` will
+    /// give us a proof that we have a `NEVec` in the `Some` branch, otherwise
+    /// it allows the caller to handle the `None` case.
     ///
     /// # Example use
     ///
@@ -288,14 +288,13 @@ impl<T> NEVec<T> {
     /// use nonempty_collections::nev;
     /// use nonempty_collections::NEVec;
     ///
-    /// let v_vec = NEVec::try_from_slice(&[1, 2, 3, 4, 5]);
+    /// let v_vec = NEVec::from_slice(&[1, 2, 3, 4, 5]);
     /// assert_eq!(v_vec, Some(nev![1, 2, 3, 4, 5]));
     ///
-    /// let empty_vec: Option<NEVec<&u32>> = NEVec::try_from_slice(&[]);
+    /// let empty_vec: Option<NEVec<&u32>> = NEVec::from_slice(&[]);
     /// assert!(empty_vec.is_none());
     /// ```
-    #[must_use]
-    pub fn try_from_slice(slice: &[T]) -> Option<NEVec<T>>
+    pub fn from_slice(slice: &[T]) -> Option<NEVec<T>>
     where
         T: Clone,
     {
@@ -309,12 +308,12 @@ impl<T> NEVec<T> {
     }
 
     /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is
-    /// `NEVec` before proceeding with a computation. Using `try_from_vec` will
-    /// give us a proof that we have a `NEVec` in the `Some` branch,
-    /// otherwise it allows the caller to handle the `None` case.
+    /// `NEVec` before proceeding with a computation. Using `from_vec` will give
+    /// us a proof that we have a `NEVec` in the `Some` branch, otherwise it
+    /// allows the caller to handle the `None` case.
     ///
     /// This version will consume the `Vec` you pass in. If you would rather
-    /// pass the data as a slice then use [`NEVec::try_from_slice`].
+    /// pass the data as a slice then use `NEVec::from_slice`.
     ///
     /// # Example Use
     ///
@@ -322,14 +321,14 @@ impl<T> NEVec<T> {
     /// use nonempty_collections::nev;
     /// use nonempty_collections::NEVec;
     ///
-    /// let v_vec = NEVec::try_from_vec(vec![1, 2, 3, 4, 5]);
+    /// let v_vec = NEVec::from_vec(vec![1, 2, 3, 4, 5]);
     /// assert_eq!(v_vec, Some(nev![1, 2, 3, 4, 5]));
     ///
-    /// let empty_vec: Option<NEVec<&u32>> = NEVec::try_from_vec(vec![]);
+    /// let empty_vec: Option<NEVec<&u32>> = NEVec::from_vec(vec![]);
     /// assert!(empty_vec.is_none());
     /// ```
     #[must_use]
-    pub fn try_from_vec(vec: Vec<T>) -> Option<NEVec<T>> {
+    pub fn from_vec(vec: Vec<T>) -> Option<NEVec<T>> {
         if vec.is_empty() {
             None
         } else {
@@ -966,16 +965,6 @@ impl<T> TryFrom<Vec<T>> for NEVec<T> {
 impl<T: Debug> Debug for NEVec<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         self.inner.fmt(f)
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Empty => {
-                f.write_str("the vector provided was empty, NEVec needs at least one element")
-            }
-        }
     }
 }
 
