@@ -824,6 +824,7 @@ pub trait IntoNonEmptyIterator: IntoIterator {
 
 /// Similar to [`std::iter::Map`], but with additional non-emptiness guarantees.
 #[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Map<I: NonEmptyIterator, F> {
     iter: std::iter::Map<I::IntoIter, F>,
 }
@@ -833,16 +834,6 @@ where
     I: NonEmptyIterator,
     F: FnMut(I::Item) -> U,
 {
-}
-
-impl<I, F> fmt::Debug for Map<I, F>
-where
-    I: NonEmptyIterator,
-    I::IntoIter: fmt::Debug,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.iter.fmt(f)
-    }
 }
 
 /// ```
@@ -864,10 +855,21 @@ where
     }
 }
 
+impl<I, F> fmt::Debug for Map<I, F>
+where
+    I: NonEmptyIterator,
+    I::IntoIter: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.iter.fmt(f)
+    }
+}
+
 /// An iterator that clones the elements of an underlying iterator.
 ///
 /// See also [`std::iter::Cloned`].
 #[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Cloned<I> {
     iter: I,
 }
@@ -877,12 +879,6 @@ where
     I: NonEmptyIterator<Item = &'a T>,
     T: Clone,
 {
-}
-
-impl<I: fmt::Debug> fmt::Debug for Cloned<I> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.iter.fmt(f)
-    }
 }
 
 impl<'a, I, T: 'a> IntoIterator for Cloned<I>
@@ -899,10 +895,17 @@ where
     }
 }
 
+impl<I: fmt::Debug> fmt::Debug for Cloned<I> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.iter.fmt(f)
+    }
+}
+
 /// An iterator that yields the current count and the element during iteration.
 ///
 /// See also [`std::iter::Enumerate`].
 #[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Enumerate<I> {
     iter: I,
 }
@@ -932,6 +935,7 @@ impl<I: fmt::Debug> fmt::Debug for Enumerate<I> {
 ///
 /// See also [`Iterator::take`].
 #[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Take<I: NonEmptyIterator> {
     iter: std::iter::Take<I::IntoIter>,
 }
