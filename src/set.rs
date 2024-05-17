@@ -164,7 +164,6 @@ where
         inner.insert(value);
         NESet { inner }
     }
-}
 
     /// Attempt a conversion from a [`HashSet`], consuming the given `HashSet`.
     /// Will fail if the `HashSet` is empty.
