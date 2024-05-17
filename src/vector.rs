@@ -72,11 +72,13 @@ pub struct NEVec<T> {
 
 impl<T> NEVec<T> {
     /// Create a new non-empty list with an initial element.
+    #[must_use]
     pub fn new(head: T) -> Self {
         NEVec { inner: vec![head] }
     }
 
     /// Creates a new `NEVec` with a single element and specified capacity.
+    #[must_use]
     pub fn with_capacity(capacity: NonZeroUsize, head: T) -> Self {
         let mut inner = Vec::with_capacity(capacity.get());
         inner.push(head);
@@ -106,6 +108,7 @@ impl<T> NEVec<T> {
     /// *head *= 42;
     /// assert_eq!(v.first(), &42);
     /// ```
+    #[must_use]
     pub fn first_mut(&mut self) -> &mut T {
         unsafe { self.inner.get_unchecked_mut(0) }
     }
@@ -200,6 +203,7 @@ impl<T> NEVec<T> {
     /// assert!(l.contains(&42));
     /// assert!(!l.contains(&101));
     /// ```
+    #[must_use]
     pub fn contains(&self, x: &T) -> bool
     where
         T: PartialEq,
@@ -214,6 +218,7 @@ impl<T> NEVec<T> {
     }
 
     /// Get an element by index, mutably.
+    #[must_use]
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
         self.inner.get_mut(index)
     }
@@ -236,7 +241,6 @@ impl<T> NEVec<T> {
     /// assert_eq!(rest_iter.next(), Some(&58));
     /// assert_eq!(rest_iter.next(), None);
     /// ```
-    #[must_use]
     pub fn iter(&self) -> Iter<'_, T> {
         Iter {
             iter: self.inner.iter(),
@@ -290,6 +294,7 @@ impl<T> NEVec<T> {
     /// let empty_vec: Option<NEVec<&u32>> = NEVec::try_from_slice(&[]);
     /// assert!(empty_vec.is_none());
     /// ```
+    #[must_use]
     pub fn try_from_slice(slice: &[T]) -> Option<NEVec<T>>
     where
         T: Clone,
@@ -689,7 +694,6 @@ impl<T> NEVec<T> {
     ///     ]
     /// );
     /// ```
-    #[must_use]
     pub fn nonempty_chunks(&self, chunk_size: NonZeroUsize) -> NEChunks<'_, T> {
         NEChunks {
             inner: self.inner.chunks(chunk_size.get()),
@@ -816,6 +820,7 @@ impl<T> FromNonEmptyIterator<T> for NEVec<T> {
 }
 
 /// A non-empty iterator over the values of an [`NEVec`].
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Iter<'a, T: 'a> {
     iter: std::slice::Iter<'a, T>,
 }
@@ -849,6 +854,7 @@ impl<T: Debug> Debug for Iter<'_, T> {
 
 /// A non-empty iterator over mutable values from an [`NEVec`].
 #[derive(Debug)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct IterMut<'a, T: 'a> {
     inner: std::slice::IterMut<'a, T>,
 }
@@ -867,6 +873,7 @@ impl<'a, T> IntoIterator for IterMut<'a, T> {
 
 /// An owned non-empty iterator over values from an [`NEVec`].
 #[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct IntoIter<T> {
     inner: std::vec::IntoIter<T>,
 }

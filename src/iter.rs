@@ -46,6 +46,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// Advances this non-empty iterator, this consumes the iterator and returns
     /// the first item and a possibly empty iterator containing the rest of the
     /// elements.
+    #[must_use]
     fn next(self) -> (Self::Item, Self::IntoIter)
     where
         Self: Sized,
@@ -71,6 +72,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// assert!(n.iter().all(|n| n % 2 == 0));
     /// assert!(n.iter().into_iter().all(|n| n % 2 == 0));
     /// ```
+    #[must_use]
     fn all<F>(self, f: F) -> bool
     where
         Self: Sized,
@@ -96,6 +98,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// assert!(n.iter().any(|n| n % 2 == 0));
     /// assert!(!n.iter().any(|n| n % 3 == 0));
     /// ```
+    #[must_use]
     fn any<F>(self, f: F) -> bool
     where
         Self: Sized,
@@ -121,6 +124,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// assert_eq!(Some(&10), n.iter().find(|n| *n % 2 == 0));
     /// assert_eq!(None, n.iter().find(|n| **n > 10));
     /// ```
+    #[must_use]
     fn find<P>(self, predicate: P) -> Option<Self::Item>
     where
         Self: Sized,
@@ -200,6 +204,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// let n1 = n0.into_nonempty_iter().collect();
     /// assert_eq!(nev![1, 2, 3, 4], n1);
     /// ```
+    #[must_use]
     fn collect<B>(self) -> B
     where
         Self: Sized,
@@ -243,6 +248,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// let n = nev![1, 2, 3, 4, 5, 6];
     /// assert_eq!(6, n.iter().count().get());
     /// ````
+    #[must_use]
     fn count(self) -> NonZeroUsize
     where
         Self: Sized,
@@ -364,6 +370,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// let r = n.into_nonempty_iter().fold(0, |acc, x| acc + x);
     /// assert_eq!(10, r);
     /// ```
+    #[must_use]
     fn fold<B, F>(self, init: B, f: F) -> B
     where
         Self: Sized,
@@ -438,6 +445,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// let v = nev![1, 1000, 2, 3];
     /// assert_eq!(1000, v.into_nonempty_iter().max());
     /// ```
+    #[must_use]
     fn max(self) -> Self::Item
     where
         Self: Sized,
@@ -450,6 +458,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// given comparison function.
     ///
     /// Unlike [`Iterator::max_by`], this always yields a value.
+    #[must_use]
     fn max_by<F>(self, compare: F) -> Self::Item
     where
         Self: Sized,
@@ -483,6 +492,7 @@ pub trait NonEmptyIterator: IntoIterator {
     ///     .max_by_key(|item| item.len());
     /// assert_eq!("rust", max);
     /// ```
+    #[must_use]
     fn max_by_key<B, F>(self, mut key: F) -> Self::Item
     where
         Self: Sized,
@@ -504,6 +514,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// let v = nev![1000, 1, 2000, 3000];
     /// assert_eq!(1, v.into_nonempty_iter().min());
     /// ```
+    #[must_use]
     fn min(self) -> Self::Item
     where
         Self: Sized,
@@ -516,6 +527,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// given comparison function.
     ///
     /// Unlike [`Iterator::min_by`], this always yields a value.
+    #[must_use]
     fn min_by<F>(self, compare: F) -> Self::Item
     where
         Self: Sized,
@@ -549,6 +561,7 @@ pub trait NonEmptyIterator: IntoIterator {
     ///     .min_by_key(|item| item.len());
     /// assert_eq!("hi", min);
     /// ```
+    #[must_use]
     fn min_by_key<B, F>(self, mut key: F) -> Self::Item
     where
         Self: Sized,
@@ -638,6 +651,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// let sum: u32 = nev![1, 2, 3, 4].iter().sum();
     /// assert_eq!(10, sum);
     /// ```
+    #[must_use]
     fn sum<S>(self) -> S
     where
         Self: Sized + IntoIterator,
@@ -711,6 +725,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// let prod: u32 = nev![1, 2, 3, 4].iter().product();
     /// assert_eq!(24, prod);
     /// ```
+    #[must_use]
     fn product<P>(self) -> P
     where
         Self: Sized + IntoIterator,
@@ -763,6 +778,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// let y = b.into_nonempty_iter().reduce(|acc, v| acc * v);
     /// assert_eq!(y, 24);
     /// ```
+    #[must_use]
     fn reduce<F>(self, f: F) -> Self::Item
     where
         Self: Sized,
@@ -992,6 +1008,7 @@ where
 
 /// A non-empty iterator that links two iterators together, in a chain.
 #[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Chain<A, B> {
     inner: std::iter::Chain<A, B>,
 }
@@ -1029,6 +1046,7 @@ where
 
 /// A non-empty iterator that yields an element exactly once.
 #[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Once<T> {
     inner: std::iter::Once<T>,
 }
@@ -1064,6 +1082,7 @@ impl<T: fmt::Debug> fmt::Debug for Once<T> {
 ///
 /// See also [`std::iter::Copied`].
 #[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Copied<I> {
     iter: std::iter::Copied<I>,
 }
@@ -1102,6 +1121,7 @@ where
 ///
 /// See also [`std::iter::Zip`].
 #[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Zip<A, B> {
     inner: std::iter::Zip<A, B>,
 }
@@ -1303,6 +1323,7 @@ where
 /// Flatten nested, non-empty structures.
 ///
 /// See also [`std::iter::FlatMap`].
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct FlatMap<I, U: IntoIterator, F> {
     inner: std::iter::FlatMap<I, U, F>,
 }
@@ -1406,6 +1427,7 @@ where
 
 /// An adapter for regular iterators that are known to be non-empty.
 #[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct NonEmptyIterAdapter<I> {
     inner: I,
 }

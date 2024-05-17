@@ -96,6 +96,7 @@ pub trait NonEmptyItertools: NonEmptyIterator {
     /// assert!(!nev![1, 2, 3, 4, 1, 5].iter().all_unique());
     /// assert!(nev![2, 3, 4, 1, 5].iter().all_unique());
     /// ```
+    #[must_use]
     fn all_unique(self) -> bool
     where
         Self: Sized,
