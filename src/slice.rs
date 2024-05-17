@@ -341,8 +341,6 @@ mod tests {
         let mut iter = c.into_iter();
 
         let next = iter.next().unwrap();
-        println!("{next:?}");
-
         assert_eq!(1, next.len().get());
         assert!(iter.next().is_none());
     }
