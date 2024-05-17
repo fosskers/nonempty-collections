@@ -30,7 +30,7 @@ use crate::NonEmptyIterator;
 macro_rules! ne_indexmap {
     ($hk:expr => $hv:expr, $( $xk:expr => $xv:expr,)+) => { $crate::ne_indexmap!{$hk => $hv, $($xk => $xv),+} };
     ($hk:expr => $hv:expr, $( $xk:expr => $xv:expr ),*) => {{
-        const CAP: std::num::NonZeroUsize = std::num::NonZeroUsize::MIN.saturating_add(<[()]>::len(&[$({ stringify!($xk); }),*]));
+        const CAP: NonZeroUsize = NonZeroUsize::MIN.saturating_add(<[()]>::len(&[$({ stringify!($xk); }),*]));
         let mut map = $crate::index_map::NEIndexMap::with_capacity(CAP, $hk, $hv);
         $( map.insert($xk, $xv); )*
         map
@@ -196,29 +196,6 @@ where
     K: Eq + Hash,
     S: BuildHasher,
 {
-    /// Attempt a conversion from [`IndexMap`], consuming the given `IndexMap`.
-    /// Will return `None` if the `IndexMap` is empty.
-    ///
-    /// ```
-    /// use indexmap::*;
-    /// use nonempty_collections::*;
-    ///
-    /// assert_eq!(
-    ///     Some(ne_indexmap! {"a" => 1, "b" => 2}),
-    ///     NEIndexMap::try_from_map(indexmap! {"a" => 1, "b" => 2})
-    /// );
-    /// let m: IndexMap<(), ()> = indexmap! {};
-    /// assert_eq!(None, NEIndexMap::try_from_map(m));
-    /// ```
-    #[must_use]
-    pub fn try_from_map(map: IndexMap<K, V, S>) -> Option<Self> {
-        if map.is_empty() {
-            None
-        } else {
-            Some(Self { inner: map })
-        }
-    }
-
     /// Returns true if the map contains a value.
     ///
     /// ```

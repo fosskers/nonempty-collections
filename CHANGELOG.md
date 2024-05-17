@@ -15,7 +15,6 @@
 - Removed: `NESlice::new(&T, &[T])`
 - `NEVec::new()` is no longer `const`
 - `NEVec::first()` is no longer `const`
-- Consistent API: changes `from_vec` to `try_from_vec`, `from_map` to `try_from_map`, `from_slice` to `try_from_slice`, and `from_set` to `try_from_set`. This new naming aligns with Rust naming conventions and indicates the fallibility of the function.
 - non-empty maps and sets now behave similarly to their possibly empty counter parts: when created from an iterator with duplicates, the last occurence is kept.
 
 #### Changed
