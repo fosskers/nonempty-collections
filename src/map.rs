@@ -72,11 +72,12 @@ where
 
     /// Creates a new `NEMap` with a single element and specified capacity.
     /// ```
-    /// use nonempty_collections::*;
     /// use std::num::*;
+    ///
+    /// use nonempty_collections::*;
     /// let map = NEMap::with_capacity(NonZeroUsize::MIN, 1, 1);
-    /// assert_eq!(nem!{ 1 => 1 }, map);
-    /// assert_eq!(NonZeroUsize::MIN, map.capacity());
+    /// assert_eq!(nem! { 1 => 1 }, map);
+    /// assert!(map.capacity().get() > 1);
     /// ```
     #[must_use]
     pub fn with_capacity(capacity: NonZeroUsize, k: K, v: V) -> NEMap<K, V> {

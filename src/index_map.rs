@@ -30,7 +30,7 @@ use crate::NonEmptyIterator;
 macro_rules! ne_indexmap {
     ($hk:expr => $hv:expr, $( $xk:expr => $xv:expr,)+) => { $crate::ne_indexmap!{$hk => $hv, $($xk => $xv),+} };
     ($hk:expr => $hv:expr, $( $xk:expr => $xv:expr ),*) => {{
-        const CAP: NonZeroUsize = NonZeroUsize::MIN.saturating_add(<[()]>::len(&[$({ stringify!($xk); }),*]));
+        const CAP: core::num::NonZeroUsize = core::num::NonZeroUsize::MIN.saturating_add(<[()]>::len(&[$({ stringify!($xk); }),*]));
         let mut map = $crate::index_map::NEIndexMap::with_capacity(CAP, $hk, $hv);
         $( map.insert($xk, $xv); )*
         map
