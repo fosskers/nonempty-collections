@@ -22,7 +22,7 @@
 - `FromNonEmptyIterator<T>` is now implemented for `HashSet<T, S>` instead of only `HashSet<T>` (with the default hasher).
 - All public types now implement `Debug`
 - Fixes bug in `PartialEq for NEIndexMap` previously, maps with unequal lengths would be considered equal if the shorter map would contain the same values as the longer map.
-- Fixes bug in `NEMap::with_capacity()` it wasn't possible to call this method because the type for `S` (the hasher) could not be inferred. This is fixed by moving the method into the proper `impl` block.
+- Fixes bug in `NEMap::with_capacity()` and `NESet::with_capacity()`, it wasn't possible to call this method without explicitly specifying the type for `S` (the hasher). For this method it is assumed that it always uses the default hasher (just like in `std`), in case the user wants to specify the hasher `with_capacity_and_hasher()` can be used. The fix is moving the method into the proper `impl` block.
 
 #### Added
  - New feature `either`: adds `NEEither` an extension to `either::Either`.
