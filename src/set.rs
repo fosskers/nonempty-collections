@@ -164,9 +164,10 @@ where
     /// Creates a new `NESet` with a single element and specified capacity.
     ///
     /// ```
-    /// use nonempty_collections::*;
-    /// use std::num::NonZeroUsize;
     /// use std::hash::RandomState;
+    /// use std::num::NonZeroUsize;
+    ///
+    /// use nonempty_collections::*;
     /// let set = NESet::with_capacity(NonZeroUsize::MIN, "hello");
     /// assert_eq!(nes! {"hello"}, set);
     /// assert!(set.capacity().get() >= 1);

@@ -14,14 +14,14 @@
 - `capacity()` now returns a `NonZeroUsize` instead of `usize`.
 - Removed: `NESlice::new(&T, &[T])`
 - `NEVec::new()` is no longer `const`
-- `first()` is no longer `const`
+- `NEVec::first()` is no longer `const`
 - Consistent API: changes `from_vec` to `try_from_vec`, `from_map` to `try_from_map`, `from_slice` to `try_from_slice`, and `from_set` to `try_from_set`. This new naming aligns with Rust naming conventions and indicates the fallibility of the function.
 - non-empty maps and sets now behave similarly to their possibly empty counter parts: when created from an iterator with duplicates, the last occurence is kept.
 
 #### Changed
 - `FromNonEmptyIterator<T>` is now implemented for `HashSet<T, S>` instead of only `HashSet<T>` (with the default hasher).
 - All public types now implement `Debug`
-- Fixes bug in `PartialEq for NEIndexMap` previously, maps with unequal lengths would be considered equal if the shorter map would contain the same values as the longer map.
+- Fixes bug in `PartialEq for NEIndexMap`, previously, maps with unequal lengths would be considered equal if the shorter map would contain the same values as the longer map.
 - Fixes bug in `NEMap::with_capacity()` and `NESet::with_capacity()`, it wasn't possible to call this method without explicitly specifying the type for `S` (the hasher). For this method it is assumed that it always uses the default hasher (just like in `std`), in case the user wants to specify the hasher `with_capacity_and_hasher()` can be used. The fix is moving the method into the proper `impl` block.
 
 #### Added

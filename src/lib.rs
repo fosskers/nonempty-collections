@@ -122,7 +122,9 @@
 //! # Features
 //!
 //! * `serde`: `serde` support.
-//! * `indexmap`: support for non-empty [`IndexMap`](https://docs.rs/indexmap/latest/indexmap/)
+//! * `indexmap`: support for non-empty [`IndexMap`](https://docs.rs/indexmap/latest/indexmap/).
+//! * `itertools`: support for non-empty variants of [`itertools`](https://docs.rs/itertools/latest/itertools/).
+//! * `either`: adds [`NEEither`] a non-empty variant of `Either` from the [`either` crate](https://docs.rs/either/latest/either/).
 
 pub mod array;
 #[cfg(feature = "either")]
