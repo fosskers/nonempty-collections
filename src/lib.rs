@@ -97,8 +97,8 @@
 //! assert_eq!(&2, v.first());
 //! ```
 //!
-//! Consider also [`IteratorExt::to_nonempty_iter`](crate::iter::IteratorExt)
-//! for converting any given [`Iterator`] into a non-empty one, if it contains
+//! Consider also [`IntoIteratorExt::try_into_nonempty_iter`] for converting any
+//! given [`Iterator`] and [`IntoIterator`] into a non-empty one, if it contains
 //! at least one item.
 //!
 //! # Arrays
