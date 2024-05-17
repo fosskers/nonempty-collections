@@ -482,10 +482,7 @@ where
     S: BuildHasher + Default,
 {
     /// ```
-    /// use nonempty_collections::nes;
-    /// use nonempty_collections::nev;
-    /// use nonempty_collections::FromNonEmptyIterator;
-    /// use nonempty_collections::NESet;
+    /// use nonempty_collections::*;
     ///
     /// let v = nev![1, 1, 2, 3, 2];
     /// let s = NESet::from_nonempty_iter(v);
