@@ -94,8 +94,9 @@
 //! assert_eq!(&2, v.first());
 //! ```
 //!
-//! Consider also [`IteratorExt::to_nonempty_iter`] for converting any given
-//! [`Iterator`] into a non-empty one, if it contains at least one item.
+//! Consider also [`IntoIteratorExt::try_into_nonempty_iter`] for converting any
+//! given [`Iterator`] and [`IntoIterator`] into a non-empty one, if it contains
+//! at least one item.
 //!
 //! # Arrays
 //!
@@ -148,7 +149,6 @@ pub use index_map::NEIndexMap;
 pub use iter::FromNonEmptyIterator;
 pub use iter::IntoIteratorExt;
 pub use iter::IntoNonEmptyIterator;
-pub use iter::IteratorExt;
 pub use iter::NonEmptyIterator;
 #[cfg(feature = "itertools")]
 pub use itertools::NonEmptyItertools;

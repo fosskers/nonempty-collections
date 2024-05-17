@@ -1178,58 +1178,6 @@ where
     }
 }
 
-/// Convenience trait extending [`Iterator`].
-pub trait IteratorExt {
-    /// The type of the elements being iterated over.
-    type Item;
-
-    /// Which kind of [`NonEmptyIterator`] are we turning this into?
-    type IntoIter: NonEmptyIterator<Item = Self::Item>;
-
-    /// Tries to convert `self` into a [`NonEmptyIterator`].
-    ///
-    /// ```
-    /// use nonempty_collections::*;
-    ///
-    /// let a = vec![1];
-    /// let x = a.into_iter().to_nonempty_iter();
-    /// assert!(x.is_some());
-    ///
-    /// let y = x.unwrap().collect::<NEVec<_>>();
-    /// assert_eq!(y.len().get(), 1);
-    /// ```
-    ///
-    /// ```
-    /// use nonempty_collections::*;
-    ///
-    /// let b: Vec<u8> = vec![];
-    /// let x = b.into_iter().to_nonempty_iter();
-    ///
-    /// assert!(x.is_none());
-    /// ```
-    ///
-    /// To construct non-empty collections directly, consider macros like
-    /// [`crate::nev!`].
-    fn to_nonempty_iter(self) -> Option<Self::IntoIter>;
-}
-
-impl<I, T> IteratorExt for I
-where
-    I: Iterator<Item = T>,
-{
-    type Item = T;
-    type IntoIter = NonEmptyIterAdapter<Peekable<I>>;
-
-    /// Converts this iterator into a non-empty iterator or returns `None` if
-    /// the iterator is empty.
-    fn to_nonempty_iter(self) -> Option<Self::IntoIter> {
-        let mut iter = self.peekable();
-        iter.peek()
-            .is_some()
-            .then_some(NonEmptyIterAdapter { inner: iter })
-    }
-}
-
 /// An adapter for regular iterators that are known to be non-empty.
 #[derive(Clone)]
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
@@ -1300,10 +1248,12 @@ where
 
     type IntoIter = NonEmptyIterAdapter<Peekable<T::IntoIter>>;
 
-    /// Tries to convert `self` into [`NonEmptyIterator`]. Calls `self.next()`
-    /// once. If `self` doesn't return `Some` upon the first call to `next()`,
-    /// returns `None`.
+    /// Converts `self` into a non-empty iterator or returns `None` if
+    /// the iterator is empty.
     fn try_into_nonempty_iter(self) -> Option<Self::IntoIter> {
-        self.into_iter().to_nonempty_iter()
+        let mut iter = self.into_iter().peekable();
+        iter.peek()
+            .is_some()
+            .then_some(NonEmptyIterAdapter { inner: iter })
     }
 }

@@ -32,7 +32,7 @@ pub trait NonEmptyItertools: NonEmptyIterator {
     /// let product = nev![0, 1]
     ///     .iter()
     ///     .copied()
-    ///     .cartesian_product("αβ".chars().to_nonempty_iter().unwrap())
+    ///     .cartesian_product("αβ".chars().try_into_nonempty_iter().unwrap())
     ///     .collect::<NEVec<_>>();
     /// assert_eq!(nev![(0, 'α'), (0, 'β'), (1, 'α'), (1, 'β')], product);
     /// ```
