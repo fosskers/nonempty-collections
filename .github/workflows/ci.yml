@@ -51,7 +51,7 @@ jobs:
           echo "RUST_TOOLCHAIN=$(cat ./rust-toolchain)" >> $GITHUB_ENV
           echo "RUST_TOOLCHAIN_NIGHTLY=$(cat ./rust-toolchain-nightly)" >> $GITHUB_ENV
 
-        # nightly is needed for the rustfmt portion of the lint command
+      # nightly is needed for the rustfmt portion of the lint command
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN_NIGHTLY }}
