@@ -101,8 +101,8 @@ let v: NEVec<_> = nev![1, 2, 3].into_nonempty_iter().map(|n| n + 1).collect();
 assert_eq!(&2, v.first());
 ```
 
-Consider also [`IteratorExt::to_nonempty_iter`](https://docs.rs/nonempty-collections/latest/nonempty_collections/iter/trait.IteratorExt.html)
-for converting any given [`Iterator`] into a non-empty one, if it contains
+Consider also [`IntoIteratorExt::try_into_nonempty_iter`] for converting any
+given [`Iterator`] and [`IntoIterator`] into a non-empty one, if it contains
 at least one item.
 
 ## Arrays

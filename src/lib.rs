@@ -97,7 +97,7 @@
 //! assert_eq!(&2, v.first());
 //! ```
 //!
-//! Consider also [`IntoIteratorExt::try_into_nonempty_iter`](crate::iter::IntoIteratorExt::try_into_nonempty_iter) for converting any
+//! Consider also [`IntoIteratorExt::try_into_nonempty_iter`] for converting any
 //! given [`Iterator`] and [`IntoIterator`] into a non-empty one, if it contains
 //! at least one item.
 //!
