@@ -14,10 +14,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - run: |
+          echo "RUST_TOOLCHAIN=$(cat ./rust-toolchain)" >> $GITHUB_ENV
+          echo "RUST_TOOLCHAIN_NIGHTLY=$(cat ./rust-toolchain-nightly)" >> $GITHUB_ENV
+
+      # nightly is needed for the rustfmt portion of the lint command
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN_NIGHTLY }}
+          components: rustfmt
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          components: clippy
 
       - name: Cache Dependencies
         uses: Swatinem/rust-cache@v2
 
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: just
+
+      - name: Run linter
+        run: just lint
+
       - name: Run tests
-        run: cargo test --locked --all-features
+        run: just test
