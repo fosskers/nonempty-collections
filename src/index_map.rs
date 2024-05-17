@@ -58,11 +58,13 @@ pub struct NEIndexMap<K, V, S = std::collections::hash_map::RandomState> {
 
 impl<K, V, S> NEIndexMap<K, V, S> {
     /// Returns the number of elements the map can hold without reallocating.
+    #[must_use]
     pub fn capacity(&self) -> NonZeroUsize {
         unsafe { NonZeroUsize::new_unchecked(self.inner.capacity()) }
     }
 
     /// Returns a reference to the map's `BuildHasher`.
+    #[must_use]
     pub fn hasher(&self) -> &S {
         self.inner.hasher()
     }
@@ -104,12 +106,14 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     /// let m = ne_indexmap! {"a" => 1, "b" => 2};
     /// assert_eq!(2, m.len().get());
     /// ```
+    #[must_use]
     pub fn len(&self) -> NonZeroUsize {
         unsafe { NonZeroUsize::new_unchecked(self.inner.len()) }
     }
 
     /// A `NEIndexMap` is never empty.
     #[deprecated(note = "A NEIndexMap is never empty.")]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         false
     }
@@ -146,12 +150,14 @@ impl<K, V, S> NEIndexMap<K, V, S> {
 
     /// Get the first element. Never fails.
     #[allow(clippy::missing_panics_doc)] // the invariant of NEIndexMap is that its non-empty
+    #[must_use]
     pub fn first(&self) -> (&K, &V) {
         self.inner.first().unwrap()
     }
 
     /// Get the last element. Never fails.
     #[allow(clippy::missing_panics_doc)] // the invariant of NEIndexMap is that its non-empty
+    #[must_use]
     pub fn last(&self) -> (&K, &V) {
         self.inner.last().unwrap()
     }
@@ -168,6 +174,7 @@ where
     K: Eq + Hash,
 {
     /// Creates a new `NEIndexMap` with a single element.
+    #[must_use]
     pub fn new(k: K, v: V) -> Self {
         Self {
             inner: indexmap! {k => v},
@@ -176,6 +183,7 @@ where
 
     /// Creates a new `NEIndexMap` with a single element and specified
     /// heap capacity.
+    #[must_use]
     pub fn with_capacity(capacity: NonZeroUsize, k: K, v: V) -> NEIndexMap<K, V> {
         let mut inner = IndexMap::with_capacity(capacity.get());
         inner.insert(k, v);
@@ -220,6 +228,7 @@ where
     /// assert!(m.contains_key("Paul"));
     /// assert!(!m.contains_key("Atreides"));
     /// ```
+    #[must_use]
     pub fn contains_key<Q>(&self, k: &Q) -> bool
     where
         Q: Hash + Equivalent<K> + ?Sized,
@@ -237,6 +246,7 @@ where
     /// assert_eq!(Some(&3), m.get("Arrakis"));
     /// assert_eq!(None, m.get("Caladan"));
     /// ```
+    #[must_use]
     pub fn get<Q>(&self, k: &Q) -> Option<&V>
     where
         Q: Hash + Equivalent<K> + ?Sized,
@@ -255,6 +265,7 @@ where
     /// assert_eq!(Some((&"Pages", &896)), m.get_key_value(&"Pages"));
     /// assert_eq!(None, m.get_key_value(&"Title"));
     /// ```
+    #[must_use]
     pub fn get_key_value<Q>(&self, key: &Q) -> Option<(&K, &V)>
     where
         Q: Hash + Equivalent<K> + ?Sized,
@@ -298,6 +309,7 @@ where
     /// assert_eq!(Some(1), m.get_index_of(&"Author"));
     /// assert_eq!(None, m.get_index_of(&"Genre"));
     /// ````
+    #[must_use]
     pub fn get_index_of<Q>(&self, key: &Q) -> Option<usize>
     where
         Q: Hash + Equivalent<K> + ?Sized,
@@ -341,6 +353,7 @@ where
 
     /// Creates a new `NEIndexMap` with a single element and specified
     /// heap capacity and hasher.
+    #[must_use]
     pub fn with_capacity_and_hasher(
         capacity: NonZeroUsize,
         hasher: S,
@@ -353,6 +366,7 @@ where
     }
 
     /// See [`IndexMap::with_hasher`].
+    #[must_use]
     pub fn with_hasher(hasher: S, k: K, v: V) -> NEIndexMap<K, V, S> {
         let mut inner = IndexMap::with_hasher(hasher);
         inner.insert(k, v);
@@ -474,6 +488,7 @@ impl<K, V> std::ops::Index<usize> for NEIndexMap<K, V> {
 }
 
 /// A non-empty iterator over the entries of an [`NEIndexMap`].
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Iter<'a, K: 'a, V: 'a> {
     iter: indexmap::map::Iter<'a, K, V>,
 }
@@ -506,6 +521,7 @@ impl<K: Debug, V: Debug> Debug for Iter<'_, K, V> {
 }
 
 /// A mutable non-empty iterator over the entries of an [`NEIndexMap`].
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct IterMut<'a, K: 'a, V: 'a> {
     iter: indexmap::map::IterMut<'a, K, V>,
 }
@@ -560,6 +576,7 @@ impl<K: Debug, V: Debug> Debug for IntoIter<K, V> {
 /// let v = m.keys().copied().collect::<NEVec<_>>();
 /// assert_eq!(nev!["elves", "orcs"], v);
 /// ```
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Keys<'a, K: 'a, V: 'a> {
     inner: indexmap::map::Keys<'a, K, V>,
 }
@@ -601,6 +618,7 @@ impl<K: Debug, V: Debug> Debug for Keys<'_, K, V> {
 /// v.sort();
 /// assert_eq!(nev![3000, 10000], v);
 /// ```
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Values<'a, K: 'a, V: 'a> {
     inner: indexmap::map::Values<'a, K, V>,
 }
@@ -633,6 +651,7 @@ impl<K: Debug, V: Debug> Debug for Values<'_, K, V> {
 }
 
 /// A non-empty iterator over the mutable values of an [`NEIndexMap`].
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct ValuesMut<'a, K: 'a, V: 'a> {
     inner: indexmap::map::ValuesMut<'a, K, V>,
 }

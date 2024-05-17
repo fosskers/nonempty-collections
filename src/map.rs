@@ -50,6 +50,7 @@ where
     K: Eq + Hash,
 {
     /// Creates a new `NEMap` with a single element.
+    #[must_use]
     pub fn new(k: K, v: V) -> NEMap<K, V> {
         let mut inner = HashMap::new();
         inner.insert(k, v);
@@ -65,6 +66,7 @@ where
     /// assert_eq!(nem! { 1 => 1 }, map);
     /// assert!(map.capacity().get() >= 1);
     /// ```
+    #[must_use]
     pub fn with_capacity(capacity: NonZeroUsize, k: K, v: V) -> NEMap<K, V> {
         let mut inner = HashMap::with_capacity(capacity.get());
         inner.insert(k, v);
@@ -97,11 +99,13 @@ impl<K, V, S> NEMap<K, V, S> {
     }
 
     /// Returns the number of elements the map can hold without reallocating.
+    #[must_use]
     pub fn capacity(&self) -> NonZeroUsize {
         unsafe { NonZeroUsize::new_unchecked(self.inner.capacity()) }
     }
 
     /// Returns a reference to the map's `BuildHasher`.
+    #[must_use]
     pub fn hasher(&self) -> &S {
         self.inner.hasher()
     }
@@ -152,12 +156,14 @@ impl<K, V, S> NEMap<K, V, S> {
     /// let m = nem!["a" => 1, "b" => 2];
     /// assert_eq!(2, m.len().get());
     /// ```
+    #[must_use]
     pub fn len(&self) -> NonZeroUsize {
         unsafe { NonZeroUsize::new_unchecked(self.inner.len()) }
     }
 
     /// A `NEMap` is never empty.
     #[deprecated(since = "0.1.0", note = "A NEMap is never empty.")]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         false
     }
@@ -213,6 +219,7 @@ where
     /// assert!(m.contains_key("Jack"));
     /// assert!(!m.contains_key("Colin"));
     /// ```
+    #[must_use]
     pub fn contains_key<Q>(&self, k: &Q) -> bool
     where
         K: Borrow<Q>,
@@ -233,6 +240,7 @@ where
     /// assert_eq!(Some(&3), m.get("silmarils"));
     /// assert_eq!(None, m.get("arkenstone"));
     /// ```
+    #[must_use]
     pub fn get<Q>(&self, k: &Q) -> Option<&V>
     where
         K: Borrow<Q>,
@@ -253,6 +261,7 @@ where
     /// assert_eq!(Some((&"silmarils", &3)), m.get_key_value("silmarils"));
     /// assert_eq!(None, m.get_key_value("arkenstone"));
     /// ```
+    #[must_use]
     pub fn get_key_value<Q>(&self, k: &Q) -> Option<(&K, &V)>
     where
         K: Borrow<Q>,
@@ -279,6 +288,7 @@ where
     ///
     /// assert_eq!(Some(&0), m.get("silmarils"));
     /// ```
+    #[must_use]
     pub fn get_mut<Q>(&mut self, k: &Q) -> Option<&mut V>
     where
         K: Borrow<Q>,
@@ -317,6 +327,7 @@ where
     }
 
     /// See [`HashMap::with_capacity_and_hasher`].
+    #[must_use]
     pub fn with_capacity_and_hasher(
         capacity: NonZeroUsize,
         hasher: S,
@@ -329,6 +340,7 @@ where
     }
 
     /// See [`HashMap::with_hasher`].
+    #[must_use]
     pub fn with_hasher(hasher: S, k: K, v: V) -> NEMap<K, V, S> {
         let mut inner = HashMap::with_hasher(hasher);
         inner.insert(k, v);
@@ -444,7 +456,7 @@ where
 }
 
 /// A non-empty iterator over the entries of an [`NEMap`].
-
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Iter<'a, K: 'a, V: 'a> {
     iter: std::collections::hash_map::Iter<'a, K, V>,
 }
@@ -468,6 +480,7 @@ impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for Iter<'_, K, V> {
 }
 
 /// A non-empty iterator over mutable values of an [`NEMap`].
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct IterMut<'a, K: 'a, V: 'a> {
     iter: std::collections::hash_map::IterMut<'a, K, V>,
 }
@@ -514,6 +527,7 @@ impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for IntoIter<K, V> {
 }
 
 /// A non-empty iterator over the keys of an [`NEMap`].
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Keys<'a, K: 'a, V: 'a> {
     inner: std::collections::hash_map::Keys<'a, K, V>,
 }
@@ -537,6 +551,7 @@ impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for Keys<'_, K, V> {
 }
 
 /// A non-empty iterator over the values of an [`NEMap`].
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Values<'a, K: 'a, V: 'a> {
     inner: std::collections::hash_map::Values<'a, K, V>,
 }

@@ -96,11 +96,13 @@ pub struct NESet<T, S = std::collections::hash_map::RandomState> {
 
 impl<T, S> NESet<T, S> {
     /// Returns the number of elements the set can hold without reallocating.
+    #[must_use]
     pub fn capacity(&self) -> NonZeroUsize {
         unsafe { NonZeroUsize::new_unchecked(self.inner.capacity()) }
     }
 
     /// Returns a reference to the set's `BuildHasher`.
+    #[must_use]
     pub fn hasher(&self) -> &S {
         self.inner.hasher()
     }
@@ -120,12 +122,14 @@ impl<T, S> NESet<T, S> {
     /// let s = nes![1, 2, 3];
     /// assert_eq!(3, s.len().get());
     /// ```
+    #[must_use]
     pub fn len(&self) -> NonZeroUsize {
         unsafe { NonZeroUsize::new_unchecked(self.inner.len()) }
     }
 
     /// A `NESet` is never empty.
     #[deprecated(since = "0.1.0", note = "A NESet is never empty.")]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         false
     }
@@ -136,6 +140,7 @@ where
     T: Eq + Hash,
 {
     /// Creates a new `NESet` with a single element.
+    #[must_use]
     pub fn new(value: T) -> Self {
         let mut inner = HashSet::new();
         inner.insert(value);
@@ -183,6 +188,7 @@ where
     /// assert!(s.contains(&3));
     /// assert!(!s.contains(&10));
     /// ```
+    #[must_use]
     pub fn contains<Q>(&self, value: &Q) -> bool
     where
         T: Borrow<Q>,
@@ -223,6 +229,7 @@ where
     /// assert_eq!(Some(&3), s.get(&3));
     /// assert_eq!(None, s.get(&10));
     /// ```
+    #[must_use]
     pub fn get<Q>(&self, value: &Q) -> Option<&T>
     where
         T: Borrow<Q>,
@@ -277,6 +284,7 @@ where
     /// let s1 = nes![4, 5, 6];
     /// assert!(s0.is_disjoint(&s1));
     /// ```
+    #[must_use]
     pub fn is_disjoint(&self, other: &NESet<T, S>) -> bool {
         self.inner.is_disjoint(&other.inner)
     }
@@ -293,6 +301,7 @@ where
     /// assert!(sub.is_subset(&sup));
     /// assert!(!sup.is_subset(&sub));
     /// ```
+    #[must_use]
     pub fn is_subset(&self, other: &NESet<T, S>) -> bool {
         self.inner.is_subset(&other.inner)
     }
@@ -309,6 +318,7 @@ where
     /// assert!(sup.is_superset(&sub));
     /// assert!(!sub.is_superset(&sup));
     /// ```
+    #[must_use]
     pub fn is_superset(&self, other: &NESet<T, S>) -> bool {
         self.inner.is_superset(&other.inner)
     }
@@ -358,6 +368,7 @@ where
     }
 
     /// Creates a new `NESet` with a single element and specified capacity.
+    #[must_use]
     pub fn with_capacity(capacity: NonZeroUsize, value: T) -> NESet<T> {
         let mut inner = HashSet::with_capacity(capacity.get());
         inner.insert(value);
@@ -365,6 +376,7 @@ where
     }
 
     /// See [`HashSet::with_capacity_and_hasher`].
+    #[must_use]
     pub fn with_capacity_and_hasher(capacity: NonZeroUsize, hasher: S, value: T) -> NESet<T, S> {
         let mut inner = HashSet::with_capacity_and_hasher(capacity.get(), hasher);
         inner.insert(value);
@@ -372,6 +384,7 @@ where
     }
 
     /// See [`HashSet::with_hasher`].
+    #[must_use]
     pub fn with_hasher(hasher: S, value: T) -> NESet<T, S> {
         let mut inner = HashSet::with_hasher(hasher);
         inner.insert(value);
@@ -480,6 +493,7 @@ where
 }
 
 /// A non-empty iterator over the values of an [`NESet`].
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Iter<'a, T: 'a> {
     iter: std::collections::hash_set::Iter<'a, T>,
 }
@@ -503,6 +517,7 @@ impl<T: fmt::Debug> fmt::Debug for Iter<'_, T> {
 }
 
 /// An owned non-empty iterator over the values of an [`NESet`].
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct IntoIter<T> {
     iter: std::collections::hash_set::IntoIter<T>,
 }
@@ -526,6 +541,7 @@ impl<T: fmt::Debug> fmt::Debug for IntoIter<T> {
 }
 
 /// A non-empty iterator producing elements in the union of two [`NESet`]s.
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Union<'a, T: 'a, S: 'a> {
     inner: std::collections::hash_set::Union<'a, T, S>,
 }

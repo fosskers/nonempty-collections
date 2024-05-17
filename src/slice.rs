@@ -61,7 +61,6 @@ impl<'a, T> NESlice<'a, T> {
     }
 
     /// Generates a standard iterator.
-    #[must_use]
     pub fn iter(&self) -> Iter<'_, T> {
         Iter {
             iter: self.inner.iter(),
@@ -94,7 +93,6 @@ impl<'a, T> NESlice<'a, T> {
     ///     ]
     /// );
     /// ```
-    #[must_use]
     pub fn nonempty_chunks(&'a self, chunk_size: NonZeroUsize) -> NEChunks<'a, T> {
         NEChunks {
             inner: self.inner.chunks(chunk_size.get()),
@@ -152,6 +150,7 @@ impl<T> Index<usize> for NESlice<'_, T> {
 
 /// A non-empty iterator over the values of an [`NESlice`].
 #[derive(Debug)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Iter<'a, T: 'a> {
     iter: std::slice::Iter<'a, T>,
 }
@@ -169,6 +168,7 @@ impl<'a, T> IntoIterator for Iter<'a, T> {
 }
 
 /// A non-empty Iterator of [`NESlice`] chunks.
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct NEChunks<'a, T> {
     pub(crate) inner: Chunks<'a, T>,
 }
