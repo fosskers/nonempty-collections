@@ -72,6 +72,7 @@ impl<'a, T> NESlice<'a, T> {
     ///
     /// ```
     /// use std::num::NonZeroUsize;
+    ///
     /// use nonempty_collections::*;
     ///
     /// let v = nev![1, 2, 3, 4, 5, 6];
