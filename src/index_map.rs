@@ -69,6 +69,13 @@ impl<K, V, S> NEIndexMap<K, V, S> {
         self.inner.hasher()
     }
 
+    /// Returns a regular iterator over the values in this non-empty index map.
+    ///
+    /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
+    pub fn iter(&self) -> indexmap::map::Iter<'_, K, V> {
+        self.inner.iter()
+    }
+
     /// An iterator visiting all elements in their order.
     pub fn nonempty_iter(&self) -> Iter<'_, K, V> {
         Iter {

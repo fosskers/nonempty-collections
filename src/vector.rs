@@ -228,6 +228,13 @@ impl<T> NEVec<T> {
         self.inner.truncate(len.get());
     }
 
+    /// Returns a regular iterator over the values in this non-empty vector.
+    ///
+    /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
+    pub fn iter(&self) -> std::slice::Iter<'_, T> {
+        self.inner.iter()
+    }
+
     /// ```
     /// use nonempty_collections::*;
     ///
