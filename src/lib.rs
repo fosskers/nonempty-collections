@@ -1,3 +1,4 @@
+#![allow(rustdoc::redundant_explicit_links)] // the explicit links are needed for cargo rdme
 //! Non-empty variants of the standard collections.
 //!
 //! Non-emptiness can be a powerful guarantee. If your main use of `Vec` is as
