@@ -233,7 +233,7 @@ impl<T> NEVec<T> {
     ///
     /// let mut l = nev![42, 36, 58];
     ///
-    /// let mut iter = l.iter();
+    /// let mut iter = l.nonempty_iter();
     /// let (first, mut rest_iter) = iter.next();
     ///
     /// assert_eq!(first, &42);
@@ -241,7 +241,7 @@ impl<T> NEVec<T> {
     /// assert_eq!(rest_iter.next(), Some(&58));
     /// assert_eq!(rest_iter.next(), None);
     /// ```
-    pub fn iter(&self) -> Iter<'_, T> {
+    pub fn nonempty_iter(&self) -> Iter<'_, T> {
         Iter {
             iter: self.inner.iter(),
         }
@@ -256,11 +256,11 @@ impl<T> NEVec<T> {
     ///
     /// let mut l = nev![42, 36, 58];
     ///
-    /// for i in l.iter_mut().into_iter() {
+    /// for i in l.nonempty_iter_mut() {
     ///     *i *= 10;
     /// }
     ///
-    /// let mut iter = l.iter();
+    /// let mut iter = l.nonempty_iter();
     /// let (first, mut rest_iter) = iter.next();
     ///
     /// assert_eq!(first, &420);
@@ -268,7 +268,7 @@ impl<T> NEVec<T> {
     /// assert_eq!(rest_iter.next(), Some(&580));
     /// assert_eq!(rest_iter.next(), None);
     /// ```
-    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
+    pub fn nonempty_iter_mut(&mut self) -> IterMut<'_, T> {
         IterMut {
             inner: self.inner.iter_mut(),
         }
@@ -805,7 +805,7 @@ impl<T> From<(T, Vec<T>)> for NEVec<T> {
 /// use nonempty_collections::*;
 ///
 /// let v0 = nev![1, 2, 3];
-/// let v1: NEVec<_> = v0.iter().cloned().collect();
+/// let v1: NEVec<_> = v0.nonempty_iter().cloned().collect();
 /// assert_eq!(v0, v1);
 /// ```
 impl<T> FromNonEmptyIterator<T> for NEVec<T> {
@@ -910,7 +910,7 @@ impl<'a, T> IntoNonEmptyIterator for &'a NEVec<T> {
     type IntoNEIter = Iter<'a, T>;
 
     fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        self.iter()
+        self.nonempty_iter()
     }
 }
 

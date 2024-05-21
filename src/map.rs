@@ -125,7 +125,7 @@ impl<K, V, S> NEMap<K, V, S> {
 
     /// An iterator visiting all elements in arbitrary order. The iterator
     /// element type is `(&'a K, &'a V)`.
-    pub fn iter(&self) -> Iter<'_, K, V> {
+    pub fn nonempty_iter(&self) -> Iter<'_, K, V> {
         Iter {
             iter: self.inner.iter(),
         }
@@ -138,7 +138,7 @@ impl<K, V, S> NEMap<K, V, S> {
     ///
     /// If you manually advance this iterator until empty and then call `first`,
     /// you're in for a surprise.
-    pub fn iter_mut(&mut self) -> IterMut<'_, K, V> {
+    pub fn nonempty_iter_mut(&mut self) -> IterMut<'_, K, V> {
         IterMut {
             iter: self.inner.iter_mut(),
         }
@@ -151,11 +151,11 @@ impl<K, V, S> NEMap<K, V, S> {
     /// use nonempty_collections::*;
     ///
     /// let m = nem!["Valmar" => "Vanyar", "Tirion" => "Noldor", "Alqualondë" => "Teleri"];
-    /// let mut v: NEVec<_> = m.keys().collect();
+    /// let mut v: NEVec<_> = m.nonempty_keys().collect();
     /// v.sort();
     /// assert_eq!(nev![&"Alqualondë", &"Tirion", &"Valmar"], v);
     /// ```
-    pub fn keys(&self) -> Keys<'_, K, V> {
+    pub fn nonempty_keys(&self) -> Keys<'_, K, V> {
         Keys {
             inner: self.inner.keys(),
         }
@@ -188,11 +188,11 @@ impl<K, V, S> NEMap<K, V, S> {
     /// use nonempty_collections::*;
     ///
     /// let m = nem!["Valmar" => "Vanyar", "Tirion" => "Noldor", "Alqualondë" => "Teleri"];
-    /// let mut v: NEVec<_> = m.values().collect();
+    /// let mut v: NEVec<_> = m.nonempty_values().collect();
     /// v.sort();
     /// assert_eq!(nev![&"Noldor", &"Teleri", &"Vanyar"], v);
     /// ```
-    pub fn values(&self) -> Values<'_, K, V> {
+    pub fn nonempty_values(&self) -> Values<'_, K, V> {
         Values {
             inner: self.inner.values(),
         }
@@ -404,6 +404,24 @@ where
     /// ```
     fn from(m: NEMap<K, V, S>) -> Self {
         m.inner
+    }
+}
+
+impl<K, V, S> IntoNonEmptyIterator for NEMap<K, V, S> {
+    type IntoNEIter = IntoIter<K, V>;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        IntoIter {
+            iter: self.inner.into_iter(),
+        }
+    }
+}
+
+impl<'a, K, V, S> IntoNonEmptyIterator for &'a NEMap<K, V, S> {
+    type IntoNEIter = Iter<'a, K, V>;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        self.nonempty_iter()
     }
 }
 
