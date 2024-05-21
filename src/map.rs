@@ -435,7 +435,7 @@ impl<'a, K, V, S> IntoIterator for &'a NEMap<K, V, S> {
     type IntoIter = std::collections::hash_map::Iter<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.inner.iter()
+        self.iter()
     }
 }
 

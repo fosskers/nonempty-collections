@@ -121,9 +121,7 @@ impl<'a, T> IntoNonEmptyIterator for &'a NESlice<'a, T> {
     type IntoNEIter = Iter<'a, T>;
 
     fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        Iter {
-            iter: self.inner.iter(),
-        }
+        self.nonempty_iter()
     }
 }
 
@@ -143,7 +141,7 @@ impl<'a, T> IntoIterator for &'a NESlice<'a, T> {
     type IntoIter = std::slice::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.inner.iter()
+        self.iter()
     }
 }
 
