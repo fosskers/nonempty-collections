@@ -178,6 +178,7 @@ where
         inner.insert(value);
         NESet { inner }
     }
+}
 
 impl<T, S> NESet<T, S>
 where
