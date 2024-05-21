@@ -196,6 +196,29 @@ where
     K: Eq + Hash,
     S: BuildHasher,
 {
+    /// Attempt a conversion from [`IndexMap`], consuming the given `IndexMap`.
+    /// Will return `None` if the `IndexMap` is empty.
+    ///
+    /// ```
+    /// use indexmap::*;
+    /// use nonempty_collections::*;
+    ///
+    /// assert_eq!(
+    ///     Some(ne_indexmap! {"a" => 1, "b" => 2}),
+    ///     NEIndexMap::try_from_map(indexmap! {"a" => 1, "b" => 2})
+    /// );
+    /// let m: IndexMap<(), ()> = indexmap! {};
+    /// assert_eq!(None, NEIndexMap::try_from_map(m));
+    /// ```
+    #[must_use]
+    pub fn try_from_map(map: IndexMap<K, V, S>) -> Option<Self> {
+        if map.is_empty() {
+            None
+        } else {
+            Some(Self { inner: map })
+        }
+    }
+
     /// Returns true if the map contains a value.
     ///
     /// ```

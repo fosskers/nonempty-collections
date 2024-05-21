@@ -62,7 +62,7 @@ macro_rules! nes {
 ///
 /// # Conversion
 ///
-/// If you have a [`HashSet`] but want an `NESet`, try [`NESet::from_set`].
+/// If you have a [`HashSet`] but want an `NESet`, try [`NESet::try_from_set`].
 /// Naturally, this might not succeed.
 ///
 /// If you have an `NESet` but want a `HashSet`, try their corresponding
@@ -179,8 +179,13 @@ where
         NESet { inner }
     }
 
+impl<T, S> NESet<T, S>
+where
+    T: Eq + Hash,
+    S: BuildHasher,
+{
     /// Attempt a conversion from a [`HashSet`], consuming the given `HashSet`.
-    /// Will fail if the `HashSet` is empty.
+    /// Will return `None` if the `HashSet` is empty.
     ///
     /// ```
     /// use std::collections::HashSet;
@@ -189,28 +194,22 @@ where
     /// use nonempty_collections::NESet;
     ///
     /// let mut s = HashSet::new();
-    /// s.insert(1);
-    /// s.insert(2);
-    /// s.insert(3);
+    /// s.extend([1, 2, 3]);
     ///
-    /// let n = NESet::from_set(s);
+    /// let n = NESet::try_from_set(s);
     /// assert_eq!(Some(nes![1, 2, 3]), n);
+    /// let s: HashSet<()> = HashSet::new();
+    /// assert_eq!(None, NESet::try_from_set(s));
     /// ```
     #[must_use]
-    pub fn from_set(set: HashSet<T>) -> Option<NESet<T>> {
+    pub fn try_from_set(set: HashSet<T, S>) -> Option<NESet<T, S>> {
         if set.is_empty() {
             None
         } else {
             Some(NESet { inner: set })
         }
     }
-}
 
-impl<T, S> NESet<T, S>
-where
-    T: Eq + Hash,
-    S: BuildHasher,
-{
     /// Returns true if the set contains a value.
     ///
     /// ```
