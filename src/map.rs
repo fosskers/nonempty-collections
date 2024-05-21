@@ -463,26 +463,8 @@ where
                 k.clone()
             };
 
-            let head_val = map.remove(&head_key).unwrap();
-
-            let ne = NEMap {
-                head_key,
-                head_val,
-                tail: map,
-            };
-
-            Ok(ne)
-        }
-    }
-}
-
-impl<K, V, S> IntoNonEmptyIterator for NEMap<K, V, S> {
-    type IntoNEIter = IntoIter<K, V>;
-
-    fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        IntoIter {
-            iter: self.inner.into_iter(),
-        }
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }
 

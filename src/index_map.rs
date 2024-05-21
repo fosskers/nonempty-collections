@@ -459,7 +459,7 @@ impl<'a, K, V, S> IntoIterator for &'a NEIndexMap<K, V, S> {
     type IntoIter = indexmap::map::Iter<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.inner.iter()
+        self.iter()
     }
 }
 

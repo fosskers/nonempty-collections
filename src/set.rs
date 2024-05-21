@@ -486,7 +486,7 @@ impl<'a, T, S> IntoIterator for &'a NESet<T, S> {
     type IntoIter = std::collections::hash_set::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.inner.iter()
+        self.iter()
     }
 }
 
