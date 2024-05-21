@@ -50,6 +50,7 @@
   - `from_slice` to `try_from_slice`
   - `from_set` to `try_from_set`.
 - **BREAKING:** `IteratorExt` is removed in favor of `IntoIteratorExt`. Now it's possible to call `try_into_nonempty_iter()` instead of `to_nonempty_iter()` on all regular iterators because regular iterators also implement `IntoIterator`.
+- **BREAKING:** `.iter()`, `.iter_mut()`, etc, are now prefixed with `nonempty_`
 - `FromNonEmptyIterator<T>` is now implemented for `HashSet<T, S>` instead of `HashSet<T>` (with the default hasher).
 
 #### Fixed
@@ -71,6 +72,7 @@
  - The rust version to which the library is build is now pinned, to avoid accidental breakage.
  - A [`justfile`](https://github.com/casey/just) that allows to run pre-configured commands to check the codebase. E.g. `just lint` or `just test`.
  - Benchmarks for `Vec` versus `NEVec`.
+ - Added `.iter()` methods to all collections returning a regular `Iterator`.
 
 
 ## 0.2.9 (2024-08-26)
