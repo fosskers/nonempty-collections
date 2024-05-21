@@ -107,6 +107,13 @@ impl<T, S> NESet<T, S> {
         self.inner.hasher()
     }
 
+    /// Returns a regular iterator over the values in this non-empty set.
+    ///
+    /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
+    pub fn iter(&self) -> std::collections::hash_set::Iter<'_, T> {
+        self.inner.iter()
+    }
+
     /// An iterator visiting all elements in arbitrary order.
     pub fn nonempty_iter(&self) -> Iter<'_, T> {
         Iter {

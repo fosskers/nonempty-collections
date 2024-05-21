@@ -60,7 +60,14 @@ impl<'a, T> NESlice<'a, T> {
         false
     }
 
-    /// Generates a standard iterator.
+    /// Returns a regular iterator over the values in this non-empty slice.
+    ///
+    /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
+    pub fn iter(&self) -> std::slice::Iter<'_, T> {
+        self.inner.iter()
+    }
+
+    /// Returns a non-empty iterator.
     pub fn nonempty_iter(&self) -> Iter<'_, T> {
         Iter {
             iter: self.inner.iter(),

@@ -67,7 +67,7 @@ pub trait NonEmptyIterator: IntoIterator {
     ///
     /// let n = nev![2, 2, 2];
     /// assert!(n.nonempty_iter().all(|n| n % 2 == 0));
-    /// assert!(n.nonempty_iter().into_iter().all(|n| n % 2 == 0));
+    /// assert!(n.iter().all(|n| n % 2 == 0));
     /// ```
     #[must_use]
     fn all<F>(self, f: F) -> bool

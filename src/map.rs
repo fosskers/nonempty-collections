@@ -110,6 +110,13 @@ impl<K, V, S> NEMap<K, V, S> {
         self.inner.hasher()
     }
 
+    /// Returns a regular iterator over the values in this non-empty map.
+    ///
+    /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
+    pub fn iter(&self) -> std::collections::hash_map::Iter<'_, K, V> {
+        self.inner.iter()
+    }
+
     /// An iterator visiting all elements in arbitrary order. The iterator
     /// element type is `(&'a K, &'a V)`.
     pub fn nonempty_iter(&self) -> Iter<'_, K, V> {
