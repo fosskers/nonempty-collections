@@ -42,7 +42,7 @@ macro_rules! nes {
 /// use nonempty_collections::*;
 ///
 /// let s = nes![1, 1, 2, 2, 3, 3, 4, 4];
-/// let mut v: NEVec<_> = s.iter().collect();
+/// let mut v: NEVec<_> = s.nonempty_iter().collect();
 /// v.sort();
 /// assert_eq!(nev![&1, &2, &3, &4], v);
 /// ```
@@ -108,7 +108,7 @@ impl<T, S> NESet<T, S> {
     }
 
     /// An iterator visiting all elements in arbitrary order.
-    pub fn iter(&self) -> Iter<'_, T> {
+    pub fn nonempty_iter(&self) -> Iter<'_, T> {
         Iter {
             iter: self.inner.iter(),
         }
@@ -445,7 +445,7 @@ impl<'a, T, S> IntoNonEmptyIterator for &'a NESet<T, S> {
     type IntoNEIter = Iter<'a, T>;
 
     fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        self.iter()
+        self.nonempty_iter()
     }
 }
 
@@ -473,7 +473,7 @@ impl<'a, T, S> IntoIterator for &'a NESet<T, S> {
 /// use nonempty_collections::*;
 ///
 /// let s0 = nes![1, 2, 3];
-/// let s1: NESet<_> = s0.iter().cloned().collect();
+/// let s1: NESet<_> = s0.nonempty_iter().cloned().collect();
 /// assert_eq!(s0, s1);
 /// ```
 impl<T, S> FromNonEmptyIterator<T> for NESet<T, S>
@@ -624,7 +624,7 @@ mod test {
     #[test]
     fn iter_debug_impl() {
         let expected = format!("{:?}", hashset! {0}.iter());
-        let actual = format!("{:?}", nes! {0}.iter());
+        let actual = format!("{:?}", nes! {0}.nonempty_iter());
         assert_eq!(expected, actual);
     }
 }

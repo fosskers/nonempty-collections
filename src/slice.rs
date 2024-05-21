@@ -61,7 +61,7 @@ impl<'a, T> NESlice<'a, T> {
     }
 
     /// Generates a standard iterator.
-    pub fn iter(&self) -> Iter<'_, T> {
+    pub fn nonempty_iter(&self) -> Iter<'_, T> {
         Iter {
             iter: self.inner.iter(),
         }
