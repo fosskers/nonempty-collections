@@ -29,6 +29,7 @@
   - `from_map` to `try_from_map`
   - `from_slice` to `try_from_slice`
   - `from_set` to `try_from_set`.
+- **BREAKING:** `IteratorExt` is removed in favor of `IntoIteratorExt`. Now it's possible to call `try_into_nonempty_iter()` instead of `to_nonempty_iter()` on all regular iterators because regular iterators also implement `IntoIterator`.
 - `FromNonEmptyIterator<T>` is now implemented for `HashSet<T, S>` instead of `HashSet<T>` (with the default hasher).
 
 #### Fixed
