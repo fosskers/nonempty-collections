@@ -56,7 +56,7 @@
 //! ```
 //! use nonempty_collections::NEVec;
 //!
-//! let mut l = NEVec::from_vec(vec![42, 36, 58]).unwrap();
+//! let mut l = NEVec::try_from_vec(vec![42, 36, 58]).unwrap();
 //! assert_eq!(&42, l.first());
 //!
 //! l.push(9001);
@@ -73,7 +73,7 @@
 //! let v: Vec<u32> = l.into();
 //! assert_eq!(v, vec![42, 36, 58, 9001]);
 //!
-//! let u: Option<NEVec<u32>> = NEVec::from_vec(v);
+//! let u: Option<NEVec<u32>> = NEVec::try_from_vec(v);
 //! assert_eq!(Some(nev![42, 36, 58, 9001]), u);
 //! ```
 //!
