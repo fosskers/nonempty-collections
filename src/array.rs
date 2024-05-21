@@ -35,7 +35,7 @@ use crate::NonEmptyIterator;
 /// ```
 /// # use nonempty_collections::*;
 /// assert_eq!(
-///     NESlice::from_slice(&[1, 2]),
+///     NESlice::try_from_slice(&[1, 2]),
 ///     Some([1, 2].as_nonempty_slice())
 /// );
 /// ```
@@ -150,7 +150,7 @@ macro_rules! impl_nonempty_iter_for_arrays {
                 fn as_nonempty_slice(&self) -> $crate::NESlice<'_, T> {
                     // This should never panic because a slice with length > 0
                     // is non-empty by definition.
-                    $crate::NESlice::from_slice(self).unwrap()
+                    $crate::NESlice::try_from_slice(self).unwrap()
                 }
 
                 fn nonzero_len(&self) -> NonZeroUsize {
