@@ -1092,7 +1092,7 @@ mod tests {
     fn test_as_slice() {
         let nonempty = NEVec::from((0, vec![1, 2, 3]));
         assert_eq!(
-            crate::NESlice::from_slice(&[0, 1, 2, 3]).unwrap(),
+            crate::NESlice::try_from_slice(&[0, 1, 2, 3]).unwrap(),
             nonempty.as_nonempty_slice(),
         );
     }
