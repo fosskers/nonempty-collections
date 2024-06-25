@@ -20,10 +20,16 @@ use std::num::NonZeroUsize;
 macro_rules! nem {
     ($hk:expr => $hv:expr, $( $xk:expr => $xv:expr ),*) => {{
         let mut tail = std::collections::HashMap::new();
-        tail.insert($hk, $hv);
-        $( tail.insert($xk, $xv); )*
-        tail.remove(&$hk);
-        $crate::NEMap { head_key: $hk, head_val: $hv, tail }
+        let head_key = $hk;
+        let mut head_val = $hv;
+        $(
+        if $xk == head_key {
+            head_val = $xv;
+        } else {
+            tail.insert($xk, $xv);
+        }
+        )*
+        $crate::NEMap { head_key, head_val, tail }
     }};
     ($hk:expr => $hv:expr) => {
         $crate::NEMap { head_key: $hk, head_val: $hv, tail: std::collections::HashMap::new() }
@@ -550,3 +556,36 @@ impl<'a, K, V> IntoIterator for Values<'a, K, V> {
 //         self.inner.next().map(|(_, v)| v)
 //     }
 // }
+
+#[cfg(test)]
+mod tests {
+    use std::num::NonZeroUsize;
+
+    use crate::nem;
+
+    struct Foo {
+        user: String,
+    }
+
+    #[test]
+    fn macro_usage() {
+        let a = Foo {
+            user: "a".to_string(),
+        };
+        let b = Foo {
+            user: "b".to_string(),
+        };
+
+        let map = nem![1 => a, 2 => b];
+        assert_eq!("a", map.get(&1).unwrap().user);
+        assert_eq!("b", map.get(&2).unwrap().user);
+    }
+
+    #[test]
+    fn macro_length() {
+        let map = nem![1 => 'a', 2 => 'b', 1 => 'c'];
+        assert_eq!(unsafe { NonZeroUsize::new_unchecked(2) }, map.len());
+        assert_eq!('c', *map.get(&1).unwrap());
+        assert_eq!('b', *map.get(&2).unwrap());
+    }
+}

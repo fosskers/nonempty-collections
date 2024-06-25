@@ -954,7 +954,24 @@ pub mod serialize {
 
 #[cfg(test)]
 mod tests {
-    use crate::NEVec;
+    use crate::{nev, NEVec};
+
+    struct Foo {
+        user: String,
+    }
+
+    #[test]
+    fn macro_usage() {
+        let a = Foo {
+            user: "a".to_string(),
+        };
+        let b = Foo {
+            user: "b".to_string(),
+        };
+
+        let v = nev![a, b];
+        assert_eq!("a", v.first().user);
+    }
 
     #[test]
     fn test_from_conversion() {
