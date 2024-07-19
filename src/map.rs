@@ -1,5 +1,8 @@
 //! Non-empty [`HashMap`]s.
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::{FromNonEmptyIterator, IntoNonEmptyIterator, NonEmptyIterator};
 use std::borrow::Borrow;
 use std::collections::HashMap;
@@ -44,6 +47,15 @@ macro_rules! nem {
 /// let m = nem!["elves" => 3000, "orcs" => 10000];
 /// assert_eq!(2, m.len().get());
 /// ```
+#[cfg_attr(
+    feature = "serde",
+    derive(Deserialize, Serialize),
+    serde(bound(
+        serialize = "K: Eq + Hash + Clone + Serialize, V: Clone + Serialize, S: Clone + BuildHasher",
+        deserialize = "K: Eq + Hash + Clone + Deserialize<'de>, V: Deserialize<'de>, S: Default + BuildHasher"
+    )),
+    serde(into = "HashMap<K, V, S>", try_from = "HashMap<K, V, S>")
+)]
 #[derive(Debug, Clone)]
 pub struct NEMap<K, V, S = std::collections::hash_map::RandomState> {
     /// The key of the ever-present element of the non-empty `HashMap`.
@@ -379,6 +391,38 @@ where
     }
 }
 
+impl<K, V, S> TryFrom<HashMap<K, V, S>> for NEMap<K, V, S>
+where
+    K: Eq + Hash + Clone,
+    S: BuildHasher,
+{
+    type Error = crate::Error;
+
+    fn try_from(mut map: HashMap<K, V, S>) -> Result<Self, Self::Error> {
+        if map.is_empty() {
+            Err(crate::Error::Empty)
+        } else {
+            // NOTE 2024-07-19 These are safe unwraps due to the emptiness check
+            // above. It was done this way, instead of a `match`, in order to
+            // avoid an ownership problem.
+            let head_key = {
+                let k = map.keys().next().unwrap();
+                k.clone()
+            };
+
+            let head_val = map.remove(&head_key).unwrap();
+
+            let ne = NEMap {
+                head_key,
+                head_val,
+                tail: map,
+            };
+
+            Ok(ne)
+        }
+    }
+}
+
 impl<K, V, S> IntoNonEmptyIterator for NEMap<K, V, S> {
     type Item = (K, V);
 
@@ -559,9 +603,8 @@ impl<'a, K, V> IntoIterator for Values<'a, K, V> {
 
 #[cfg(test)]
 mod tests {
-    use std::num::NonZeroUsize;
-
     use crate::nem;
+    use std::num::NonZeroUsize;
 
     struct Foo {
         user: String,
@@ -587,5 +630,25 @@ mod tests {
         assert_eq!(unsafe { NonZeroUsize::new_unchecked(2) }, map.len());
         assert_eq!('c', *map.get(&1).unwrap());
         assert_eq!('b', *map.get(&2).unwrap());
+    }
+}
+
+#[cfg(feature = "serde")]
+#[cfg(test)]
+mod serde_tests {
+    use crate::{nem, NEMap};
+    use std::collections::HashMap;
+
+    #[test]
+    fn json() {
+        let map0 = nem![1 => 'a', 2 => 'b', 1 => 'c'];
+        let j = serde_json::to_string(&map0).unwrap();
+        let map1 = serde_json::from_str(&j).unwrap();
+        assert_eq!(map0, map1);
+
+        let empty: HashMap<usize, char> = HashMap::new();
+        let j = serde_json::to_string(&empty).unwrap();
+        let bad = serde_json::from_str::<NEMap<usize, char>>(&j);
+        assert!(bad.is_err());
     }
 }

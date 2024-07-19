@@ -918,37 +918,11 @@ impl<T> std::ops::IndexMut<usize> for NEVec<T> {
     }
 }
 
-#[cfg(feature = "serde")]
-pub mod serialize {
-    //! Serde support for [`NEVec`].
+impl<T> TryFrom<Vec<T>> for NEVec<T> {
+    type Error = crate::Error;
 
-    use std::{convert::TryFrom, fmt};
-
-    use super::NEVec;
-
-    /// Encoding/decoding errors.
-    #[derive(Debug)]
-    pub enum Error {
-        /// There was nothing to decode.
-        Empty,
-    }
-
-    impl fmt::Display for Error {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            match self {
-                Self::Empty => {
-                    f.write_str("the vector provided was empty, NEVec needs at least one element")
-                }
-            }
-        }
-    }
-
-    impl<T> TryFrom<Vec<T>> for NEVec<T> {
-        type Error = Error;
-
-        fn try_from(vec: Vec<T>) -> Result<Self, Self::Error> {
-            NEVec::from_vec(vec).ok_or(Error::Empty)
-        }
+    fn try_from(vec: Vec<T>) -> Result<Self, Self::Error> {
+        NEVec::from_vec(vec).ok_or(crate::Error::Empty)
     }
 }
 
