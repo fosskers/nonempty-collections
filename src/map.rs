@@ -393,6 +393,7 @@ where
 
 impl<K, V, S> TryFrom<HashMap<K, V, S>> for NEMap<K, V, S>
 where
+    // FIXME 2024-07-19 Fix the lower clone, thereby removing the need for `Clone` here.
     K: Eq + Hash + Clone,
     S: BuildHasher,
 {
@@ -407,6 +408,7 @@ where
             // avoid an ownership problem.
             let head_key = {
                 let k = map.keys().next().unwrap();
+                // FIXME 2024-07-19 Avoid this clone.
                 k.clone()
             };
 
