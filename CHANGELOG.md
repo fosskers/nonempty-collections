@@ -1,5 +1,11 @@
 # `nonempty-collections`
 
+## Unreleased
+
+#### Added
+
+- `serde` support for `NEMap` and `NESet`.
+
 ## 0.2.6 (2024-06-27)
 
 #### Fixed
