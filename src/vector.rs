@@ -263,6 +263,7 @@ impl<T> NEVec<T> {
         Iter {
             head: &self.head,
             iter: std::iter::once(&self.head).chain(self.tail.iter()),
+            at_start: true,
         }
     }
 
@@ -800,6 +801,7 @@ impl<T> FromNonEmptyIterator<T> for NEVec<T> {
 pub struct Iter<'a, T: 'a> {
     head: &'a T,
     iter: Chain<Once<&'a T>, std::slice::Iter<'a, T>>,
+    at_start: bool,
 }
 
 impl<'a, T> NonEmptyIterator for Iter<'a, T> {
@@ -807,11 +809,12 @@ impl<'a, T> NonEmptyIterator for Iter<'a, T> {
     type IntoIter = Skip<Chain<Once<&'a T>, std::slice::Iter<'a, T>>>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        self.at_start = false;
         self.iter.next()
     }
 
     fn first(self) -> (Self::Item, Self::IntoIter) {
-        (self.head, self.iter.skip(1))
+        (self.head, self.iter.skip(usize::from(self.at_start)))
     }
 }
 
@@ -1051,5 +1054,51 @@ mod tests {
             nonempty.as_nonempty_slice(),
             crate::NESlice::new(&0, &[1, 2, 3])
         );
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::nev;
+    use crate::NonEmptyIterator;
+
+    #[test]
+    fn test() {
+        let v = nev![0, 1, 2];
+
+        // first call first()
+        let iter = v.iter().copied();
+        let (first, mut rest) = iter.first();
+        assert_eq!(0, first);
+        assert_eq!(Some(1), rest.next());
+        assert_eq!(Some(2), rest.next());
+        assert_eq!(None, rest.next());
+
+        // call first() after next()
+        let mut iter = v.iter().copied();
+        assert_eq!(Some(0), iter.next());
+        let (first, mut rest) = iter.first();
+        assert_eq!(0, first);
+        assert_eq!(Some(1), rest.next());
+        assert_eq!(Some(2), rest.next());
+        assert_eq!(None, rest.next());
+
+        // call first() after iterating over the entire iterator
+        let mut iter = v.iter().copied();
+        assert_eq!(Some(0), iter.next());
+        assert_eq!(Some(1), iter.next());
+        assert_eq!(Some(2), iter.next());
+        assert_eq!(None, iter.next());
+        let (first, mut rest) = iter.first();
+        assert_eq!(0, first);
+        assert_eq!(None, rest.next());
+    }
+
+    #[test]
+    fn test2() {
+        let v = nev![8, 0];
+        let mut iter = v.iter().copied();
+        iter.next();
+        assert_eq!(vec![1], iter.map(|x| x + 1).collect::<Vec<_>>());
     }
 }
