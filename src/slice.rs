@@ -222,9 +222,10 @@ mod tests {
     #[test]
     fn test_iter_syntax() {
         let slice = [0, 1, 2, 3];
-        let nonempty = NESlice::from_slice(&slice);
-        for n in &nonempty {
-            assert_eq!(*n, *n); // Prove that we're dealing with references.
+        if let Some(nonempty) = NESlice::from_slice(&slice) {
+            for n in nonempty.iter() {
+                assert_eq!(*n, *n); // Prove that we're dealing with references.
+            }
         }
     }
 
