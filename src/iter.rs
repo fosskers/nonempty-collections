@@ -2,6 +2,7 @@
 
 use crate::NEVec;
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::iter::{Product, Sum};
@@ -736,7 +737,27 @@ impl<T> FromNonEmptyIterator<T> for Vec<T> {
     }
 }
 
-impl<T: Eq + Hash> FromNonEmptyIterator<T> for HashSet<T> {
+impl<K, V> FromNonEmptyIterator<(K, V)> for HashMap<K, V>
+where
+    K: Eq + Hash,
+{
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = (K, V)>,
+    {
+        let ((head_key, head_val), rest) = iter.into_nonempty_iter().first();
+
+        let mut hm = HashMap::new();
+        hm.insert(head_key, head_val);
+        hm.extend(rest);
+        hm
+    }
+}
+
+impl<T> FromNonEmptyIterator<T> for HashSet<T>
+where
+    T: Eq + Hash,
+{
     fn from_nonempty_iter<I>(iter: I) -> Self
     where
         I: IntoNonEmptyIterator<Item = T>,
@@ -1342,5 +1363,25 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{nem, NEMap};
+
+    #[test]
+    fn into_hashset() {
+        let m = nem!['a' => 1, 'b' => 2, 'c' => 3];
+        let _: HashSet<_> = m.values().collect();
+    }
+
+    #[test]
+    fn into_hashmap() {
+        let m = nem!['a' => 1, 'b' => 2, 'c' => 3];
+        let h: HashMap<_, _> = m.iter().map(|(k, v)| (*k, *v)).collect();
+        let n = NEMap::try_from(h).unwrap();
+        assert_eq!(m, n);
     }
 }
