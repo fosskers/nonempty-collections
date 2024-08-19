@@ -1,6 +1,6 @@
 # `nonempty-collections`
 
-## Unreleased
+## 0.2.8 (2024-08-19)
 
 #### Added
 
