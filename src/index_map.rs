@@ -534,7 +534,7 @@ impl<'a, K, V> IntoIterator for Iter<'a, K, V> {
     }
 }
 
-// FIXME(#26925) Remove in favor of `#[derive(Clone)]` (see https://github.com/rust-lang/rust/issues/26925 for more info)
+// FIXME: Remove in favor of `#[derive(Clone)]` (see https://github.com/rust-lang/rust/issues/26925 for more info)
 impl<K, V> Clone for Iter<'_, K, V> {
     fn clone(&self) -> Self {
         Iter {
@@ -622,7 +622,7 @@ impl<'a, K, V> IntoIterator for Keys<'a, K, V> {
     }
 }
 
-// FIXME(#26925) Remove in favor of `#[derive(Clone)]` (see https://github.com/rust-lang/rust/issues/26925 for more info)
+// FIXME: Remove in favor of `#[derive(Clone)]` (see https://github.com/rust-lang/rust/issues/26925 for more info)
 impl<K, V> Clone for Keys<'_, K, V> {
     fn clone(&self) -> Self {
         Keys {
@@ -678,7 +678,7 @@ impl<'a, K, V> IntoIterator for Values<'a, K, V> {
     }
 }
 
-// FIXME(#26925) Remove in favor of `#[derive(Clone)]` (see https://github.com/rust-lang/rust/issues/26925 for more info)
+// FIXME: Remove in favor of `#[derive(Clone)]` (see https://github.com/rust-lang/rust/issues/26925 for more info)
 impl<K, V> Clone for Values<'_, K, V> {
     fn clone(&self) -> Self {
         Values {

@@ -571,13 +571,85 @@ impl<T> NEVec<T> {
         T: Ord,
     {
         if self.tail.is_empty().not() {
-            self.tail.sort();
+            let zero: &T = &self.tail[0];
 
-            if self.head > self.tail[0] {
-                std::mem::swap(&mut self.head, self.tail.index_mut(0));
-                self.tail.sort(); // FIXME Unfortunate second sort, as there is no ordered insert.
+            let (ix, smallest) =
+                self.tail
+                    .iter()
+                    .enumerate()
+                    .fold((0, zero), |(ix, smallest), (ix_curr, curr)| {
+                        if curr < smallest {
+                            (ix_curr, curr)
+                        } else {
+                            (ix, smallest)
+                        }
+                    });
+
+            if &self.head > smallest {
+                std::mem::swap(&mut self.head, self.tail.index_mut(ix));
             }
+
+            self.tail.sort();
         }
+    }
+
+    /// Like [`sort`], sorts the `NEVec` in place but with a given comparison function.
+    ///
+    /// See also [`slice::sort_by`].
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    ///
+    /// let mut n = nev!["Sirion", "Gelion", "Narog"];
+    /// n.sort_by(|a, b| b.cmp(&a));
+    /// assert_eq!(nev!["Sirion", "Narog", "Gelion"], n);
+    /// ```
+    pub fn sort_by<F>(&mut self, mut compare: F)
+    where
+        F: FnMut(&T, &T) -> Ordering,
+    {
+        if self.tail.is_empty().not() {
+            let zero: &T = &self.tail[0];
+
+            let (ix, smallest) =
+                self.tail
+                    .iter()
+                    .enumerate()
+                    .fold((0, zero), |(ix, smallest), (ix_curr, curr)| {
+                        if matches!(compare(curr, smallest), Ordering::Less) {
+                            (ix_curr, curr)
+                        } else {
+                            (ix, smallest)
+                        }
+                    });
+
+            if matches!(compare(&self.head, smallest), Ordering::Greater) {
+                std::mem::swap(&mut self.head, self.tail.index_mut(ix));
+            }
+
+            self.tail.sort_by(compare);
+        }
+    }
+
+    /// Like [`sort`], sorts the `NEVec` in place after first transforming each
+    /// element into something easily comparable. Beware of expensive key
+    /// functions, as the results of each call are not cached.
+    ///
+    /// See also [`slice::sort_by_key`].
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    ///
+    /// let mut n = nev![-5i32, 4, 1, -3, 2];
+    /// n.sort_by_key(|k| k.abs());
+    /// assert_eq!(nev![1, 2, -3, 4, -5], n);
+    /// ```
+    pub fn sort_by_key<K, F>(&mut self, mut f: F)
+    where
+        F: FnMut(&T) -> K,
+        K: Ord,
+    {
+        self.sort_by(|a, b| f(a).cmp(&f(b)));
     }
 
     /// Yields a `NESlice`.
@@ -1051,5 +1123,16 @@ mod tests {
             nonempty.as_nonempty_slice(),
             crate::NESlice::new(&0, &[1, 2, 3])
         );
+    }
+
+    #[test]
+    fn sorting() {
+        let mut n = nev![1, 5, 4, 3, 2, 1];
+        n.sort();
+        assert_eq!(nev![1, 1, 2, 3, 4, 5], n);
+
+        let mut m = nev![1];
+        m.sort();
+        assert_eq!(nev![1], m);
     }
 }

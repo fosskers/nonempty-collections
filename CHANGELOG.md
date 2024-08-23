@@ -1,5 +1,15 @@
 # `nonempty-collections`
 
+## Unreleased
+
+#### Added
+
+- `NVec::sort_by` and `NEVec::sort_by_key`.
+
+#### Fixed
+
+- `NEVec::sort` avoids a second internal `sort`.
+
 ## 0.2.8 (2024-08-19)
 
 #### Added
