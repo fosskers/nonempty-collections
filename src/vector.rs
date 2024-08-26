@@ -998,6 +998,15 @@ impl<T> TryFrom<Vec<T>> for NEVec<T> {
     }
 }
 
+impl<T> Extend<T> for NEVec<T> {
+    fn extend<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = T>,
+    {
+        self.tail.extend(iter)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{nev, NEVec};
@@ -1134,5 +1143,14 @@ mod tests {
         let mut m = nev![1];
         m.sort();
         assert_eq!(nev![1], m);
+    }
+
+    #[test]
+    fn extend() {
+        let mut n = nev![1, 2, 3];
+        let v = vec![4, 5, 6];
+        n.extend(v);
+
+        assert_eq!(n, nev![1, 2, 3, 4, 5, 6]);
     }
 }
