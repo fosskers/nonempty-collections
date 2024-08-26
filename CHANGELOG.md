@@ -4,7 +4,9 @@
 
 #### Added
 
+- `NonEmptyIterator::group_by`.
 - `NVec::sort_by` and `NEVec::sort_by_key`.
+- An impl of `Extend` for `NEVec`.
 
 #### Fixed
 
