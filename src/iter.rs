@@ -1,5 +1,6 @@
 //! Non-empty iterators.
 
+use crate::nev;
 use crate::NEVec;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -359,6 +360,15 @@ pub trait NonEmptyIterator {
             accum = f(accum, x);
         }
         accum
+    }
+
+    fn group_by<K, F>(self, f: F) -> NEGroupBy<Self, F>
+    where
+        Self: Sized,
+        F: FnMut(&Self::Item) -> K,
+        K: PartialEq,
+    {
+        todo!()
     }
 
     /// Takes a closure and creates a non-empty iterator which calls that
@@ -1173,6 +1183,92 @@ where
     }
 }
 
+pub struct NEGroupBy<I, F> {
+    iter: I,
+    f: F,
+}
+
+impl<I, F, K> NonEmptyIterator for NEGroupBy<I, F>
+where
+    I: NonEmptyIterator + IntoIterator<Item = <I as NonEmptyIterator>::Item>,
+    F: FnMut(&<I as NonEmptyIterator>::Item) -> K,
+    K: PartialEq,
+{
+    type Item = NEVec<<I as NonEmptyIterator>::Item>;
+
+    type IntoIter = Self;
+
+    fn first(self) -> (Self::Item, Self::IntoIter) {
+        todo!()
+    }
+
+    fn next(&mut self) -> Option<Self::Item> {
+        todo!()
+    }
+}
+
+impl<I, F, K> IntoIterator for NEGroupBy<I, F>
+where
+    I: IntoIterator,
+    F: FnMut(&I::Item) -> K,
+    K: PartialEq,
+{
+    type Item = NEVec<I::Item>;
+
+    type IntoIter = GroupBy<<I as IntoIterator>::IntoIter, K, I::Item, F>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        todo!()
+    }
+}
+
+pub struct GroupBy<I, K, V, F> {
+    iter: I,
+    f: F,
+    prev: Option<K>,
+    curr: Option<NEVec<V>>,
+}
+
+impl<I, K, V, F> Iterator for GroupBy<I, K, V, F>
+where
+    I: Iterator<Item = V>,
+    F: FnMut(&I::Item) -> K,
+    K: PartialEq,
+{
+    type Item = NEVec<I::Item>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            match self.iter.next() {
+                None => return self.curr.take(),
+                Some(v) => {
+                    let f = &mut self.f;
+                    let k = f(&v);
+
+                    match (self.prev.as_ref(), &mut self.curr) {
+                        // Continue some run of similar values.
+                        (Some(p), Some(c)) if p == &k => {
+                            c.push(v);
+                        }
+                        // We found a break; finally yield an NEVec.
+                        (Some(_), Some(_)) => {
+                            let curr = self.curr.take();
+                            self.curr = Some(nev![v]);
+                            self.prev = Some(k);
+                            return curr;
+                        }
+                        // Very first iteration.
+                        (_, _) => {
+                            self.prev = Some(k);
+                            self.curr = Some(nev![v]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 /// Flatten nested, non-empty structures.
 ///
 /// See also [`std::iter::FlatMap`].
@@ -1383,5 +1479,50 @@ mod tests {
         let h: HashMap<_, _> = m.iter().map(|(k, v)| (*k, *v)).collect();
         let n = NEMap::try_from(h).unwrap();
         assert_eq!(m, n);
+    }
+
+    #[test]
+    fn group_by_iterator_normal() {
+        let orig: Vec<usize> = vec![1, 1, 2, 3, 3];
+        let iter = orig.into_iter().map(|n| n + 1);
+        let gb = GroupBy {
+            iter,
+            f: |v: &usize| v.clone(),
+            prev: None,
+            curr: None,
+        };
+
+        let res: Vec<_> = gb.collect();
+        assert_eq!(res, vec![nev![2, 2], nev![3], nev![4, 4]]);
+    }
+
+    #[test]
+    fn group_by_iterator_empty() {
+        let orig: Vec<usize> = vec![1, 1, 2, 3, 3];
+        let iter = orig.into_iter().filter(|_| false);
+        let gb = GroupBy {
+            iter,
+            f: |v: &usize| v.clone(),
+            prev: None,
+            curr: None,
+        };
+
+        let res: Vec<_> = gb.collect();
+        assert_eq!(res, Vec::new());
+    }
+
+    #[test]
+    fn group_by_iterator_singleton() {
+        let orig: Vec<usize> = vec![1];
+        let iter = orig.into_iter();
+        let gb = GroupBy {
+            iter,
+            f: |v: &usize| v.clone(),
+            prev: None,
+            curr: None,
+        };
+
+        let res: Vec<_> = gb.collect();
+        assert_eq!(res, vec![nev![1]]);
     }
 }
