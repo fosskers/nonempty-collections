@@ -593,7 +593,8 @@ impl<T> NEVec<T> {
         }
     }
 
-    /// Like [`sort`], sorts the `NEVec` in place but with a given comparison function.
+    /// Like [`NEVec::sort`], but sorts the `NEVec` with a given comparison
+    /// function.
     ///
     /// See also [`slice::sort_by`].
     ///
@@ -631,8 +632,8 @@ impl<T> NEVec<T> {
         }
     }
 
-    /// Like [`sort`], sorts the `NEVec` in place after first transforming each
-    /// element into something easily comparable. Beware of expensive key
+    /// Like [`NEVec::sort`], but sorts the `NEVec` after first transforming
+    /// each element into something easily comparable. Beware of expensive key
     /// functions, as the results of each call are not cached.
     ///
     /// See also [`slice::sort_by_key`].
