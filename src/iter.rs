@@ -1,9 +1,6 @@
 //! Non-empty iterators.
 
-use crate::nev;
-use crate::NEVec;
 use core::fmt;
-use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -12,9 +9,7 @@ use std::hash::Hash;
 use std::iter::Peekable;
 use std::iter::Product;
 use std::iter::Sum;
-use std::iter::{Product, Sum};
 use std::num::NonZeroUsize;
-use std::rc::Rc;
 use std::result::Result;
 
 use crate::NEVec;
@@ -808,20 +803,16 @@ impl<T> FromNonEmptyIterator<T> for Vec<T> {
     }
 }
 
-impl<K, V> FromNonEmptyIterator<(K, V)> for HashMap<K, V>
+impl<K, V, S> FromNonEmptyIterator<(K, V)> for HashMap<K, V, S>
 where
     K: Eq + Hash,
+    S: BuildHasher + Default,
 {
     fn from_nonempty_iter<I>(iter: I) -> Self
     where
         I: IntoNonEmptyIterator<Item = (K, V)>,
     {
-        let ((head_key, head_val), rest) = iter.into_nonempty_iter().first();
-
-        let mut hm = HashMap::new();
-        hm.insert(head_key, head_val);
-        hm.extend(rest);
-        hm
+        iter.into_nonempty_iter().into_iter().collect()
     }
 }
 
