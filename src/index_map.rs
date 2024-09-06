@@ -3,36 +3,34 @@
 //! Unlike `HashMap` and [`crate::NEMap`], these feature a predictable iteration
 //! order.
 
-#![deny(clippy::correctness, clippy::suspicious)]
-#![warn(clippy::complexity, clippy::perf, clippy::style, clippy::pedantic)]
-#![allow(clippy::module_name_repetitions)]
 use std::fmt;
 use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::hash::BuildHasher;
 use std::hash::Hash;
-use std::mem;
+use std::num::NonZeroUsize;
+
+use indexmap::indexmap;
+use indexmap::Equivalent;
+use indexmap::IndexMap;
 
 use crate::FromNonEmptyIterator;
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
-use indexmap::Equivalent;
-use indexmap::IndexMap;
-use std::num::NonZeroUsize;
 
 /// Short-hand for constructing [`NEIndexMap`] values.
 ///
 /// ```
 /// use nonempty_collections::ne_indexmap;
 ///
-/// let m = ne_indexmap!{"elves" => 3000, "orcs" => 10000};
+/// let m = ne_indexmap! {"elves" => 3000, "orcs" => 10000};
 /// assert_eq!(2, m.len().get());
 /// ```
 #[macro_export]
 macro_rules! ne_indexmap {
     ($hk:expr => $hv:expr, $( $xk:expr => $xv:expr,)+) => { $crate::ne_indexmap!{$hk => $hv, $($xk => $xv),+} };
     ($hk:expr => $hv:expr, $( $xk:expr => $xv:expr ),*) => {{
-        const CAP: usize = <[()]>::len(&[$({ stringify!($xk); }),*]);
+        const CAP: core::num::NonZeroUsize = core::num::NonZeroUsize::MIN.saturating_add(<[()]>::len(&[$({ stringify!($xk); }),*]));
         let mut map = $crate::index_map::NEIndexMap::with_capacity(CAP, $hk, $hv);
         $( map.insert($xk, $xv); )*
         map
@@ -50,47 +48,38 @@ macro_rules! ne_indexmap {
 /// ```
 /// use nonempty_collections::*;
 ///
-/// let m = ne_indexmap!{"Netherlands" => 18, "Canada" => 40};
+/// let m = ne_indexmap! {"Netherlands" => 18, "Canada" => 40};
 /// assert_eq!(2, m.len().get());
 /// ```
 #[derive(Clone)]
 pub struct NEIndexMap<K, V, S = std::collections::hash_map::RandomState> {
-    /// The key of the ever-present element of the non-empty `IndexMap`.
-    head_key: K,
-
-    /// The value of the ever-present element of the non-empty `IndexMap`.
-    head_val: V,
-
-    /// The remaining key-value pairs, perhaps empty.
-    tail: IndexMap<K, V, S>,
+    inner: IndexMap<K, V, S>,
 }
 
 impl<K, V, S> NEIndexMap<K, V, S> {
     /// Returns the number of elements the map can hold without reallocating.
-    pub fn capacity(&self) -> usize {
-        self.tail.capacity() + 1
+    #[must_use]
+    pub fn capacity(&self) -> NonZeroUsize {
+        unsafe { NonZeroUsize::new_unchecked(self.inner.capacity()) }
     }
 
     /// Returns a reference to the map's `BuildHasher`.
+    #[must_use]
     pub fn hasher(&self) -> &S {
-        self.tail.hasher()
+        self.inner.hasher()
     }
 
     /// An iterator visiting all elements in their order.
-    #[allow(clippy::iter_not_returning_iterator)]
     pub fn iter(&self) -> Iter<'_, K, V> {
         Iter {
-            head_key: &self.head_key,
-            head_val: &self.head_val,
-            iter: std::iter::once((&self.head_key, &self.head_val)).chain(self.tail.iter()),
+            iter: self.inner.iter(),
         }
     }
 
     /// An iterator visiting all elements in their order.
-    #[allow(clippy::iter_not_returning_iterator)]
     pub fn iter_mut(&mut self) -> IterMut<'_, K, V> {
         IterMut {
-            iter: std::iter::once((&self.head_key, &mut self.head_val)).chain(self.tail.iter_mut()),
+            iter: self.inner.iter_mut(),
         }
     }
 
@@ -100,14 +89,13 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let m = ne_indexmap!{"Duke" => "Leto", "Doctor" => "Yueh", "Planetologist" => "Kynes"};
+    /// let m = ne_indexmap! {"Duke" => "Leto", "Doctor" => "Yueh", "Planetologist" => "Kynes"};
     /// let v = m.keys().collect::<NEVec<_>>();
     /// assert_eq!(nev![&"Duke", &"Doctor", &"Planetologist"], v);
     /// ```
     pub fn keys(&self) -> Keys<'_, K, V> {
         Keys {
-            head_key: &self.head_key,
-            inner: std::iter::once(&self.head_key).chain(self.tail.keys()),
+            inner: self.inner.keys(),
         }
     }
 
@@ -115,16 +103,17 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let m = ne_indexmap!{"a" => 1, "b" => 2};
+    /// let m = ne_indexmap! {"a" => 1, "b" => 2};
     /// assert_eq!(2, m.len().get());
     /// ```
+    #[must_use]
     pub fn len(&self) -> NonZeroUsize {
-        NonZeroUsize::MIN.saturating_add(self.tail.len())
+        unsafe { NonZeroUsize::new_unchecked(self.inner.len()) }
     }
 
     /// A `NEIndexMap` is never empty.
     #[deprecated(note = "A NEIndexMap is never empty.")]
-    #[allow(clippy::unused_self)]
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         false
     }
@@ -139,8 +128,7 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     /// ```
     pub fn values(&self) -> Values<'_, K, V> {
         Values {
-            head_val: &self.head_val,
-            inner: std::iter::once(&self.head_val).chain(self.tail.values()),
+            inner: self.inner.values(),
         }
     }
 
@@ -156,51 +144,50 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     /// ```
     pub fn values_mut(&mut self) -> ValuesMut<'_, K, V> {
         ValuesMut {
-            inner: std::iter::once(&mut self.head_val).chain(self.tail.values_mut()),
+            inner: self.inner.values_mut(),
         }
     }
 
     /// Get the first element. Never fails.
-    pub const fn first(&self) -> (&K, &V) {
-        (&self.head_key, &self.head_val)
+    #[allow(clippy::missing_panics_doc)] // the invariant of NEIndexMap is that its non-empty
+    #[must_use]
+    pub fn first(&self) -> (&K, &V) {
+        self.inner.first().unwrap()
     }
 
     /// Get the last element. Never fails.
+    #[allow(clippy::missing_panics_doc)] // the invariant of NEIndexMap is that its non-empty
+    #[must_use]
     pub fn last(&self) -> (&K, &V) {
-        match self.tail.last() {
-            None => (&self.head_key, &self.head_val),
-            Some(e) => e,
-        }
+        self.inner.last().unwrap()
     }
 }
 
 impl<K: Debug, V: Debug, S> Debug for NEIndexMap<K, V, S> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_map().entries(self.iter()).finish()
     }
 }
 
-impl<K, V> NEIndexMap<K, V> {
+impl<K, V> NEIndexMap<K, V>
+where
+    K: Eq + Hash,
+{
     /// Creates a new `NEIndexMap` with a single element.
+    #[must_use]
     pub fn new(k: K, v: V) -> Self {
         Self {
-            head_key: k,
-            head_val: v,
-            tail: IndexMap::default(),
+            inner: indexmap! {k => v},
         }
     }
 
     /// Creates a new `NEIndexMap` with a single element and specified
     /// heap capacity.
-    ///
-    /// Note that the effective capacity of this map is always `heap_capacity + 1`
-    /// because the first element is stored inline.
-    pub fn with_capacity(heap_capacity: usize, k: K, v: V) -> NEIndexMap<K, V> {
-        Self {
-            head_key: k,
-            head_val: v,
-            tail: IndexMap::with_capacity(heap_capacity),
-        }
+    #[must_use]
+    pub fn with_capacity(capacity: NonZeroUsize, k: K, v: V) -> NEIndexMap<K, V> {
+        let mut inner = IndexMap::with_capacity(capacity.get());
+        inner.insert(k, v);
+        Self { inner }
     }
 }
 
@@ -214,15 +201,16 @@ where
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let m = ne_indexmap!{"Paul" => ()};
+    /// let m = ne_indexmap! {"Paul" => ()};
     /// assert!(m.contains_key("Paul"));
     /// assert!(!m.contains_key("Atreides"));
     /// ```
+    #[must_use]
     pub fn contains_key<Q>(&self, k: &Q) -> bool
     where
         Q: Hash + Equivalent<K> + ?Sized,
     {
-        self.tail.contains_key(k) || k.equivalent(&self.head_key)
+        self.inner.contains_key(k)
     }
 
     /// Return a reference to the value stored for `key`, if it is present,
@@ -231,17 +219,16 @@ where
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let m = ne_indexmap!{"Arrakis" => 3};
+    /// let m = ne_indexmap! {"Arrakis" => 3};
     /// assert_eq!(Some(&3), m.get("Arrakis"));
     /// assert_eq!(None, m.get("Caladan"));
     /// ```
+    #[must_use]
     pub fn get<Q>(&self, k: &Q) -> Option<&V>
     where
         Q: Hash + Equivalent<K> + ?Sized,
     {
-        self.tail
-            .get(k)
-            .or_else(|| (k.equivalent(&self.head_key)).then_some(&self.head_val))
+        self.inner.get(k)
     }
 
     /// Return references to the key-value pair stored for `key`,
@@ -250,20 +237,17 @@ where
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let m = ne_indexmap!{"Year" => 1963, "Pages" => 896};
+    /// let m = ne_indexmap! {"Year" => 1963, "Pages" => 896};
     /// assert_eq!(Some((&"Year", &1963)), m.get_key_value(&"Year"));
     /// assert_eq!(Some((&"Pages", &896)), m.get_key_value(&"Pages"));
     /// assert_eq!(None, m.get_key_value(&"Title"));
     /// ```
-    pub fn get_key_value<Q: ?Sized>(&self, key: &Q) -> Option<(&K, &V)>
+    #[must_use]
+    pub fn get_key_value<Q>(&self, key: &Q) -> Option<(&K, &V)>
     where
-        Q: Hash + Equivalent<K>,
+        Q: Hash + Equivalent<K> + ?Sized,
     {
-        if key.equivalent(&self.head_key) {
-            Some((&self.head_key, &self.head_val))
-        } else {
-            self.tail.get_key_value(key)
-        }
+        self.inner.get_key_value(key)
     }
 
     /// Return a mutable reference to the value stored for `key`, if it is
@@ -272,7 +256,7 @@ where
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let mut m = ne_indexmap!{"Mentat" => 3, "Bene Gesserit" => 14};
+    /// let mut m = ne_indexmap! {"Mentat" => 3, "Bene Gesserit" => 14};
     /// let v = m.get_mut(&"Mentat");
     /// assert_eq!(Some(&mut 3), v);
     /// *v.unwrap() += 1;
@@ -285,36 +269,29 @@ where
     ///
     /// assert_eq!(None, m.get_mut(&"Sandworm"));
     /// ```
-    pub fn get_mut<Q: ?Sized>(&mut self, key: &Q) -> Option<&mut V>
+    pub fn get_mut<Q>(&mut self, key: &Q) -> Option<&mut V>
     where
-        Q: Hash + Equivalent<K>,
+        Q: Hash + Equivalent<K> + ?Sized,
     {
-        if key.equivalent(&self.head_key) {
-            Some(&mut self.head_val)
-        } else {
-            self.tail.get_mut(key)
-        }
+        self.inner.get_mut(key)
     }
 
     /// Return item index, if it exists in the map.
     ///
     /// ```
     /// use nonempty_collections::*;
-    /// let m = ne_indexmap!{"Title" => "Dune", "Author" => "Frank Herbert", "Language" => "English"};
+    /// let m = ne_indexmap! {"Title" => "Dune", "Author" => "Frank Herbert", "Language" => "English"};
     ///
     /// assert_eq!(Some(0), m.get_index_of(&"Title"));
     /// assert_eq!(Some(1), m.get_index_of(&"Author"));
     /// assert_eq!(None, m.get_index_of(&"Genre"));
     /// ````
-    pub fn get_index_of<Q: ?Sized>(&self, key: &Q) -> Option<usize>
+    #[must_use]
+    pub fn get_index_of<Q>(&self, key: &Q) -> Option<usize>
     where
-        Q: Hash + Equivalent<K>,
+        Q: Hash + Equivalent<K> + ?Sized,
     {
-        if key.equivalent(&self.head_key) {
-            Some(0)
-        } else {
-            self.tail.get_index_of(key).map(|i| i + 1)
-        }
+        self.inner.get_index_of(key)
     }
 
     /// Insert a key-value pair into the map.
@@ -328,84 +305,57 @@ where
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let mut m = ne_indexmap!{"Duke" => "Leto", "Doctor" => "Yueh"};
+    /// let mut m = ne_indexmap! {"Duke" => "Leto", "Doctor" => "Yueh"};
     /// assert_eq!(None, m.insert("Lady", "Jessica"));
-    /// assert_eq!(vec!["Duke", "Doctor", "Lady"], m.keys().copied().collect::<Vec<_>>());
+    /// assert_eq!(
+    ///     vec!["Duke", "Doctor", "Lady"],
+    ///     m.keys().copied().collect::<Vec<_>>()
+    /// );
     ///
     /// // Spoiler alert: there is a different duke at some point
     /// assert_eq!(Some("Leto"), m.insert("Duke", "Paul"));
-    /// assert_eq!(vec!["Paul", "Yueh", "Jessica"], m.values().copied().collect::<Vec<_>>());
+    /// assert_eq!(
+    ///     vec!["Paul", "Yueh", "Jessica"],
+    ///     m.values().copied().collect::<Vec<_>>()
+    /// );
     /// ```
     pub fn insert(&mut self, k: K, v: V) -> Option<V> {
-        if k.equivalent(&self.head_key) {
-            Some(std::mem::replace(&mut self.head_val, v))
-        } else {
-            self.tail.insert(k, v)
-        }
+        self.inner.insert(k, v)
     }
 
     /// Shrink the capacity of the map as much as possible.
     pub fn shrink_to_fit(&mut self) {
-        self.tail.shrink_to_fit();
+        self.inner.shrink_to_fit();
     }
 
     /// Creates a new `NEIndexMap` with a single element and specified
     /// heap capacity and hasher.
-    ///
-    /// Note that the effective capacity of this map is always `heap_capacity + 1`
-    /// because the first element is stored inline.
+    #[must_use]
     pub fn with_capacity_and_hasher(
-        heap_capacity: usize,
+        capacity: NonZeroUsize,
         hasher: S,
         k: K,
         v: V,
     ) -> NEIndexMap<K, V, S> {
-        Self {
-            head_key: k,
-            head_val: v,
-            tail: IndexMap::with_capacity_and_hasher(heap_capacity, hasher),
-        }
+        let mut inner = IndexMap::with_capacity_and_hasher(capacity.get(), hasher);
+        inner.insert(k, v);
+        Self { inner }
     }
 
     /// See [`IndexMap::with_hasher`].
+    #[must_use]
     pub fn with_hasher(hasher: S, k: K, v: V) -> NEIndexMap<K, V, S> {
-        Self {
-            head_key: k,
-            head_val: v,
-            tail: IndexMap::with_hasher(hasher),
-        }
+        let mut inner = IndexMap::with_hasher(hasher);
+        inner.insert(k, v);
+        Self { inner }
     }
 
     /// Swaps the position of two key-value pairs in the map.
     ///
     /// # Panics
     /// If `a` or `b` are out of bounds.
-    #[allow(clippy::panic)]
-    pub fn swap_indices(&mut self, mut a: usize, mut b: usize) {
-        if a == b && a < self.len().get() {
-            return;
-        }
-        if b == 0 {
-            b = a;
-            a = 0;
-        }
-
-        if a == 0 {
-            b -= 1;
-            let (existing_k, existing_v) = self
-                .tail
-                .swap_remove_index(b)
-                .unwrap_or_else(|| panic!("Index out of bounds {b}"));
-
-            let old_head_key = mem::replace(&mut self.head_key, existing_k);
-            let old_head_value = mem::replace(&mut self.head_val, existing_v);
-
-            let (index, _) = self.tail.insert_full(old_head_key, old_head_value);
-            // swap the newly inserted item to the original position
-            self.tail.swap_indices(index, b);
-        } else {
-            self.tail.swap_indices(a - 1, b - 1);
-        }
+    pub fn swap_indices(&mut self, a: usize, b: usize) {
+        self.inner.swap_indices(a, b);
     }
 }
 
@@ -416,8 +366,7 @@ where
     S: BuildHasher,
 {
     fn eq(&self, other: &Self) -> bool {
-        self.iter()
-            .all(|(k, v)| other.get(k).is_some_and(|ov| v == ov))
+        self.inner.eq(&other.inner)
     }
 }
 
@@ -435,26 +384,52 @@ where
     S: BuildHasher,
 {
     /// ```
-    /// use nonempty_collections::*;
     /// use indexmap::IndexMap;
+    /// use nonempty_collections::*;
     ///
-    /// let m: IndexMap<&str, usize> = ne_indexmap!{"population" => 1000}.into();
+    /// let m: IndexMap<&str, usize> = ne_indexmap! {"population" => 1000}.into();
     /// assert!(m.contains_key("population"));
     /// ```
     fn from(m: NEIndexMap<K, V, S>) -> Self {
-        let mut map = m.tail;
-        map.shift_insert(0, m.head_key, m.head_val);
-        map
+        m.inner
     }
 }
 
 impl<K, V, S> IntoNonEmptyIterator for NEIndexMap<K, V, S> {
+    type IntoNEIter = IntoIter<K, V>;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        IntoIter {
+            iter: self.inner.into_iter(),
+        }
+    }
+}
+
+impl<'a, K, V, S> IntoNonEmptyIterator for &'a NEIndexMap<K, V, S> {
+    type IntoNEIter = Iter<'a, K, V>;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        self.iter()
+    }
+}
+
+impl<K, V, S> IntoIterator for NEIndexMap<K, V, S> {
     type Item = (K, V);
 
-    type IntoIter = crate::iter::Chain<crate::iter::Once<(K, V)>, indexmap::map::IntoIter<K, V>>;
+    type IntoIter = indexmap::map::IntoIter<K, V>;
 
-    fn into_nonempty_iter(self) -> Self::IntoIter {
-        crate::iter::once((self.head_key, self.head_val)).chain(self.tail)
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner.into_iter()
+    }
+}
+
+impl<'a, K, V, S> IntoIterator for &'a NEIndexMap<K, V, S> {
+    type Item = (&'a K, &'a V);
+
+    type IntoIter = indexmap::map::Iter<'a, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner.iter()
     }
 }
 
@@ -463,7 +438,7 @@ impl<K, V, S> IntoNonEmptyIterator for NEIndexMap<K, V, S> {
 ///
 /// let v = nev![('a', 1), ('b', 2), ('c', 3), ('a', 4)];
 /// let m0 = v.into_nonempty_iter().collect::<NEIndexMap<_, _>>();
-/// let m1 = ne_indexmap!{'a' => 1, 'b' => 2, 'c' => 3};
+/// let m1 = ne_indexmap! {'a' => 4, 'b' => 2, 'c' => 3};
 /// assert_eq!(m0, m1);
 /// ```
 impl<K, V, S> FromNonEmptyIterator<(K, V)> for NEIndexMap<K, V, S>
@@ -475,15 +450,8 @@ where
     where
         I: IntoNonEmptyIterator<Item = (K, V)>,
     {
-        let ((head_key, head_val), rest) = iter.into_nonempty_iter().first();
-
         Self {
-            head_val,
-            tail: rest
-                .into_iter()
-                .filter(|(k, _)| !head_key.equivalent(k))
-                .collect(),
-            head_key,
+            inner: iter.into_nonempty_iter().into_iter().collect(),
         }
     }
 }
@@ -492,42 +460,22 @@ impl<K, V> std::ops::Index<usize> for NEIndexMap<K, V> {
     type Output = V;
 
     fn index(&self, index: usize) -> &V {
-        if index > 0 {
-            &self.tail[index - 1]
-        } else {
-            &self.head_val
-        }
+        self.inner.index(index)
     }
 }
 
 /// A non-empty iterator over the entries of an [`NEIndexMap`].
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Iter<'a, K: 'a, V: 'a> {
-    head_key: &'a K,
-    head_val: &'a V,
-    iter: std::iter::Chain<std::iter::Once<(&'a K, &'a V)>, indexmap::map::Iter<'a, K, V>>,
+    iter: indexmap::map::Iter<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for Iter<'a, K, V> {
-    type Item = (&'a K, &'a V);
-
-    type IntoIter = std::iter::Skip<
-        std::iter::Chain<std::iter::Once<(&'a K, &'a V)>, indexmap::map::Iter<'a, K, V>>,
-    >;
-
-    fn first(self) -> (Self::Item, Self::IntoIter) {
-        ((self.head_key, self.head_val), self.iter.skip(1))
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
-}
+impl<K, V> NonEmptyIterator for Iter<'_, K, V> {}
 
 impl<'a, K, V> IntoIterator for Iter<'a, K, V> {
     type Item = (&'a K, &'a V);
 
-    type IntoIter =
-        std::iter::Chain<std::iter::Once<(&'a K, &'a V)>, indexmap::map::Iter<'a, K, V>>;
+    type IntoIter = indexmap::map::Iter<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
@@ -538,8 +486,6 @@ impl<'a, K, V> IntoIterator for Iter<'a, K, V> {
 impl<K, V> Clone for Iter<'_, K, V> {
     fn clone(&self) -> Self {
         Iter {
-            head_key: self.head_key,
-            head_val: self.head_val,
             iter: self.iter.clone(),
         }
     }
@@ -552,34 +498,49 @@ impl<K: Debug, V: Debug> Debug for Iter<'_, K, V> {
 }
 
 /// A mutable non-empty iterator over the entries of an [`NEIndexMap`].
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct IterMut<'a, K: 'a, V: 'a> {
-    iter: std::iter::Chain<std::iter::Once<(&'a K, &'a mut V)>, indexmap::map::IterMut<'a, K, V>>,
+    iter: indexmap::map::IterMut<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for IterMut<'a, K, V> {
-    type Item = (&'a K, &'a mut V);
-
-    type IntoIter =
-        std::iter::Chain<std::iter::Once<(&'a K, &'a mut V)>, indexmap::map::IterMut<'a, K, V>>;
-
-    fn first(mut self) -> (Self::Item, Self::IntoIter) {
-        let (key, val) = self.iter.next().unwrap();
-        ((key, val), self.iter)
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
-    }
-}
+impl<K, V> NonEmptyIterator for IterMut<'_, K, V> {}
 
 impl<'a, K, V> IntoIterator for IterMut<'a, K, V> {
     type Item = (&'a K, &'a mut V);
 
-    type IntoIter =
-        std::iter::Chain<std::iter::Once<(&'a K, &'a mut V)>, indexmap::map::IterMut<'a, K, V>>;
+    type IntoIter = indexmap::map::IterMut<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
+    }
+}
+
+impl<K: Debug, V: Debug> Debug for IterMut<'_, K, V> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        self.iter.fmt(f)
+    }
+}
+
+/// A non-empty iterator over the entries of an [`NEIndexMap`].
+pub struct IntoIter<K, V> {
+    iter: indexmap::map::IntoIter<K, V>,
+}
+
+impl<K, V> NonEmptyIterator for IntoIter<K, V> {}
+
+impl<K, V> IntoIterator for IntoIter<K, V> {
+    type Item = (K, V);
+
+    type IntoIter = indexmap::map::IntoIter<K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter
+    }
+}
+
+impl<K: Debug, V: Debug> Debug for IntoIter<K, V> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        self.iter.fmt(f)
     }
 }
 
@@ -588,34 +549,21 @@ impl<'a, K, V> IntoIterator for IterMut<'a, K, V> {
 /// ```
 /// use nonempty_collections::*;
 ///
-/// let m = ne_indexmap!{"elves" => 3000, "orcs" => 10000};
+/// let m = ne_indexmap! {"elves" => 3000, "orcs" => 10000};
 /// let v = m.keys().copied().collect::<NEVec<_>>();
 /// assert_eq!(nev!["elves", "orcs"], v);
 /// ```
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Keys<'a, K: 'a, V: 'a> {
-    head_key: &'a K,
-    inner: std::iter::Chain<std::iter::Once<&'a K>, indexmap::map::Keys<'a, K, V>>,
+    inner: indexmap::map::Keys<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for Keys<'a, K, V> {
-    type Item = &'a K;
-
-    type IntoIter =
-        std::iter::Skip<std::iter::Chain<std::iter::Once<&'a K>, indexmap::map::Keys<'a, K, V>>>;
-
-    fn first(self) -> (Self::Item, Self::IntoIter) {
-        (self.head_key, self.inner.skip(1))
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next()
-    }
-}
+impl<K, V> NonEmptyIterator for Keys<'_, K, V> {}
 
 impl<'a, K, V> IntoIterator for Keys<'a, K, V> {
     type Item = &'a K;
 
-    type IntoIter = std::iter::Chain<std::iter::Once<&'a K>, indexmap::map::Keys<'a, K, V>>;
+    type IntoIter = indexmap::map::Keys<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner
@@ -626,7 +574,6 @@ impl<'a, K, V> IntoIterator for Keys<'a, K, V> {
 impl<K, V> Clone for Keys<'_, K, V> {
     fn clone(&self) -> Self {
         Keys {
-            head_key: self.head_key,
             inner: self.inner.clone(),
         }
     }
@@ -643,35 +590,22 @@ impl<K: Debug, V: Debug> Debug for Keys<'_, K, V> {
 /// ```
 /// use nonempty_collections::*;
 ///
-/// let m = ne_indexmap!{"elves" => 3000, "orcs" => 10000};
+/// let m = ne_indexmap! {"elves" => 3000, "orcs" => 10000};
 /// let mut v = m.values().copied().collect::<NEVec<_>>();
 /// v.sort();
 /// assert_eq!(nev![3000, 10000], v);
 /// ```
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Values<'a, K: 'a, V: 'a> {
-    head_val: &'a V,
-    inner: std::iter::Chain<std::iter::Once<&'a V>, indexmap::map::Values<'a, K, V>>,
+    inner: indexmap::map::Values<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for Values<'a, K, V> {
-    type Item = &'a V;
-
-    type IntoIter =
-        std::iter::Skip<std::iter::Chain<std::iter::Once<&'a V>, indexmap::map::Values<'a, K, V>>>;
-
-    fn first(self) -> (Self::Item, Self::IntoIter) {
-        (self.head_val, self.inner.skip(1))
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next()
-    }
-}
+impl<K, V> NonEmptyIterator for Values<'_, K, V> {}
 
 impl<'a, K, V> IntoIterator for Values<'a, K, V> {
     type Item = &'a V;
 
-    type IntoIter = std::iter::Chain<std::iter::Once<&'a V>, indexmap::map::Values<'a, K, V>>;
+    type IntoIter = indexmap::map::Values<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner
@@ -682,7 +616,6 @@ impl<'a, K, V> IntoIterator for Values<'a, K, V> {
 impl<K, V> Clone for Values<'_, K, V> {
     fn clone(&self) -> Self {
         Values {
-            head_val: self.head_val,
             inner: self.inner.clone(),
         }
     }
@@ -695,34 +628,26 @@ impl<K: Debug, V: Debug> Debug for Values<'_, K, V> {
 }
 
 /// A non-empty iterator over the mutable values of an [`NEIndexMap`].
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct ValuesMut<'a, K: 'a, V: 'a> {
-    inner: std::iter::Chain<std::iter::Once<&'a mut V>, indexmap::map::ValuesMut<'a, K, V>>,
+    inner: indexmap::map::ValuesMut<'a, K, V>,
 }
 
-impl<'a, K, V> NonEmptyIterator for ValuesMut<'a, K, V> {
-    type Item = &'a mut V;
-
-    type IntoIter =
-        std::iter::Chain<std::iter::Once<&'a mut V>, indexmap::map::ValuesMut<'a, K, V>>;
-
-    fn first(mut self) -> (Self::Item, Self::IntoIter) {
-        let value = self.inner.next().unwrap();
-        (value, self.inner)
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next()
-    }
-}
+impl<K, V> NonEmptyIterator for ValuesMut<'_, K, V> {}
 
 impl<'a, K, V> IntoIterator for ValuesMut<'a, K, V> {
     type Item = &'a mut V;
 
-    type IntoIter =
-        std::iter::Chain<std::iter::Once<&'a mut V>, indexmap::map::ValuesMut<'a, K, V>>;
+    type IntoIter = indexmap::map::ValuesMut<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner
+    }
+}
+
+impl<K: Debug, V: Debug> Debug for ValuesMut<'_, K, V> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
     }
 }
 
@@ -765,5 +690,12 @@ mod test {
             vec![3, 2, 1, 0, 4, 5],
             map.keys().copied().collect::<Vec<_>>()
         );
+    }
+
+    #[test]
+    fn debug_impl() {
+        let expected = format!("{:?}", indexmap! {0 => 10, 1 => 11, 2 => 12});
+        let actual = format!("{:?}", ne_indexmap! {0 => 10, 1 => 11, 2 => 12});
+        assert_eq!(expected, actual);
     }
 }

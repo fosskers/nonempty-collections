@@ -19,6 +19,7 @@
 //!
 //! These extensions are only provided for arrays up to size 32.
 
+use core::fmt;
 use std::num::NonZeroUsize;
 
 use crate::impl_nonempty_iter_for_arrays;
@@ -33,7 +34,10 @@ use crate::NonEmptyIterator;
 ///
 /// ```
 /// # use nonempty_collections::*;
-/// assert_eq!(NESlice::new(&1, &[2]), [1, 2].as_nonempty_slice());
+/// assert_eq!(
+///     NESlice::from_slice(&[1, 2]),
+///     Some([1, 2].as_nonempty_slice())
+/// );
 /// ```
 ///
 /// Get the length of an array as a [`NonZeroUsize`]:
@@ -68,8 +72,9 @@ pub trait NonEmptyArrayExt<T> {
 /// Use non-zero length arrays anywhere an [`IntoNonEmptyIterator`] is expected.
 ///
 /// ```
-/// use nonempty_collections::*;
 /// use std::num::NonZeroUsize;
+///
+/// use nonempty_collections::*;
 ///
 /// fn is_one<T>(iter: impl IntoNonEmptyIterator<Item = T>) {
 ///     assert_eq!(NonZeroUsize::MIN, iter.into_nonempty_iter().count());
@@ -87,22 +92,26 @@ pub trait NonEmptyArrayExt<T> {
 ///
 /// is_one([]); // Doesn't compile because it is empty.
 /// ```
+#[derive(Clone)]
 pub struct ArrayNonEmptyIterator<T, const C: usize> {
     iter: core::array::IntoIter<T, C>,
 }
 
-impl<T, const C: usize> NonEmptyIterator for ArrayNonEmptyIterator<T, C> {
+impl<T, const C: usize> IntoIterator for ArrayNonEmptyIterator<T, C> {
     type Item = T;
 
     type IntoIter = core::array::IntoIter<T, C>;
 
-    fn first(self) -> (Self::Item, Self::IntoIter) {
-        let mut iter = self.iter;
-        (iter.next().unwrap(), iter)
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter
     }
+}
 
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
+impl<T, const C: usize> NonEmptyIterator for ArrayNonEmptyIterator<T, C> {}
+
+impl<T: fmt::Debug, const C: usize> fmt::Debug for ArrayNonEmptyIterator<T, C> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.iter.fmt(f)
     }
 }
 
@@ -120,14 +129,20 @@ macro_rules! impl_nonempty_iter_for_arrays {
     ($($i:literal),+ $(,)?) => {
         $(
             impl<T> IntoNonEmptyIterator for [T; $i] {
-                type Item = T;
+                type IntoNEIter = ArrayNonEmptyIterator<T, $i>;
 
-                type IntoIter = ArrayNonEmptyIterator<T, $i>;
-
-                fn into_nonempty_iter(self) -> Self::IntoIter {
+                fn into_nonempty_iter(self) -> Self::IntoNEIter {
                     ArrayNonEmptyIterator {
                         iter: self.into_iter(),
                     }
+                }
+            }
+
+            impl<'a, T> IntoNonEmptyIterator for &'a [T; $i] {
+                type IntoNEIter = $crate::slice::Iter<'a,T>;
+
+                fn into_nonempty_iter(self) -> Self::IntoNEIter {
+                    self.as_nonempty_slice().into_nonempty_iter()
                 }
             }
 
@@ -159,15 +174,30 @@ mod test {
     #[test]
     fn test_iter() {
         let iter = [1, 2, 3, 4].into_nonempty_iter();
-        let (first, rest) = iter.first();
+        let (first, rest) = iter.next();
         assert_eq!(1, first);
         assert_eq!(vec![2, 3, 4], rest.into_iter().collect::<Vec<_>>());
 
         let iter = [1].into_nonempty_iter();
-        let (first, rest) = iter.first();
+        let (first, rest) = iter.next();
         assert_eq!(1, first);
         assert_eq!(0, rest.into_iter().count());
 
         assert_eq!(33, [1, -2, 33, 4].into_nonempty_iter().max());
+    }
+
+    #[test]
+    fn test_iter_ref() {
+        let iter = (&[1, 2, 3, 4]).into_nonempty_iter();
+        let (first, rest) = iter.next();
+        assert_eq!(&1, first);
+        assert_eq!(vec![&2, &3, &4], rest.into_iter().collect::<Vec<_>>());
+
+        let iter = (&[1]).into_nonempty_iter();
+        let (first, rest) = iter.next();
+        assert_eq!(&1, first);
+        assert_eq!(0, rest.into_iter().count());
+
+        assert_eq!(&33, (&[1, -2, 33, 4]).into_nonempty_iter().max());
     }
 }
