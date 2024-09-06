@@ -137,6 +137,8 @@ pub mod array;
 pub mod either;
 #[cfg(feature = "indexmap")]
 pub mod index_map;
+
+pub mod array;
 pub mod iter;
 #[cfg(feature = "itertools")]
 pub mod itertools;
@@ -151,6 +153,9 @@ pub use array::NonEmptyArrayExt;
 pub use either::NEEither;
 #[cfg(feature = "indexmap")]
 pub use index_map::NEIndexMap;
+
+pub use array::ArrayNonEmptyIterator;
+pub use array::NonEmptyArrayExt;
 pub use iter::FromNonEmptyIterator;
 pub use iter::IntoIteratorExt;
 pub use iter::IntoNonEmptyIterator;
@@ -165,3 +170,18 @@ pub use nev as ne_vec;
 pub use set::NESet;
 pub use slice::NESlice;
 pub use vector::NEVec;
+
+/// Errors typically involving type conversions.
+#[derive(Debug, Clone)]
+pub enum Error {
+    /// There was nothing to decode.
+    Empty,
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::Empty => write!(f, "Given collection was empty"),
+        }
+    }
+}

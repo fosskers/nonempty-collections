@@ -46,6 +46,36 @@
  - A [`justfile`](https://github.com/casey/just) that allows to run pre-configured commands to check the codebase. E.g. `just lint` or `just test`.
  - Benchmarks for `Vec` versus `NEVec`.
 
+## 0.2.9 (2024-08-26)
+
+#### Added
+
+- `NonEmptyIterator::group_by`.
+- `NVec::sort_by` and `NEVec::sort_by_key`.
+- An impl of `Extend` for `NEVec`.
+
+#### Fixed
+
+- `NEVec::sort` avoids a second internal `sort`.
+
+## 0.2.8 (2024-08-19)
+
+#### Added
+
+- Missing `FromNonEmptyIterator` for `HashMap`.
+
+## 0.2.7 (2024-07-22)
+
+#### Added
+
+- `serde` support for `NEMap` and `NESet`.
+
+## 0.2.6 (2024-06-27)
+
+#### Fixed
+
+- Ownership issues in `nem!` when using non-Copy types.
+
 ## 0.2.5 (2024-04-09)
 
 #### Added

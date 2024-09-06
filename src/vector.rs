@@ -612,6 +612,66 @@ impl<T> NEVec<T> {
         self.inner.sort_by_key(f);
     }
 
+    /// Like [`NEVec::sort`], but sorts the `NEVec` with a given comparison
+    /// function.
+    ///
+    /// See also [`slice::sort_by`].
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    ///
+    /// let mut n = nev!["Sirion", "Gelion", "Narog"];
+    /// n.sort_by(|a, b| b.cmp(&a));
+    /// assert_eq!(nev!["Sirion", "Narog", "Gelion"], n);
+    /// ```
+    pub fn sort_by<F>(&mut self, mut compare: F)
+    where
+        F: FnMut(&T, &T) -> Ordering,
+    {
+        if self.tail.is_empty().not() {
+            let zero: &T = &self.tail[0];
+
+            let (ix, smallest) =
+                self.tail
+                    .iter()
+                    .enumerate()
+                    .fold((0, zero), |(ix, smallest), (ix_curr, curr)| {
+                        if matches!(compare(curr, smallest), Ordering::Less) {
+                            (ix_curr, curr)
+                        } else {
+                            (ix, smallest)
+                        }
+                    });
+
+            if matches!(compare(&self.head, smallest), Ordering::Greater) {
+                std::mem::swap(&mut self.head, self.tail.index_mut(ix));
+            }
+
+            self.tail.sort_by(compare);
+        }
+    }
+
+    /// Like [`NEVec::sort`], but sorts the `NEVec` after first transforming
+    /// each element into something easily comparable. Beware of expensive key
+    /// functions, as the results of each call are not cached.
+    ///
+    /// See also [`slice::sort_by_key`].
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    ///
+    /// let mut n = nev![-5i32, 4, 1, -3, 2];
+    /// n.sort_by_key(|k| k.abs());
+    /// assert_eq!(nev![1, 2, -3, 4, -5], n);
+    /// ```
+    pub fn sort_by_key<K, F>(&mut self, mut f: F)
+    where
+        F: FnMut(&T) -> K,
+        K: Ord,
+    {
+        self.sort_by(|a, b| f(a).cmp(&f(b)));
+    }
+
     /// Yields a `NESlice`.
     #[must_use]
     pub fn as_nonempty_slice(&self) -> crate::NESlice<'_, T> {
@@ -960,44 +1020,43 @@ impl<T: Debug> Debug for NEVec<T> {
     }
 }
 
-#[cfg(feature = "serde")]
-pub mod serialize {
-    //! Serde support for [`NEVec`].
+impl<T> TryFrom<Vec<T>> for NEVec<T> {
+    type Error = crate::Error;
 
-    use std::convert::TryFrom;
-    use std::fmt;
-
-    use super::NEVec;
-
-    /// Encoding/decoding errors.
-    #[derive(Debug, Copy, Clone)]
-    pub enum Error {
-        /// There was nothing to decode.
-        Empty,
+    fn try_from(vec: Vec<T>) -> Result<Self, Self::Error> {
+        NEVec::from_vec(vec).ok_or(crate::Error::Empty)
     }
+}
 
-    impl fmt::Display for Error {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            match self {
-                Self::Empty => {
-                    f.write_str("the vector provided was empty, NEVec needs at least one element")
-                }
-            }
-        }
-    }
-
-    impl<T> TryFrom<Vec<T>> for NEVec<T> {
-        type Error = Error;
-
-        fn try_from(vec: Vec<T>) -> Result<Self, Self::Error> {
-            NEVec::from_vec(vec).ok_or(Error::Empty)
-        }
+impl<T> Extend<T> for NEVec<T> {
+    fn extend<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = T>,
+    {
+        self.tail.extend(iter)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::NEVec;
+    use crate::{nev, NEVec};
+
+    struct Foo {
+        user: String,
+    }
+
+    #[test]
+    fn macro_usage() {
+        let a = Foo {
+            user: "a".to_string(),
+        };
+        let b = Foo {
+            user: "b".to_string(),
+        };
+
+        let v = nev![a, b];
+        assert_eq!("a", v.first().user);
+    }
 
     #[test]
     fn test_from_conversion() {
@@ -1101,5 +1160,24 @@ mod tests {
         let actual = format!("{:?}", nev![0, 1, 2, 3]);
         let expected = format!("{:?}", vec![0, 1, 2, 3]);
         assert_eq!(expected, actual);
+    }
+
+    fn sorting() {
+        let mut n = nev![1, 5, 4, 3, 2, 1];
+        n.sort();
+        assert_eq!(nev![1, 1, 2, 3, 4, 5], n);
+
+        let mut m = nev![1];
+        m.sort();
+        assert_eq!(nev![1], m);
+    }
+
+    #[test]
+    fn extend() {
+        let mut n = nev![1, 2, 3];
+        let v = vec![4, 5, 6];
+        n.extend(v);
+
+        assert_eq!(n, nev![1, 2, 3, 4, 5, 6]);
     }
 }
