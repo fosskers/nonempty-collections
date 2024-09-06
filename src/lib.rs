@@ -138,7 +138,6 @@ pub mod either;
 #[cfg(feature = "indexmap")]
 pub mod index_map;
 
-pub mod array;
 pub mod iter;
 #[cfg(feature = "itertools")]
 pub mod itertools;
@@ -153,9 +152,6 @@ pub use array::NonEmptyArrayExt;
 pub use either::NEEither;
 #[cfg(feature = "indexmap")]
 pub use index_map::NEIndexMap;
-
-pub use array::ArrayNonEmptyIterator;
-pub use array::NonEmptyArrayExt;
 pub use iter::FromNonEmptyIterator;
 pub use iter::IntoIteratorExt;
 pub use iter::IntoNonEmptyIterator;
@@ -168,7 +164,7 @@ pub use slice::NESlice;
 pub use vector::NEVec;
 
 /// Errors typically involving type conversions.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Error {
     /// There was nothing to decode.
     Empty,
