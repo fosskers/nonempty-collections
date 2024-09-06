@@ -377,35 +377,6 @@ pub trait NonEmptyIterator: IntoIterator {
         self.into_iter().fold(init, f)
     }
 
-    /// Group the non-empty input stream into concrete, non-empty subsections
-    /// via a given function. The cutoff criterion is whether the return value
-    /// of `f` changes between two consecutive elements.
-    ///
-    /// ```
-    /// use nonempty_collections::*;
-    ///
-    /// let n = nev![1,1,2,3,3];
-    /// let r: NEVec<_> = n.into_nonempty_iter().group_by(|n| *n).collect();
-    /// assert_eq!(r, nev![nev![1,1], nev![2], nev![3,3]]);
-    ///
-    /// let n = nev![2,4,6,7,9,1,2,4,6,3];
-    /// let r: NEVec<_> = n.into_nonempty_iter().group_by(|n| n % 2 == 0).collect();
-    /// assert_eq!(r, nev![nev![2,4,6], nev![7,9,1], nev![2,4,6], nev![3]]);
-    /// ```
-    fn group_by<K, F>(self, f: F) -> NEGroupBy<Self, K, Self::Item, F>
-    where
-        Self: Sized,
-        F: FnMut(&Self::Item) -> K,
-        K: PartialEq,
-    {
-        NEGroupBy {
-            iter: self,
-            f,
-            prev: None,
-            curr: None,
-        }
-    }
-
     /// Takes a closure and creates a non-empty iterator which calls that
     /// closure on each element.
     ///
@@ -1176,169 +1147,6 @@ where
     }
 }
 
-/// Wrapper struct for powering [`NonEmptyIterator::group_by`].
-pub struct NEGroupBy<I, K, V, F> {
-    iter: I,
-    f: F,
-    prev: Option<K>,
-    curr: Option<NEVec<V>>,
-}
-
-impl<I, K, V, F> NonEmptyIterator for NEGroupBy<I, K, V, F>
-where
-    I: NonEmptyIterator<Item = V>,
-    F: FnMut(&V) -> K,
-    K: PartialEq,
-{
-    type Item = NEVec<V>;
-
-    type IntoIter = Peekable<GroupBy<<I::IntoIter as IntoIterator>::IntoIter, K, V, F>>;
-
-    fn first(self) -> (Self::Item, Self::IntoIter) {
-        let (mut head, iter) = self.iter.first();
-
-        let gb = GroupBy {
-            iter: iter.into_iter(),
-            f: Rc::new(RefCell::new(self.f)),
-            prev: None,
-            curr: None,
-        };
-
-        let rc = gb.f.clone();
-        let mut peek = gb.peekable();
-
-        match peek.peek() {
-            Some(c) => {
-                // Proactive drop of `f` to avoid a panic elsewhere.
-                let must_append = {
-                    let mut f = rc.borrow_mut();
-                    f(&head) == f(c.first())
-                };
-
-                if must_append {
-                    // NOTE: This is a safe unwrap.
-                    let mut next = peek.next().unwrap();
-
-                    // HACK: 2024-08-26 This is a way to fuse two NEVec when you
-                    // don't own one of them.
-                    let old_head = &mut next.head;
-                    std::mem::swap(old_head, &mut head);
-                    next.tail.push(head);
-                    next.tail.rotate_right(1);
-
-                    (next, peek)
-                } else {
-                    (nev![head], peek)
-                }
-            }
-            None => (nev![head], peek),
-        }
-    }
-
-    fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            match self.iter.next() {
-                None => return self.curr.take(),
-                Some(v) => {
-                    let f = &mut self.f;
-                    let k = f(&v);
-
-                    match (self.prev.as_ref(), &mut self.curr) {
-                        // Continue some run of similar values.
-                        (Some(p), Some(c)) if p == &k => {
-                            c.push(v);
-                        }
-                        // We found a break; finally yield an NEVec.
-                        (Some(_), Some(_)) => {
-                            let curr = self.curr.take();
-                            self.curr = Some(nev![v]);
-                            self.prev = Some(k);
-                            return curr;
-                        }
-                        // Very first iteration.
-                        (_, _) => {
-                            self.prev = Some(k);
-                            self.curr = Some(nev![v]);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-impl<I, K, V, F> IntoIterator for NEGroupBy<I, K, V, F>
-where
-    I: IntoIterator,
-    F: FnMut(&I::Item) -> K,
-    K: PartialEq,
-{
-    type Item = NEVec<I::Item>;
-
-    type IntoIter = GroupBy<<I as IntoIterator>::IntoIter, K, I::Item, F>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        GroupBy {
-            iter: self.iter.into_iter(),
-            f: Rc::new(RefCell::new(self.f)),
-            prev: None,
-            curr: None,
-        }
-    }
-}
-
-/// A (possibly empty) definition of the group-by operation that enables
-/// [`NEGroupBy`] to be written. You aren't expected to use this directly, thus
-/// there is no way to construct one.
-pub struct GroupBy<I, K, V, F> {
-    iter: I,
-    f: Rc<RefCell<F>>,
-    prev: Option<K>,
-    curr: Option<NEVec<V>>,
-}
-
-impl<I, K, V, F> Iterator for GroupBy<I, K, V, F>
-where
-    I: Iterator<Item = V>,
-    F: FnMut(&I::Item) -> K,
-    K: PartialEq,
-{
-    type Item = NEVec<I::Item>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            match self.iter.next() {
-                None => return self.curr.take(),
-                Some(v) => {
-                    let k = {
-                        let mut f = self.f.borrow_mut();
-                        f(&v)
-                    };
-
-                    match (self.prev.as_ref(), &mut self.curr) {
-                        // Continue some run of similar values.
-                        (Some(p), Some(c)) if p == &k => {
-                            c.push(v);
-                        }
-                        // We found a break; finally yield an NEVec.
-                        (Some(_), Some(_)) => {
-                            let curr = self.curr.take();
-                            self.curr = Some(nev![v]);
-                            self.prev = Some(k);
-                            return curr;
-                        }
-                        // Very first iteration.
-                        (_, _) => {
-                            self.prev = Some(k);
-                            self.curr = Some(nev![v]);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
 /// Flatten nested, non-empty structures.
 ///
 /// See also [`std::iter::FlatMap`].
@@ -1525,7 +1333,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{nem, NEMap};
+    use crate::nem;
+    use crate::NEMap;
 
     #[test]
     fn into_hashset() {
@@ -1539,50 +1348,5 @@ mod tests {
         let h: HashMap<_, _> = m.iter().map(|(k, v)| (*k, *v)).collect();
         let n = NEMap::try_from(h).unwrap();
         assert_eq!(m, n);
-    }
-
-    #[test]
-    fn group_by_iterator_normal() {
-        let orig: Vec<usize> = vec![1, 1, 2, 3, 3];
-        let iter = orig.into_iter().map(|n| n + 1);
-        let gb = GroupBy {
-            iter,
-            f: Rc::new(RefCell::new(|v: &usize| v.clone())),
-            prev: None,
-            curr: None,
-        };
-
-        let res: Vec<_> = gb.collect();
-        assert_eq!(res, vec![nev![2, 2], nev![3], nev![4, 4]]);
-    }
-
-    #[test]
-    fn group_by_iterator_empty() {
-        let orig: Vec<usize> = vec![1, 1, 2, 3, 3];
-        let iter = orig.into_iter().filter(|_| false);
-        let gb = GroupBy {
-            iter,
-            f: Rc::new(RefCell::new(|v: &usize| v.clone())),
-            prev: None,
-            curr: None,
-        };
-
-        let res: Vec<_> = gb.collect();
-        assert_eq!(res, Vec::new());
-    }
-
-    #[test]
-    fn group_by_iterator_singleton() {
-        let orig: Vec<usize> = vec![1];
-        let iter = orig.into_iter();
-        let gb = GroupBy {
-            iter,
-            f: Rc::new(RefCell::new(|v: &usize| v.clone())),
-            prev: None,
-            curr: None,
-        };
-
-        let res: Vec<_> = gb.collect();
-        assert_eq!(res, vec![nev![1]]);
     }
 }
