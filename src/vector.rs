@@ -595,11 +595,30 @@ impl<T> NEVec<T> {
         self.inner.sort();
     }
 
-    /// Sorts the `NEVec` in place using a key extraction function.
+    /// Like [`NEVec::sort`], but sorts the `NEVec` with a given comparison
+    /// function.
+    ///
+    /// See also [`slice::sort_by`].
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    ///
+    /// let mut n = nev!["Sirion", "Gelion", "Narog"];
+    /// n.sort_by(|a, b| b.cmp(&a));
+    /// assert_eq!(nev!["Sirion", "Narog", "Gelion"], n);
+    /// ```
+    pub fn sort_by<F>(&mut self, f: F)
+    where
+        F: FnMut(&T, &T) -> Ordering,
+    {
+        self.inner.sort_by(f);
+    }
+
+    /// Like [`NEVec::sort`], but sorts the `NEVec` after first transforming
+    /// each element into something easily comparable. Beware of expensive key
+    /// functions, as the results of each call are not cached.
     ///
     /// See also [`slice::sort_by_key`].
-    ///
-    /// # Examples
     ///
     /// ```
     /// use nonempty_collections::nev;
@@ -976,26 +995,19 @@ impl<T: Debug> Debug for NEVec<T> {
     }
 }
 
-#[cfg(feature = "serde")]
-pub mod serialize {
-    //! Serde support for [`NEVec`].
-
-    use std::convert::TryFrom;
-    use std::fmt;
-
-    use super::NEVec;
-
-    /// Encoding/decoding errors.
-    #[derive(Debug, Copy, Clone)]
-    pub enum Error {
-        /// There was nothing to decode.
-        Empty,
+impl<T> Extend<T> for NEVec<T> {
+    fn extend<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = T>,
+    {
+        self.inner.extend(iter);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{nev, NEVec};
+    use crate::nev;
+    use crate::NEVec;
 
     struct Foo {
         user: String,
@@ -1109,6 +1121,13 @@ mod tests {
             crate::NESlice::try_from_slice(&[0, 1, 2, 3]).unwrap(),
             nonempty.as_nonempty_slice(),
         );
+    }
+
+    #[test]
+    fn debug_impl() {
+        let actual = format!("{:?}", nev![0, 1, 2, 3]);
+        let expected = format!("{:?}", vec![0, 1, 2, 3]);
+        assert_eq!(expected, actual);
     }
 
     #[test]
