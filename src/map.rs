@@ -1,17 +1,19 @@
 //! Non-empty [`HashMap`]s.
 
 use core::fmt;
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
-use crate::{FromNonEmptyIterator, IntoNonEmptyIterator, NonEmptyIterator};
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::hash::BuildHasher;
 use std::hash::Hash;
 use std::num::NonZeroUsize;
 
+#[cfg(feature = "serde")]
+use serde::Deserialize;
+#[cfg(feature = "serde")]
+use serde::Serialize;
+
 use crate::FromNonEmptyIterator;
+use crate::IntoIteratorExt;
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
 
@@ -44,6 +46,7 @@ macro_rules! nem {
 /// let m = nem!["elves" => 3000, "orcs" => 10000];
 /// assert_eq!(2, m.len().get());
 /// ```
+#[allow(clippy::unsafe_derive_deserialize)]
 #[cfg_attr(
     feature = "serde",
     derive(Deserialize, Serialize),
@@ -53,7 +56,7 @@ macro_rules! nem {
     )),
     serde(into = "HashMap<K, V, S>", try_from = "HashMap<K, V, S>")
 )]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct NEMap<K, V, S = std::collections::hash_map::RandomState> {
     inner: HashMap<K, V, S>,
 }
@@ -386,35 +389,15 @@ where
 
 impl<K, V, S> TryFrom<HashMap<K, V, S>> for NEMap<K, V, S>
 where
-    // FIXME: 2024-07-19 Fix the lower clone, thereby removing the need for `Clone` here.
-    K: Eq + Hash + Clone,
-    S: BuildHasher,
+    K: Eq + Hash,
+    S: BuildHasher + Default,
 {
     type Error = crate::Error;
 
-    fn try_from(mut map: HashMap<K, V, S>) -> Result<Self, Self::Error> {
-        if map.is_empty() {
-            Err(crate::Error::Empty)
-        } else {
-            // NOTE 2024-07-19 These are safe unwraps due to the emptiness check
-            // above. It was done this way, instead of a `match`, in order to
-            // avoid an ownership problem.
-            let head_key = {
-                let k = map.keys().next().unwrap();
-                // FIXME: 2024-07-19 Avoid this clone.
-                k.clone()
-            };
-
-            let head_val = map.remove(&head_key).unwrap();
-
-            let ne = NEMap {
-                head_key,
-                head_val,
-                tail: map,
-            };
-
-            Ok(ne)
-        }
+    fn try_from(map: HashMap<K, V, S>) -> Result<Self, Self::Error> {
+        map.try_into_nonempty_iter()
+            .map(NonEmptyIterator::collect)
+            .ok_or(crate::Error::Empty)
     }
 }
 
@@ -626,19 +609,21 @@ impl<K: fmt::Debug, V: fmt::Debug, S> fmt::Debug for NEMap<K, V, S> {
 
 #[cfg(test)]
 mod test {
-    use maplit::hashmap;    
-    use crate::nem;
     use std::num::NonZeroUsize;
+
+    use maplit::hashmap;
+
+    use crate::nem;
+
+    struct Foo {
+        user: String,
+    }
 
     #[test]
     fn debug_impl() {
         let expected = format!("{:?}", hashmap! {0 => 10});
         let actual = format!("{:?}", nem! {0 => 10});
         assert_eq!(expected, actual);
-
-
-    struct Foo {
-        user: String,
     }
 
     #[test]
@@ -667,8 +652,10 @@ mod test {
 #[cfg(feature = "serde")]
 #[cfg(test)]
 mod serde_tests {
-    use crate::{nem, NEMap};
     use std::collections::HashMap;
+
+    use crate::nem;
+    use crate::NEMap;
 
     #[test]
     fn json() {
