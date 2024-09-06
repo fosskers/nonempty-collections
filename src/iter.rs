@@ -1,8 +1,10 @@
 //! Non-empty iterators.
 
+<<<<<<< HEAD
 use crate::nev;
+=======
+>>>>>>> 6dba154 (fix impl<K, V, S> FromNonEmptyIterator<(K, V)> for HashMap<K, V, S>)
 use core::fmt;
-use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -11,7 +13,6 @@ use std::iter::Peekable;
 use std::iter::Product;
 use std::iter::Sum;
 use std::num::NonZeroUsize;
-use std::rc::Rc;
 use std::result::Result;
 
 use crate::NEVec;
@@ -809,7 +810,24 @@ impl<T> FromNonEmptyIterator<T> for Vec<T> {
     }
 }
 
-impl<T: Eq + Hash, S: BuildHasher + Default> FromNonEmptyIterator<T> for HashSet<T, S> {
+impl<K, V, S> FromNonEmptyIterator<(K, V)> for HashMap<K, V, S>
+where
+    K: Eq + Hash,
+    S: BuildHasher + Default,
+{
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = (K, V)>,
+    {
+        iter.into_nonempty_iter().into_iter().collect()
+    }
+}
+
+impl<T, S> FromNonEmptyIterator<T> for HashSet<T, S>
+where
+    T: Eq + Hash,
+    S: BuildHasher + Default,
+{
     fn from_nonempty_iter<I>(iter: I) -> Self
     where
         I: IntoNonEmptyIterator<Item = T>,
