@@ -1,8 +1,5 @@
 //! Non-empty Sets.
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
 use crate::iter::NonEmptyIterator;
 use crate::{FromNonEmptyIterator, IntoNonEmptyIterator};
 use core::fmt;
@@ -12,8 +9,14 @@ use std::hash::BuildHasher;
 use std::hash::Hash;
 use std::num::NonZeroUsize;
 
+#[cfg(feature = "serde")]
+use serde::Deserialize;
+#[cfg(feature = "serde")]
+use serde::Serialize;
+
 use crate::iter::NonEmptyIterator;
 use crate::FromNonEmptyIterator;
+use crate::IntoIteratorExt;
 use crate::IntoNonEmptyIterator;
 
 /// Like the [`crate::nev!`] macro, but for Sets. A nice short-hand for
@@ -94,6 +97,7 @@ macro_rules! nes {
 ///
 /// As these methods are all "mutate-in-place" style and are difficult to
 /// reconcile with the non-emptiness guarantee.
+#[allow(clippy::unsafe_derive_deserialize)]
 #[cfg_attr(
     feature = "serde",
     derive(Serialize, Deserialize),
@@ -103,7 +107,7 @@ macro_rules! nes {
     )),
     serde(into = "HashSet<T, S>", try_from = "HashSet<T, S>")
 )]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct NESet<T, S = std::collections::hash_map::RandomState> {
     inner: HashSet<T, S>,
 }
@@ -651,8 +655,10 @@ impl<T: fmt::Debug, S> fmt::Debug for NESet<T, S> {
 #[cfg(feature = "serde")]
 #[cfg(test)]
 mod serde_tests {
-    use crate::{nes, NESet};
     use std::collections::HashSet;
+
+    use crate::nes;
+    use crate::NESet;
 
     #[test]
     fn json() {
