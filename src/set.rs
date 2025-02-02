@@ -1,7 +1,9 @@
 //! Non-empty Sets.
 
 use crate::iter::NonEmptyIterator;
-use crate::{FromNonEmptyIterator, IntoNonEmptyIterator};
+use crate::FromNonEmptyIterator;
+use crate::IntoIteratorExt;
+use crate::IntoNonEmptyIterator;
 use core::fmt;
 use std::borrow::Borrow;
 use std::collections::HashSet;
@@ -13,11 +15,6 @@ use std::num::NonZeroUsize;
 use serde::Deserialize;
 #[cfg(feature = "serde")]
 use serde::Serialize;
-
-use crate::iter::NonEmptyIterator;
-use crate::FromNonEmptyIterator;
-use crate::IntoIteratorExt;
-use crate::IntoNonEmptyIterator;
 
 /// Like the [`crate::nev!`] macro, but for Sets. A nice short-hand for
 /// constructing [`NESet`] values.

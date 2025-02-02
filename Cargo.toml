@@ -57,7 +57,6 @@ perf = { level = "warn", priority = -1 }
 style = { level = "warn", priority = -1 }
 suspicious = { level = "deny", priority = -1 }
 todo = "warn"
-
 missing_const_for_fn = "warn"
 
 ### Pedantic

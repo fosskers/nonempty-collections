@@ -1,10 +1,14 @@
 //! Non-empty iterators.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 use crate::nev;
 =======
 >>>>>>> 6dba154 (fix impl<K, V, S> FromNonEmptyIterator<(K, V)> for HashMap<K, V, S>)
 use core::fmt;
+=======
+use crate::NEVec;
+>>>>>>> 0154fbb (refactor: minor reorganisations)
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -14,8 +18,6 @@ use std::iter::Product;
 use std::iter::Sum;
 use std::num::NonZeroUsize;
 use std::result::Result;
-
-use crate::NEVec;
 
 // Iterator structs which _always_ have something if the source iterator is
 // non-empty:
@@ -41,11 +43,11 @@ pub fn once<T>(value: T) -> Once<T> {
 /// An [`Iterator`] that is guaranteed to have at least one item.
 ///
 /// By implementing `NonEmptyIterator` for a type the implementor is responsible
-/// for ensuring that non-emptiness holds. Not holding up the non-emptiness
-/// invariant may lead to panics and/or undefined behavior.
+/// for ensuring that non-emptiness holds. Violating this invariant may lead to
+/// panics and/or undefined behavior.
 pub trait NonEmptyIterator: IntoIterator {
-    /// Advances this non-empty iterator, this consumes the iterator and returns
-    /// the first item and a possibly empty iterator containing the rest of the
+    /// Advances this non-empty iterator, consuming its ownership. Yields the
+    /// first item and a possibly empty iterator containing the rest of the
     /// elements.
     #[must_use]
     fn next(self) -> (Self::Item, Self::IntoIter)
@@ -830,14 +832,6 @@ where
     }
 }
 
-impl<I: NonEmptyIterator> IntoNonEmptyIterator for I {
-    type IntoNEIter = I;
-
-    fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        self
-    }
-}
-
 /// Conversion into a [`NonEmptyIterator`].
 pub trait IntoNonEmptyIterator: IntoIterator {
     /// Which kind of [`NonEmptyIterator`] are we turning this into?
@@ -845,6 +839,14 @@ pub trait IntoNonEmptyIterator: IntoIterator {
 
     /// Creates a [`NonEmptyIterator`] from a value.
     fn into_nonempty_iter(self) -> Self::IntoNEIter;
+}
+
+impl<I: NonEmptyIterator> IntoNonEmptyIterator for I {
+    type IntoNEIter = I;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        self
+    }
 }
 
 /// Similar to [`std::iter::Map`], but with additional non-emptiness guarantees.
@@ -880,12 +882,12 @@ where
     }
 }
 
-impl<I, F> fmt::Debug for Map<I, F>
+impl<I, F> std::fmt::Debug for Map<I, F>
 where
     I: NonEmptyIterator,
-    I::IntoIter: fmt::Debug,
+    I::IntoIter: std::fmt::Debug,
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.iter.fmt(f)
     }
 }
@@ -920,8 +922,8 @@ where
     }
 }
 
-impl<I: fmt::Debug> fmt::Debug for Cloned<I> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl<I: std::fmt::Debug> std::fmt::Debug for Cloned<I> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.iter.fmt(f)
     }
 }
@@ -950,8 +952,8 @@ where
     }
 }
 
-impl<I: fmt::Debug> fmt::Debug for Enumerate<I> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl<I: std::fmt::Debug> std::fmt::Debug for Enumerate<I> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.iter.fmt(f)
     }
 }
@@ -993,12 +995,12 @@ where
     }
 }
 
-impl<I> fmt::Debug for Take<I>
+impl<I> std::fmt::Debug for Take<I>
 where
     I: NonEmptyIterator,
-    I::IntoIter: fmt::Debug,
+    I::IntoIter: std::fmt::Debug,
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.iter.fmt(f)
     }
 }
@@ -1031,12 +1033,12 @@ where
     }
 }
 
-impl<A, B> fmt::Debug for Chain<A, B>
+impl<A, B> std::fmt::Debug for Chain<A, B>
 where
-    A: fmt::Debug,
-    B: fmt::Debug,
+    A: std::fmt::Debug,
+    B: std::fmt::Debug,
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
     }
 }
@@ -1068,8 +1070,8 @@ impl<T> IntoIterator for Once<T> {
     }
 }
 
-impl<T: fmt::Debug> fmt::Debug for Once<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl<T: std::fmt::Debug> std::fmt::Debug for Once<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
     }
 }
@@ -1105,11 +1107,11 @@ where
     }
 }
 
-impl<'a, I, T: 'a> fmt::Debug for Copied<I>
+impl<'a, I, T: 'a> std::fmt::Debug for Copied<I>
 where
-    I: Iterator<Item = &'a T> + fmt::Debug,
+    I: Iterator<Item = &'a T> + std::fmt::Debug,
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.iter.fmt(f)
     }
 }
@@ -1144,12 +1146,12 @@ where
     }
 }
 
-impl<A, B> fmt::Debug for Zip<A, B>
+impl<A, B> std::fmt::Debug for Zip<A, B>
 where
-    A: fmt::Debug,
-    B: fmt::Debug,
+    A: std::fmt::Debug,
+    B: std::fmt::Debug,
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
     }
 }
@@ -1185,12 +1187,12 @@ impl<I: Iterator, U: IntoIterator, F: FnMut(I::Item) -> U> IntoIterator for Flat
     }
 }
 
-impl<I: fmt::Debug, U, F> fmt::Debug for FlatMap<I, U, F>
+impl<I: std::fmt::Debug, U, F> std::fmt::Debug for FlatMap<I, U, F>
 where
     U: IntoIterator,
-    U::IntoIter: fmt::Debug,
+    U::IntoIter: std::fmt::Debug,
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
     }
 }
@@ -1229,8 +1231,8 @@ where
     }
 }
 
-impl<I: fmt::Debug> fmt::Debug for NonEmptyIterAdapter<I> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl<I: std::fmt::Debug> std::fmt::Debug for NonEmptyIterAdapter<I> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
     }
 }
