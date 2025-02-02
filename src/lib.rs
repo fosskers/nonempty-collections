@@ -1,4 +1,5 @@
 #![allow(rustdoc::redundant_explicit_links)] // the explicit links are needed for cargo rdme
+
 //! Non-empty variants of the standard collections.
 //!
 //! Non-emptiness can be a powerful guarantee. If your main use of `Vec` is as
@@ -133,39 +134,37 @@
 //! * `either`: adds [`NEEither`](crate::either::NEEither) a non-empty variant of `Either` from the [`either` crate](https://docs.rs/either/latest/either/).
 
 pub mod array;
-#[cfg(feature = "either")]
-pub mod either;
-#[cfg(feature = "indexmap")]
-pub mod index_map;
-
 pub mod iter;
-#[cfg(feature = "itertools")]
-pub mod itertools;
 pub mod map;
 pub mod set;
 pub mod slice;
 pub mod vector;
 
+#[cfg(feature = "either")]
+pub mod either;
+#[cfg(feature = "indexmap")]
+pub mod index_map;
+#[cfg(feature = "itertools")]
+pub mod itertools;
+
 pub use array::ArrayNonEmptyIterator;
 pub use array::NonEmptyArrayExt;
-#[cfg(feature = "either")]
-pub use either::NEEither;
-#[cfg(feature = "indexmap")]
-pub use index_map::NEIndexMap;
 pub use iter::FromNonEmptyIterator;
 pub use iter::IntoIteratorExt;
 pub use iter::IntoNonEmptyIterator;
 pub use iter::IteratorExt;
 pub use iter::NonEmptyIterator;
-#[cfg(feature = "itertools")]
-pub use itertools::NonEmptyItertools;
 pub use map::NEMap;
-pub use nem as ne_hashmap;
-pub use nes as ne_hashset;
-pub use nev as ne_vec;
 pub use set::NESet;
 pub use slice::NESlice;
 pub use vector::NEVec;
+
+#[cfg(feature = "either")]
+pub use either::NEEither;
+#[cfg(feature = "indexmap")]
+pub use index_map::NEIndexMap;
+#[cfg(feature = "itertools")]
+pub use itertools::NonEmptyItertools;
 
 /// Errors typically involving type conversions.
 #[derive(Debug, Clone, Copy)]
