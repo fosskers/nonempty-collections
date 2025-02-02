@@ -15,10 +15,10 @@
 //!     get_data(0).into_nonempty_iter().collect::<NEVec<_>>()
 //! );
 //! ```
-use either::Either;
 
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
+use either::Either;
 
 /// Non-empty variant of [`either::Either`] that implements
 /// [`NonEmptyIterator`].
