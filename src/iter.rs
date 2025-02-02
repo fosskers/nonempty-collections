@@ -1,14 +1,11 @@
 //! Non-empty iterators.
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 use crate::nev;
-=======
->>>>>>> 6dba154 (fix impl<K, V, S> FromNonEmptyIterator<(K, V)> for HashMap<K, V, S>)
-use core::fmt;
-=======
+use crate::nev;
 use crate::NEVec;
->>>>>>> 0154fbb (refactor: minor reorganisations)
+use crate::NEVec;
+use core::fmt;
+use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -17,6 +14,7 @@ use std::iter::Peekable;
 use std::iter::Product;
 use std::iter::Sum;
 use std::num::NonZeroUsize;
+use std::rc::Rc;
 use std::result::Result;
 
 // Iterator structs which _always_ have something if the source iterator is
@@ -332,6 +330,32 @@ pub trait NonEmptyIterator: IntoIterator {
         self.into_iter().filter_map(f)
     }
 
+    /// Searches for an element of an iterator that satisfies a predicate.
+    ///
+    /// Because this function always advances the iterator at least once, the
+    /// non-empty guarantee is invalidated. Therefore, this function consumes
+    /// this `NonEmptyIterator`.
+    ///
+    /// See also [`Iterator::find`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let n = nev![1, 3, 5, 7, 9, 10];
+    /// assert_eq!(Some(&10), n.iter().find(|n| *n % 2 == 0));
+    /// assert_eq!(None, n.iter().find(|n| **n > 10));
+    /// ```
+    #[must_use]
+    fn find<P>(self, predicate: P) -> Option<Self::Item>
+    where
+        Self: Sized,
+        P: FnMut(&Self::Item) -> bool,
+    {
+        self.into_iter().find(predicate)
+    }
+
     /// Creates an iterator that works like `map`, but flattens nested,
     /// non-empty structure.
     ///
@@ -384,6 +408,30 @@ pub trait NonEmptyIterator: IntoIterator {
         F: FnMut(B, Self::Item) -> B,
     {
         self.into_iter().fold(init, f)
+    }
+
+    /// Group the non-empty input stream into concrete, non-empty subsections
+    /// via a given function. The cutoff criterion is whether the return value
+    /// of `f` changes between two consecutive elements.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let n = nev![1,1,2,3,3];
+    /// let r: NEVec<_> = n.into_nonempty_iter().group_by(|n| *n).collect();
+    /// assert_eq!(r, nev![nev![1,1], nev![2], nev![3,3]]);
+    ///
+    /// let n = nev![2,4,6,7,9,1,2,4,6,3];
+    /// let r: NEVec<_> = n.into_nonempty_iter().group_by(|n| n % 2 == 0).collect();
+    /// assert_eq!(r, nev![nev![2,4,6], nev![7,9,1], nev![2,4,6], nev![3]]);
+    /// ```
+    fn group_by<K, F>(self, f: F) -> NEGroupBy<Self, F>
+    where
+        Self: Sized,
+        F: FnMut(&Self::Item) -> K,
+        K: PartialEq,
+    {
+        NEGroupBy { iter: self, f }
     }
 
     /// Takes a closure and creates a non-empty iterator which calls that
@@ -1153,6 +1201,94 @@ where
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
+    }
+}
+
+/// Wrapper struct for powering [`NonEmptyIterator::group_by`].
+#[derive(Debug)]
+pub struct NEGroupBy<I, F> {
+    iter: I,
+    f: F,
+}
+
+impl<I, K, F> NonEmptyIterator for NEGroupBy<I, F>
+where
+    I: NonEmptyIterator,
+    F: FnMut(&I::Item) -> K,
+    K: PartialEq,
+{
+}
+
+impl<I, K, F> IntoIterator for NEGroupBy<I, F>
+where
+    I: IntoIterator,
+    F: FnMut(&I::Item) -> K,
+    K: PartialEq,
+{
+    type Item = NEVec<I::Item>;
+
+    type IntoIter = GroupBy<<I as IntoIterator>::IntoIter, K, I::Item, F>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        GroupBy {
+            iter: self.iter.into_iter(),
+            f: Rc::new(RefCell::new(self.f)),
+            prev: None,
+            curr: None,
+        }
+    }
+}
+
+/// A (possibly empty) definition of the group-by operation that enables
+/// [`NEGroupBy`] to be written. You aren't expected to use this directly, thus
+/// there is no way to construct one.
+#[derive(Debug)]
+pub struct GroupBy<I, K, V, F> {
+    iter: I,
+    f: Rc<RefCell<F>>,
+    prev: Option<K>,
+    curr: Option<NEVec<V>>,
+}
+
+impl<I, K, V, F> Iterator for GroupBy<I, K, V, F>
+where
+    I: Iterator<Item = V>,
+    F: FnMut(&I::Item) -> K,
+    K: PartialEq,
+{
+    type Item = NEVec<I::Item>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            match self.iter.next() {
+                None => return self.curr.take(),
+                Some(v) => {
+                    let k = {
+                        let mut f = self.f.borrow_mut();
+                        f(&v)
+                    };
+
+                    match (self.prev.as_ref(), &mut self.curr) {
+                        // Continue some run of similar values.
+                        (Some(p), Some(c)) if p == &k => {
+                            c.push(v);
+                        }
+                        // We found a break; finally yield an NEVec.
+                        (Some(_), Some(_)) => {
+                            let curr = self.curr.take();
+                            self.curr = Some(nev![v]);
+                            self.prev = Some(k);
+                            return curr;
+                        }
+                        // Very first iteration.
+                        (_, _) => {
+                            self.prev = Some(k);
+                            self.curr = Some(nev![v]);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
