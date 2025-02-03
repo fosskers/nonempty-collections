@@ -1,12 +1,13 @@
 //! Non-empty Slices.
 
-use crate::iter::IntoNonEmptyIterator;
-use crate::iter::NonEmptyIterator;
 use core::fmt;
 use std::iter::FilterMap;
 use std::num::NonZeroUsize;
 use std::ops::Index;
 use std::slice::Chunks;
+
+use crate::iter::IntoNonEmptyIterator;
+use crate::iter::NonEmptyIterator;
 
 /// A non-empty slice. Like [`crate::NEVec`], but guaranteed to have borrowed
 /// contents.

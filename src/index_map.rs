@@ -3,18 +3,20 @@
 //! Unlike `HashMap` and [`crate::NEMap`], these feature a predictable iteration
 //! order.
 
-use crate::FromNonEmptyIterator;
-use crate::IntoNonEmptyIterator;
-use crate::NonEmptyIterator;
-use indexmap::indexmap;
-use indexmap::Equivalent;
-use indexmap::IndexMap;
 use std::fmt;
 use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::hash::BuildHasher;
 use std::hash::Hash;
 use std::num::NonZeroUsize;
+
+use indexmap::indexmap;
+use indexmap::Equivalent;
+use indexmap::IndexMap;
+
+use crate::FromNonEmptyIterator;
+use crate::IntoNonEmptyIterator;
+use crate::NonEmptyIterator;
 
 /// Short-hand for constructing [`NEIndexMap`] values.
 ///

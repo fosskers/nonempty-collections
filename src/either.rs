@@ -16,9 +16,10 @@
 //! );
 //! ```
 
+use either::Either;
+
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
-use either::Either;
 
 /// Non-empty variant of [`either::Either`] that implements
 /// [`NonEmptyIterator`].
