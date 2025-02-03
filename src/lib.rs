@@ -149,22 +149,21 @@ pub mod itertools;
 
 pub use array::ArrayNonEmptyIterator;
 pub use array::NonEmptyArrayExt;
+#[cfg(feature = "either")]
+pub use either::NEEither;
+#[cfg(feature = "indexmap")]
+pub use index_map::NEIndexMap;
 pub use iter::FromNonEmptyIterator;
 pub use iter::IntoIteratorExt;
 pub use iter::IntoNonEmptyIterator;
 pub use iter::IteratorExt;
 pub use iter::NonEmptyIterator;
+#[cfg(feature = "itertools")]
+pub use itertools::NonEmptyItertools;
 pub use map::NEMap;
 pub use set::NESet;
 pub use slice::NESlice;
 pub use vector::NEVec;
-
-#[cfg(feature = "either")]
-pub use either::NEEither;
-#[cfg(feature = "indexmap")]
-pub use index_map::NEIndexMap;
-#[cfg(feature = "itertools")]
-pub use itertools::NonEmptyItertools;
 
 /// Errors typically involving type conversions.
 #[derive(Debug, Clone, Copy)]

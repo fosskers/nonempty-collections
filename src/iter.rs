@@ -1,7 +1,5 @@
 //! Non-empty iterators.
 
-use crate::nev;
-use crate::NEVec;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -14,6 +12,9 @@ use std::iter::Sum;
 use std::num::NonZeroUsize;
 use std::rc::Rc;
 use std::result::Result;
+
+use crate::nev;
+use crate::NEVec;
 
 // Iterator structs which _always_ have something if the source iterator is
 // non-empty:
@@ -385,13 +386,16 @@ pub trait NonEmptyIterator: IntoIterator {
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let n = nev![1,1,2,3,3];
+    /// let n = nev![1, 1, 2, 3, 3];
     /// let r: NEVec<_> = n.into_nonempty_iter().group_by(|n| *n).collect();
-    /// assert_eq!(r, nev![nev![1,1], nev![2], nev![3,3]]);
+    /// assert_eq!(r, nev![nev![1, 1], nev![2], nev![3, 3]]);
     ///
-    /// let n = nev![2,4,6,7,9,1,2,4,6,3];
+    /// let n = nev![2, 4, 6, 7, 9, 1, 2, 4, 6, 3];
     /// let r: NEVec<_> = n.into_nonempty_iter().group_by(|n| n % 2 == 0).collect();
-    /// assert_eq!(r, nev![nev![2,4,6], nev![7,9,1], nev![2,4,6], nev![3]]);
+    /// assert_eq!(
+    ///     r,
+    ///     nev![nev![2, 4, 6], nev![7, 9, 1], nev![2, 4, 6], nev![3]]
+    /// );
     /// ```
     fn group_by<K, F>(self, f: F) -> NEGroupBy<Self, F>
     where

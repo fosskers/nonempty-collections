@@ -1,9 +1,5 @@
 //! Non-empty [`HashMap`]s.
 
-use crate::FromNonEmptyIterator;
-use crate::IntoIteratorExt;
-use crate::IntoNonEmptyIterator;
-use crate::NonEmptyIterator;
 use core::fmt;
 use std::borrow::Borrow;
 use std::collections::HashMap;
@@ -15,6 +11,11 @@ use std::num::NonZeroUsize;
 use serde::Deserialize;
 #[cfg(feature = "serde")]
 use serde::Serialize;
+
+use crate::FromNonEmptyIterator;
+use crate::IntoIteratorExt;
+use crate::IntoNonEmptyIterator;
+use crate::NonEmptyIterator;
 
 /// Like the [`crate::nev!`] macro, but for Maps. A nice short-hand for
 /// constructing [`NEMap`] values.
