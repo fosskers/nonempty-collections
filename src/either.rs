@@ -15,6 +15,18 @@
 //!     get_data(0).into_nonempty_iter().collect::<NEVec<_>>()
 //! );
 //! ```
+
+// Implementation note:
+// In an ideal world there is no need for `NEEither` and we could just implement
+// `NonEmptyIterator` for `Either`. However, the following holds:
+//  - `NonEmptyIterator` requires an implementation of `IntoIterator`
+//  - `Either` conditionally implements `Iterator`
+//  - Rust has blanket implementation `impl<I: Iterator> IntoIterator for I`
+// Therefore we cannot implement (`Into`)`NonEmptyIterator` for `Either<L, R>`
+// except if we add bounds similar to `L: NonEmptyIterator + Iterator` and `R:
+// NonEmptyIterator + Iterator`, which our implementations of `NonEmptyIterator`
+// don't satisfy as that would break encapsulation.
+
 use either::Either;
 
 use crate::IntoNonEmptyIterator;

@@ -7,7 +7,13 @@ use std::hash::BuildHasher;
 use std::hash::Hash;
 use std::num::NonZeroUsize;
 
+#[cfg(feature = "serde")]
+use serde::Deserialize;
+#[cfg(feature = "serde")]
+use serde::Serialize;
+
 use crate::FromNonEmptyIterator;
+use crate::IntoIteratorExt;
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
 
@@ -40,6 +46,16 @@ macro_rules! nem {
 /// let m = nem!["elves" => 3000, "orcs" => 10000];
 /// assert_eq!(2, m.len().get());
 /// ```
+#[allow(clippy::unsafe_derive_deserialize)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Deserialize, Serialize),
+    serde(bound(
+        serialize = "K: Eq + Hash + Clone + Serialize, V: Clone + Serialize, S: Clone + BuildHasher",
+        deserialize = "K: Eq + Hash + Clone + Deserialize<'de>, V: Deserialize<'de>, S: Default + BuildHasher"
+    )),
+    serde(into = "HashMap<K, V, S>", try_from = "HashMap<K, V, S>")
+)]
 #[derive(Clone)]
 pub struct NEMap<K, V, S = std::collections::hash_map::RandomState> {
     inner: HashMap<K, V, S>,
@@ -401,6 +417,20 @@ where
     }
 }
 
+impl<K, V, S> TryFrom<HashMap<K, V, S>> for NEMap<K, V, S>
+where
+    K: Eq + Hash,
+    S: BuildHasher + Default,
+{
+    type Error = crate::Error;
+
+    fn try_from(map: HashMap<K, V, S>) -> Result<Self, Self::Error> {
+        map.try_into_nonempty_iter()
+            .map(NonEmptyIterator::collect)
+            .ok_or(crate::Error::Empty)
+    }
+}
+
 impl<K, V, S> IntoNonEmptyIterator for NEMap<K, V, S> {
     type IntoNEIter = IntoIter<K, V>;
 
@@ -609,12 +639,64 @@ impl<K: fmt::Debug, V: fmt::Debug, S> fmt::Debug for NEMap<K, V, S> {
 
 #[cfg(test)]
 mod test {
+    use std::num::NonZeroUsize;
+
     use maplit::hashmap;
+
+    use crate::nem;
+
+    struct Foo {
+        user: String,
+    }
 
     #[test]
     fn debug_impl() {
         let expected = format!("{:?}", hashmap! {0 => 10});
         let actual = format!("{:?}", nem! {0 => 10});
         assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn macro_usage() {
+        let a = Foo {
+            user: "a".to_string(),
+        };
+        let b = Foo {
+            user: "b".to_string(),
+        };
+
+        let map = nem![1 => a, 2 => b];
+        assert_eq!("a", map.get(&1).unwrap().user);
+        assert_eq!("b", map.get(&2).unwrap().user);
+    }
+
+    #[test]
+    fn macro_length() {
+        let map = nem![1 => 'a', 2 => 'b', 1 => 'c'];
+        assert_eq!(unsafe { NonZeroUsize::new_unchecked(2) }, map.len());
+        assert_eq!('c', *map.get(&1).unwrap());
+        assert_eq!('b', *map.get(&2).unwrap());
+    }
+}
+
+#[cfg(feature = "serde")]
+#[cfg(test)]
+mod serde_tests {
+    use std::collections::HashMap;
+
+    use crate::nem;
+    use crate::NEMap;
+
+    #[test]
+    fn json() {
+        let map0 = nem![1 => 'a', 2 => 'b', 1 => 'c'];
+        let j = serde_json::to_string(&map0).unwrap();
+        let map1 = serde_json::from_str(&j).unwrap();
+        assert_eq!(map0, map1);
+
+        let empty: HashMap<usize, char> = HashMap::new();
+        let j = serde_json::to_string(&empty).unwrap();
+        let bad = serde_json::from_str::<NEMap<usize, char>>(&j);
+        assert!(bad.is_err());
     }
 }

@@ -1,7 +1,8 @@
 //! Non-empty iterators.
 
-use core::fmt;
+use std::cell::RefCell;
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::hash::BuildHasher;
 use std::hash::Hash;
@@ -9,8 +10,10 @@ use std::iter::Peekable;
 use std::iter::Product;
 use std::iter::Sum;
 use std::num::NonZeroUsize;
+use std::rc::Rc;
 use std::result::Result;
 
+use crate::nev;
 use crate::NEVec;
 
 // Iterator structs which _always_ have something if the source iterator is
@@ -37,11 +40,11 @@ pub fn once<T>(value: T) -> Once<T> {
 /// An [`Iterator`] that is guaranteed to have at least one item.
 ///
 /// By implementing `NonEmptyIterator` for a type the implementor is responsible
-/// for ensuring that non-emptiness holds. Not holding up the non-emptiness
-/// invariant may lead to panics and/or undefined behavior.
+/// for ensuring that non-emptiness holds. Violating this invariant may lead to
+/// panics and/or undefined behavior.
 pub trait NonEmptyIterator: IntoIterator {
-    /// Advances this non-empty iterator, this consumes the iterator and returns
-    /// the first item and a possibly empty iterator containing the rest of the
+    /// Advances this non-empty iterator, consuming its ownership. Yields the
+    /// first item and a possibly empty iterator containing the rest of the
     /// elements.
     #[must_use]
     fn next(self) -> (Self::Item, Self::IntoIter)
@@ -104,32 +107,6 @@ pub trait NonEmptyIterator: IntoIterator {
         self.into_iter().any(f)
     }
 
-    /// Searches for an element of an iterator that satisfies a predicate.
-    ///
-    /// Because this function always advances the iterator at least once, the
-    /// non-empty guarantee is invalidated. Therefore, this function consumes
-    /// this `NonEmptyIterator`.
-    ///
-    /// See also [`Iterator::find`].
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use nonempty_collections::*;
-    ///
-    /// let n = nev![1, 3, 5, 7, 9, 10];
-    /// assert_eq!(Some(&10), n.nonempty_iter().find(|n| *n % 2 == 0));
-    /// assert_eq!(None, n.nonempty_iter().find(|n| **n > 10));
-    /// ```
-    #[must_use]
-    fn find<P>(self, predicate: P) -> Option<Self::Item>
-    where
-        Self: Sized,
-        P: FnMut(&Self::Item) -> bool,
-    {
-        self.into_iter().find(predicate)
-    }
-
     /// Takes two iterators and creates a new non-empty iterator over both in
     /// sequence.
     ///
@@ -185,7 +162,7 @@ pub trait NonEmptyIterator: IntoIterator {
     fn cloned<'a, T>(self) -> Cloned<Self>
     where
         Self: Sized + NonEmptyIterator<Item = &'a T>,
-        T: 'a + Clone,
+        T: Clone + 'a,
     {
         Cloned { iter: self }
     }
@@ -224,7 +201,7 @@ pub trait NonEmptyIterator: IntoIterator {
     fn copied<'a, T>(self) -> Copied<Self::IntoIter>
     where
         Self: Sized + NonEmptyIterator<Item = &'a T>,
-        T: 'a + Copy,
+        T: Copy + 'a,
     {
         Copied {
             iter: self.into_iter().copied(),
@@ -326,6 +303,32 @@ pub trait NonEmptyIterator: IntoIterator {
         self.into_iter().filter_map(f)
     }
 
+    /// Searches for an element of an iterator that satisfies a predicate.
+    ///
+    /// Because this function always advances the iterator at least once, the
+    /// non-empty guarantee is invalidated. Therefore, this function consumes
+    /// this `NonEmptyIterator`.
+    ///
+    /// See also [`Iterator::find`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let n = nev![1, 3, 5, 7, 9, 10];
+    /// assert_eq!(Some(&10), n.iter().find(|n| *n % 2 == 0));
+    /// assert_eq!(None, n.iter().find(|n| **n > 10));
+    /// ```
+    #[must_use]
+    fn find<P>(self, predicate: P) -> Option<Self::Item>
+    where
+        Self: Sized,
+        P: FnMut(&Self::Item) -> bool,
+    {
+        self.into_iter().find(predicate)
+    }
+
     /// Creates an iterator that works like `map`, but flattens nested,
     /// non-empty structure.
     ///
@@ -378,6 +381,33 @@ pub trait NonEmptyIterator: IntoIterator {
         F: FnMut(B, Self::Item) -> B,
     {
         self.into_iter().fold(init, f)
+    }
+
+    /// Group the non-empty input stream into concrete, non-empty subsections
+    /// via a given function. The cutoff criterion is whether the return value
+    /// of `f` changes between two consecutive elements.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let n = nev![1, 1, 2, 3, 3];
+    /// let r: NEVec<_> = n.into_nonempty_iter().group_by(|n| *n).collect();
+    /// assert_eq!(r, nev![nev![1, 1], nev![2], nev![3, 3]]);
+    ///
+    /// let n = nev![2, 4, 6, 7, 9, 1, 2, 4, 6, 3];
+    /// let r: NEVec<_> = n.into_nonempty_iter().group_by(|n| n % 2 == 0).collect();
+    /// assert_eq!(
+    ///     r,
+    ///     nev![nev![2, 4, 6], nev![7, 9, 1], nev![2, 4, 6], nev![3]]
+    /// );
+    /// ```
+    fn group_by<K, F>(self, f: F) -> NEGroupBy<Self, F>
+    where
+        Self: Sized,
+        F: FnMut(&Self::Item) -> K,
+        K: PartialEq,
+    {
+        NEGroupBy { iter: self, f }
     }
 
     /// Takes a closure and creates a non-empty iterator which calls that
@@ -543,6 +573,43 @@ pub trait NonEmptyIterator: IntoIterator {
         self.map(|item| (key(&item), item))
             .min_by(|(left_key, _), (right_key, _)| left_key.cmp(right_key))
             .1
+    }
+
+    /// Sort all iterator elements into a new non-empty iterator in ascending
+    /// order.
+    ///
+    /// **Note:** This consumes the entire iterator, uses the
+    /// [`NEVec::sort_by_key`] method and returns the result as a new iterator
+    /// that owns its elements.
+    ///
+    /// This sort is stable (i.e., does not reorder equal elements).
+    ///
+    /// The sorted iterator, if directly collected to a `NEVec`, is converted
+    /// without any extra copying or allocation cost.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// // sort people in descending order by age
+    /// let people = nev![("Jane", 20), ("John", 18), ("Jill", 30), ("Jack", 30)];
+    ///
+    /// let oldest_people_first = people
+    ///     .into_nonempty_iter()
+    ///     .sorted_by_key(|x| -x.1)
+    ///     .map(|(person, _age)| person)
+    ///     .collect::<NEVec<_>>();
+    ///
+    /// assert_eq!(nev!["Jill", "Jack", "Jane", "John"], oldest_people_first);
+    /// ```
+    fn sorted_by_key<K, F>(self, f: F) -> crate::vector::IntoIter<Self::Item>
+    where
+        Self: Sized,
+        K: Ord,
+        F: FnMut(&Self::Item) -> K,
+    {
+        let mut v = NEVec::from_nonempty_iter(self);
+        v.sort_by_key(f);
+        v.into_nonempty_iter()
     }
 
     /// Returns the `n`th element of the iterator.
@@ -777,7 +844,24 @@ impl<T> FromNonEmptyIterator<T> for Vec<T> {
     }
 }
 
-impl<T: Eq + Hash, S: BuildHasher + Default> FromNonEmptyIterator<T> for HashSet<T, S> {
+impl<K, V, S> FromNonEmptyIterator<(K, V)> for HashMap<K, V, S>
+where
+    K: Eq + Hash,
+    S: BuildHasher + Default,
+{
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = (K, V)>,
+    {
+        iter.into_nonempty_iter().into_iter().collect()
+    }
+}
+
+impl<T, S> FromNonEmptyIterator<T> for HashSet<T, S>
+where
+    T: Eq + Hash,
+    S: BuildHasher + Default,
+{
     fn from_nonempty_iter<I>(iter: I) -> Self
     where
         I: IntoNonEmptyIterator<Item = T>,
@@ -809,14 +893,6 @@ where
     }
 }
 
-impl<I: NonEmptyIterator> IntoNonEmptyIterator for I {
-    type IntoNEIter = I;
-
-    fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        self
-    }
-}
-
 /// Conversion into a [`NonEmptyIterator`].
 pub trait IntoNonEmptyIterator: IntoIterator {
     /// Which kind of [`NonEmptyIterator`] are we turning this into?
@@ -824,6 +900,14 @@ pub trait IntoNonEmptyIterator: IntoIterator {
 
     /// Creates a [`NonEmptyIterator`] from a value.
     fn into_nonempty_iter(self) -> Self::IntoNEIter;
+}
+
+impl<I: NonEmptyIterator> IntoNonEmptyIterator for I {
+    type IntoNEIter = I;
+
+    fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        self
+    }
 }
 
 /// Similar to [`std::iter::Map`], but with additional non-emptiness guarantees.
@@ -859,12 +943,12 @@ where
     }
 }
 
-impl<I, F> fmt::Debug for Map<I, F>
+impl<I, F> std::fmt::Debug for Map<I, F>
 where
     I: NonEmptyIterator,
-    I::IntoIter: fmt::Debug,
+    I::IntoIter: std::fmt::Debug,
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.iter.fmt(f)
     }
 }
@@ -899,8 +983,8 @@ where
     }
 }
 
-impl<I: fmt::Debug> fmt::Debug for Cloned<I> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl<I: std::fmt::Debug> std::fmt::Debug for Cloned<I> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.iter.fmt(f)
     }
 }
@@ -929,8 +1013,8 @@ where
     }
 }
 
-impl<I: fmt::Debug> fmt::Debug for Enumerate<I> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl<I: std::fmt::Debug> std::fmt::Debug for Enumerate<I> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.iter.fmt(f)
     }
 }
@@ -972,12 +1056,12 @@ where
     }
 }
 
-impl<I> fmt::Debug for Take<I>
+impl<I> std::fmt::Debug for Take<I>
 where
     I: NonEmptyIterator,
-    I::IntoIter: fmt::Debug,
+    I::IntoIter: std::fmt::Debug,
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.iter.fmt(f)
     }
 }
@@ -1010,12 +1094,12 @@ where
     }
 }
 
-impl<A, B> fmt::Debug for Chain<A, B>
+impl<A, B> std::fmt::Debug for Chain<A, B>
 where
-    A: fmt::Debug,
-    B: fmt::Debug,
+    A: std::fmt::Debug,
+    B: std::fmt::Debug,
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
     }
 }
@@ -1047,8 +1131,8 @@ impl<T> IntoIterator for Once<T> {
     }
 }
 
-impl<T: fmt::Debug> fmt::Debug for Once<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl<T: std::fmt::Debug> std::fmt::Debug for Once<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
     }
 }
@@ -1084,11 +1168,11 @@ where
     }
 }
 
-impl<'a, I, T: 'a> fmt::Debug for Copied<I>
+impl<'a, I, T: 'a> std::fmt::Debug for Copied<I>
 where
-    I: Iterator<Item = &'a T> + fmt::Debug,
+    I: Iterator<Item = &'a T> + std::fmt::Debug,
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.iter.fmt(f)
     }
 }
@@ -1123,13 +1207,101 @@ where
     }
 }
 
-impl<A, B> fmt::Debug for Zip<A, B>
+impl<A, B> std::fmt::Debug for Zip<A, B>
 where
-    A: fmt::Debug,
-    B: fmt::Debug,
+    A: std::fmt::Debug,
+    B: std::fmt::Debug,
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
+    }
+}
+
+/// Wrapper struct for powering [`NonEmptyIterator::group_by`].
+#[derive(Debug)]
+pub struct NEGroupBy<I, F> {
+    iter: I,
+    f: F,
+}
+
+impl<I, K, F> NonEmptyIterator for NEGroupBy<I, F>
+where
+    I: NonEmptyIterator,
+    F: FnMut(&I::Item) -> K,
+    K: PartialEq,
+{
+}
+
+impl<I, K, F> IntoIterator for NEGroupBy<I, F>
+where
+    I: IntoIterator,
+    F: FnMut(&I::Item) -> K,
+    K: PartialEq,
+{
+    type Item = NEVec<I::Item>;
+
+    type IntoIter = GroupBy<<I as IntoIterator>::IntoIter, K, I::Item, F>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        GroupBy {
+            iter: self.iter.into_iter(),
+            f: Rc::new(RefCell::new(self.f)),
+            prev: None,
+            curr: None,
+        }
+    }
+}
+
+/// A (possibly empty) definition of the group-by operation that enables
+/// [`NEGroupBy`] to be written. You aren't expected to use this directly, thus
+/// there is no way to construct one.
+#[derive(Debug)]
+pub struct GroupBy<I, K, V, F> {
+    iter: I,
+    f: Rc<RefCell<F>>,
+    prev: Option<K>,
+    curr: Option<NEVec<V>>,
+}
+
+impl<I, K, V, F> Iterator for GroupBy<I, K, V, F>
+where
+    I: Iterator<Item = V>,
+    F: FnMut(&I::Item) -> K,
+    K: PartialEq,
+{
+    type Item = NEVec<I::Item>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            match self.iter.next() {
+                None => return self.curr.take(),
+                Some(v) => {
+                    let k = {
+                        let mut f = self.f.borrow_mut();
+                        f(&v)
+                    };
+
+                    match (self.prev.as_ref(), &mut self.curr) {
+                        // Continue some run of similar values.
+                        (Some(p), Some(c)) if p == &k => {
+                            c.push(v);
+                        }
+                        // We found a break; finally yield an NEVec.
+                        (Some(_), Some(_)) => {
+                            let curr = self.curr.take();
+                            self.curr = Some(nev![v]);
+                            self.prev = Some(k);
+                            return curr;
+                        }
+                        // Very first iteration.
+                        (_, _) => {
+                            self.prev = Some(k);
+                            self.curr = Some(nev![v]);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -1164,12 +1336,12 @@ impl<I: Iterator, U: IntoIterator, F: FnMut(I::Item) -> U> IntoIterator for Flat
     }
 }
 
-impl<I: fmt::Debug, U, F> fmt::Debug for FlatMap<I, U, F>
+impl<I: std::fmt::Debug, U, F> std::fmt::Debug for FlatMap<I, U, F>
 where
     U: IntoIterator,
-    U::IntoIter: fmt::Debug,
+    U::IntoIter: std::fmt::Debug,
 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
     }
 }
@@ -1208,8 +1380,8 @@ where
     }
 }
 
-impl<I: fmt::Debug> fmt::Debug for NonEmptyIterAdapter<I> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl<I: std::fmt::Debug> std::fmt::Debug for NonEmptyIterAdapter<I> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
     }
 }
@@ -1263,5 +1435,26 @@ where
         iter.peek()
             .is_some()
             .then_some(NonEmptyIterAdapter { inner: iter })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::nem;
+    use crate::NEMap;
+
+    #[test]
+    fn into_hashset() {
+        let m = nem!['a' => 1, 'b' => 2, 'c' => 3];
+        let _: HashSet<_> = m.values().collect();
+    }
+
+    #[test]
+    fn into_hashmap() {
+        let m = nem!['a' => 1, 'b' => 2, 'c' => 3];
+        let h: HashMap<_, _> = m.iter().map(|(k, v)| (*k, *v)).collect();
+        let n = NEMap::try_from(h).unwrap();
+        assert_eq!(m, n);
     }
 }

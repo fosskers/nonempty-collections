@@ -1,6 +1,6 @@
 [package]
 name = "nonempty-collections"
-version = "0.2.5"
+version = "0.2.9"
 description = "Correct-by-construction non-empty collections."
 authors = ["Colin Woodbury <colin@fosskers.ca>"]
 edition = "2021"
@@ -11,15 +11,15 @@ keywords = ["nonempty", "vector", "set", "map"]
 categories = ["data-structures"]
 
 [dependencies]
-serde = { version = "1", features = ["serde_derive"], optional = true }
-indexmap = { version = "2.2.5", optional = true }
-either = { version = "^1.0", optional = true }
-itertools = { version = "^0.12", optional = true, features = ["use_alloc"] }
+serde = { version = "1.0", features = ["serde_derive"], optional = true }
+indexmap = { version = "2.7", optional = true }
+either = { version = "1.0", optional = true }
+itertools = { version = "0.14", optional = true, features = ["use_alloc"] }
 
 [dev-dependencies]
-serde_json = "1"
-divan = "0.1.14"
-maplit = "1.0.2"
+serde_json = "1.0"
+divan = "0.1"
+maplit = "1.0"
 
 [[bench]]
 name = "vec"
@@ -57,7 +57,6 @@ perf = { level = "warn", priority = -1 }
 style = { level = "warn", priority = -1 }
 suspicious = { level = "deny", priority = -1 }
 todo = "warn"
-
 missing_const_for_fn = "warn"
 
 ### Pedantic

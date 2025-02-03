@@ -7,8 +7,14 @@ use std::hash::BuildHasher;
 use std::hash::Hash;
 use std::num::NonZeroUsize;
 
+#[cfg(feature = "serde")]
+use serde::Deserialize;
+#[cfg(feature = "serde")]
+use serde::Serialize;
+
 use crate::iter::NonEmptyIterator;
 use crate::FromNonEmptyIterator;
+use crate::IntoIteratorExt;
 use crate::IntoNonEmptyIterator;
 
 /// Like the [`crate::nev!`] macro, but for Sets. A nice short-hand for
@@ -89,6 +95,16 @@ macro_rules! nes {
 ///
 /// As these methods are all "mutate-in-place" style and are difficult to
 /// reconcile with the non-emptiness guarantee.
+#[allow(clippy::unsafe_derive_deserialize)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Serialize, Deserialize),
+    serde(bound(
+        serialize = "T: Eq + Hash + Clone + Serialize, S: Clone + BuildHasher",
+        deserialize = "T: Eq + Hash + Deserialize<'de>, S: Default + BuildHasher"
+    )),
+    serde(into = "HashSet<T, S>", try_from = "HashSet<T, S>")
+)]
 #[derive(Clone)]
 pub struct NESet<T, S = std::collections::hash_map::RandomState> {
     inner: HashSet<T, S>,
@@ -633,5 +649,44 @@ mod test {
         let expected = format!("{:?}", hashset! {0}.iter());
         let actual = format!("{:?}", nes! {0}.nonempty_iter());
         assert_eq!(expected, actual);
+    }
+}
+
+impl<T, S> TryFrom<HashSet<T, S>> for NESet<T, S>
+where
+    T: Eq + Hash,
+    S: BuildHasher + Default,
+{
+    type Error = crate::Error;
+
+    fn try_from(set: HashSet<T, S>) -> Result<Self, Self::Error> {
+        let ne = set
+            .try_into_nonempty_iter()
+            .ok_or(crate::Error::Empty)?
+            .collect();
+
+        Ok(ne)
+    }
+}
+
+#[cfg(feature = "serde")]
+#[cfg(test)]
+mod serde_tests {
+    use std::collections::HashSet;
+
+    use crate::nes;
+    use crate::NESet;
+
+    #[test]
+    fn json() {
+        let set0 = nes![1, 1, 2, 3, 2, 1, 4];
+        let j = serde_json::to_string(&set0).unwrap();
+        let set1 = serde_json::from_str(&j).unwrap();
+        assert_eq!(set0, set1);
+
+        let empty: HashSet<usize> = HashSet::new();
+        let j = serde_json::to_string(&empty).unwrap();
+        let bad = serde_json::from_str::<NESet<usize>>(&j);
+        assert!(bad.is_err());
     }
 }
