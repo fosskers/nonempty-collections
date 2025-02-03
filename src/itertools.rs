@@ -12,9 +12,7 @@ use std::fmt::Debug;
 
 use itertools::Itertools;
 
-use crate::FromNonEmptyIterator;
 use crate::IntoNonEmptyIterator;
-use crate::NEVec;
 use crate::NonEmptyIterator;
 
 /// A [`NonEmptyIterator`] blanket implementation that provides extra adaptors
@@ -46,43 +44,6 @@ pub trait NonEmptyItertools: NonEmptyIterator {
         Product {
             inner: Itertools::cartesian_product(self.into_iter(), other.into_nonempty_iter()),
         }
-    }
-
-    /// Sort all iterator elements into a new non-empty iterator in ascending
-    /// order.
-    ///
-    /// **Note:** This consumes the entire iterator, uses the
-    /// [`NEVec::sort_by_key`] method and returns the result as a new iterator
-    /// that owns its elements.
-    ///
-    /// This sort is stable (i.e., does not reorder equal elements).
-    ///
-    /// The sorted iterator, if directly collected to a `NEVec`, is converted
-    /// without any extra copying or allocation cost.
-    ///
-    /// ```
-    /// use nonempty_collections::*;
-    ///
-    /// // sort people in descending order by age
-    /// let people = nev![("Jane", 20), ("John", 18), ("Jill", 30), ("Jack", 30)];
-    ///
-    /// let oldest_people_first = people
-    ///     .into_nonempty_iter()
-    ///     .sorted_by_key(|x| -x.1)
-    ///     .map(|(person, _age)| person)
-    ///     .collect::<NEVec<_>>();
-    ///
-    /// assert_eq!(nev!["Jill", "Jack", "Jane", "John"], oldest_people_first);
-    /// ```
-    fn sorted_by_key<K, F>(self, f: F) -> crate::vector::IntoIter<Self::Item>
-    where
-        Self: Sized,
-        K: Ord,
-        F: FnMut(&Self::Item) -> K,
-    {
-        let mut v = NEVec::from_nonempty_iter(self);
-        v.sort_by_key(f);
-        v.into_nonempty_iter()
     }
 
     /// Check whether all elements are unique (non equal).
