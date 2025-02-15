@@ -1,11 +1,12 @@
 # `nonempty-collections`
 
-## Unreleased
+## 0.3.0 (2025-02-15)
 
 #### Changed
 
 - **BREAKING:** Redesign of `NonEmptyIterator`:
-  - `NonEmptyIterator` is now bounded by `IntoIterator` and has default implementations of all methods (i.e. it is a marker trait).
+  - `NonEmptyIterator` is now bounded by `IntoIterator` and has default
+    implementations of all methods (i.e. it is a marker trait).
   - `NonEmptyIterator::first()` is renamed to `next()` and the old implementation of `next()` is removed.
   - `NonEmptyIterator::all()` now consumes self
   - `NonEmptyIterator::any()` now consumes self
@@ -23,34 +24,54 @@
 - **BREAKING:** Methods that are no longer `const`:
   - `NEVec::new()`
   - `NEVec::first()`
-- **BREAKING:** non-empty maps and sets now behave similarly to their possibly empty counter parts: when created from an iterator with duplicates, the last occurence is kept.
-- **BREAKING:** Consistent API, new naming to align with Rust's naming conventions and indicate the fallibility of the function:
+- **BREAKING:** non-empty maps and sets now behave similarly to their possibly
+  empty counter parts: when created from an iterator with duplicates, the last
+  occurence is kept.
+- **BREAKING:** Consistent API, new naming to align with Rust's naming
+  conventions and indicate the fallibility of the function:
   - `from_vec` to `try_from_vec`
   - `from_map` to `try_from_map`
   - `from_slice` to `try_from_slice`
   - `from_set` to `try_from_set`.
-- **BREAKING:** `IteratorExt` is removed in favor of `IntoIteratorExt`. Now it's possible to call `try_into_nonempty_iter()` instead of `to_nonempty_iter()` on all regular iterators because regular iterators also implement `IntoIterator`.
+- **BREAKING:** `IteratorExt` is removed in favor of `IntoIteratorExt`. Now it's
+  possible to call `try_into_nonempty_iter()` instead of `to_nonempty_iter()` on
+  all regular iterators because regular iterators also implement `IntoIterator`.
 - **BREAKING:** `.iter()`, `.iter_mut()`, etc, are now prefixed with `nonempty_`
-- `FromNonEmptyIterator<T>` is now implemented for `HashSet<T, S>` instead of `HashSet<T>` (with the default hasher).
+- `FromNonEmptyIterator<T>` is now implemented for `HashSet<T, S>` instead of
+  `HashSet<T>` (with the default hasher).
 
 #### Fixed
 
-- Fixes bug in `PartialEq for NEIndexMap`, previously, maps with unequal lengths would be considered equal if the shorter map would contain the same values as the longer map.
-- Fixes bug in `NEMap::with_capacity()` and `NESet::with_capacity()`, it wasn't possible to call this method without explicitly specifying the type for `S` (the hasher). For this method it is assumed that it always uses the default hasher (just like in `std`), in case the user wants to specify the hasher `with_capacity_and_hasher()` can be used. The fix moved the method into the proper `impl` block.
+- Fixes bug in `PartialEq for NEIndexMap`, previously, maps with unequal lengths
+  would be considered equal if the shorter map would contain the same values as
+  the longer map.
+- Fixes bug in `NEMap::with_capacity()` and `NESet::with_capacity()`, it wasn't
+  possible to call this method without explicitly specifying the type for `S`
+  (the hasher). For this method it is assumed that it always uses the default
+  hasher (just like in `std`), in case the user wants to specify the hasher
+  `with_capacity_and_hasher()` can be used. The fix moved the method into the
+  proper `impl` block.
 
 #### Added
 
  - New feature `either`: adds `NEEither` an extension to `either::Either`.
- - New feature `itertools`: adds a new `NonEmptyItertools` trait that is an extension of the `NonEmptyIterator` similar to how `Itertools` extends `Iterator`. So far, `cartesian_product()`, `sorted_by_key()`, and `all_unique()` are implemented. 
+ - New feature `itertools`: adds a new `NonEmptyItertools` trait that is an
+   extension of the `NonEmptyIterator` similar to how `Itertools` extends
+   `Iterator`. So far, `cartesian_product()`, `sorted_by_key()`, and
+   `all_unique()` are implemented.
  - `NonEmptyIterator::find()` the equivalent of `Iterator::find()`.
- - `IntoNonEmptyIterator for &NEVec`, `&NEIndexMap`, `&NEMap`, `&NESet`, `&NESlice`, `&[T; $i] where $i > 0` (these previously only existed for their owned equivalents)
+ - `IntoNonEmptyIterator for &NEVec`, `&NEIndexMap`, `&NEMap`, `&NESet`,
+   `&NESlice`, `&[T; $i] where $i > 0` (these previously only existed for their
+   owned equivalents)
  - `NESlice::from_slice()` is now `const`
  - `Index<usize> for NESlice`
  - All public types now implement `Debug`
  - Aliases `ne_vec` for `nev`, `ne_hashset` for `nes`, and `ne_hashmap` for `nem`.
  - Strict lint configuration
  - The rust version to which the library is build is now pinned, to avoid accidental breakage.
- - A [`justfile`](https://github.com/casey/just) that allows to run pre-configured commands to check the codebase. E.g. `just lint` or `just test`.
+ - A [`justfile`](https://github.com/casey/just) that allows to run
+   pre-configured commands to check the codebase. E.g. `just lint` or `just
+   test`.
  - Benchmarks for `Vec` versus `NEVec`.
  - Added `.iter()` methods to all collections returning a regular `Iterator`.
 
