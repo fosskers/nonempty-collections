@@ -346,7 +346,7 @@ where
     /// as much as possible while maintaining the internal rules and possibly
     /// leaving some space in accordance with the resize policy.
     pub fn shrink_to_fit(&mut self) {
-        self.inner.shrink_to_fit()
+        self.inner.shrink_to_fit();
     }
 
     /// See [`HashMap::with_capacity_and_hasher`].
@@ -417,34 +417,6 @@ where
     }
 }
 
-impl<K, V, S> IntoNonEmptyIterator for NEMap<K, V, S> {
-    type IntoNEIter = IntoIter<K, V>;
-
-    fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        IntoIter {
-            iter: self.inner.into_iter(),
-        }
-    }
-}
-
-impl<'a, K, V, S> IntoNonEmptyIterator for &'a NEMap<K, V, S> {
-    type IntoNEIter = Iter<'a, K, V>;
-
-    fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        self.nonempty_iter()
-    }
-}
-
-impl<K, V, S> IntoIterator for NEMap<K, V, S> {
-    type Item = (K, V);
-
-    type IntoIter = std::collections::hash_map::IntoIter<K, V>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.inner.into_iter()
-    }
-}
-
 impl<K, V, S> TryFrom<HashMap<K, V, S>> for NEMap<K, V, S>
 where
     K: Eq + Hash,
@@ -473,6 +445,26 @@ impl<'a, K, V, S> IntoNonEmptyIterator for &'a NEMap<K, V, S> {
     type IntoNEIter = Iter<'a, K, V>;
 
     fn into_nonempty_iter(self) -> Self::IntoNEIter {
+        self.nonempty_iter()
+    }
+}
+
+impl<K, V, S> IntoIterator for NEMap<K, V, S> {
+    type Item = (K, V);
+
+    type IntoIter = std::collections::hash_map::IntoIter<K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner.into_iter()
+    }
+}
+
+impl<'a, K, V, S> IntoIterator for &'a NEMap<K, V, S> {
+    type Item = (&'a K, &'a V);
+
+    type IntoIter = std::collections::hash_map::Iter<'a, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
 }
@@ -619,6 +611,12 @@ impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for Values<'_, K, V> {
     }
 }
 
+impl<K: fmt::Debug, V: fmt::Debug, S> fmt::Debug for NEMap<K, V, S> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
 // /// A non-empty iterator over mutable values of an [`NEMap`].
 // pub struct ValuesMut<'a, K: 'a, V: 'a> {
 //     inner: IterMut<'a, K, V>,
@@ -700,10 +698,5 @@ mod serde_tests {
         let j = serde_json::to_string(&empty).unwrap();
         let bad = serde_json::from_str::<NEMap<usize, char>>(&j);
         assert!(bad.is_err());
-    }
-    fn debug_impl() {
-        let expected = format!("{:?}", hashmap! {0 => 10});
-        let actual = format!("{:?}", nem! {0 => 10});
-        assert_eq!(expected, actual);
     }
 }

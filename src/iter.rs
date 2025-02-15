@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::hash::BuildHasher;
 use std::hash::Hash;
 use std::iter::Peekable;
 use std::iter::Product;
@@ -106,32 +107,6 @@ pub trait NonEmptyIterator: IntoIterator {
         self.into_iter().any(f)
     }
 
-    /// Searches for an element of an iterator that satisfies a predicate.
-    ///
-    /// Because this function always advances the iterator at least once, the
-    /// non-empty guarantee is invalidated. Therefore, this function consumes
-    /// this `NonEmptyIterator`.
-    ///
-    /// See also [`Iterator::find`].
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use nonempty_collections::*;
-    ///
-    /// let n = nev![1, 3, 5, 7, 9, 10];
-    /// assert_eq!(Some(&10), n.nonempty_iter().find(|n| *n % 2 == 0));
-    /// assert_eq!(None, n.nonempty_iter().find(|n| **n > 10));
-    /// ```
-    #[must_use]
-    fn find<P>(self, predicate: P) -> Option<Self::Item>
-    where
-        Self: Sized,
-        P: FnMut(&Self::Item) -> bool,
-    {
-        self.into_iter().find(predicate)
-    }
-
     /// Takes two iterators and creates a new non-empty iterator over both in
     /// sequence.
     ///
@@ -187,7 +162,7 @@ pub trait NonEmptyIterator: IntoIterator {
     fn cloned<'a, T>(self) -> Cloned<Self>
     where
         Self: Sized + NonEmptyIterator<Item = &'a T>,
-        T: 'a + Clone,
+        T: Clone + 'a,
     {
         Cloned { iter: self }
     }
@@ -226,7 +201,7 @@ pub trait NonEmptyIterator: IntoIterator {
     fn copied<'a, T>(self) -> Copied<Self::IntoIter>
     where
         Self: Sized + NonEmptyIterator<Item = &'a T>,
-        T: 'a + Copy,
+        T: Copy + 'a,
     {
         Copied {
             iter: self.into_iter().copied(),
@@ -908,7 +883,7 @@ where
 
         let mut buf = NEVec::new(head);
 
-        for item in rest.into_iter() {
+        for item in rest {
             let item: A = item?;
             buf.push(item);
         }
@@ -1460,23 +1435,6 @@ where
         iter.peek()
             .is_some()
             .then_some(NonEmptyIterAdapter { inner: iter })
-    }
-}
-
-/// A wrapper type for easy derivation of [`IntoIterator`] for anything
-/// that's already [`NonEmptyIterator`].
-pub struct IntoIteratorProxy<T> {
-    pub(crate) iter: T,
-}
-
-impl<T> Iterator for IntoIteratorProxy<T>
-where
-    T: NonEmptyIterator,
-{
-    type Item = T::Item;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next()
     }
 }
 

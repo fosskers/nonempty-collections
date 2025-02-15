@@ -627,6 +627,31 @@ where
     }
 }
 
+impl<T: fmt::Debug, S> fmt::Debug for NESet<T, S> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use maplit::hashset;
+
+    #[test]
+    fn debug_impl() {
+        let expected = format!("{:?}", hashset! {0});
+        let actual = format!("{:?}", nes! {0});
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn iter_debug_impl() {
+        let expected = format!("{:?}", hashset! {0}.iter());
+        let actual = format!("{:?}", nes! {0}.nonempty_iter());
+        assert_eq!(expected, actual);
+    }
+}
+
 impl<T, S> TryFrom<HashSet<T, S>> for NESet<T, S>
 where
     T: Eq + Hash,
@@ -641,12 +666,6 @@ where
             .collect();
 
         Ok(ne)
-    }
-}
-
-impl<T: fmt::Debug, S> fmt::Debug for NESet<T, S> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.inner.fmt(f)
     }
 }
 
@@ -669,24 +688,5 @@ mod serde_tests {
         let j = serde_json::to_string(&empty).unwrap();
         let bad = serde_json::from_str::<NESet<usize>>(&j);
         assert!(bad.is_err());
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use maplit::hashset;
-
-    #[test]
-    fn debug_impl() {
-        let expected = format!("{:?}", hashset! {0});
-        let actual = format!("{:?}", nes! {0});
-        assert_eq!(expected, actual);
-    }
-
-    #[test]
-    fn iter_debug_impl() {
-        let expected = format!("{:?}", hashset! {0}.iter());
-        let actual = format!("{:?}", nes! {0}.nonempty_iter());
-        assert_eq!(expected, actual);
     }
 }

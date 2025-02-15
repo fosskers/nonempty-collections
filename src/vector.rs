@@ -981,17 +981,17 @@ impl<T> std::ops::IndexMut<usize> for NEVec<T> {
     }
 }
 
-impl<T> TryFrom<Vec<T>> for NEVec<T> {
-    type Error = Error;
-
-    fn try_from(vec: Vec<T>) -> Result<Self, Self::Error> {
-        NEVec::try_from_vec(vec).ok_or(Error::Empty)
-    }
-}
-
 impl<T: Debug> Debug for NEVec<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         self.inner.fmt(f)
+    }
+}
+
+impl<T> TryFrom<Vec<T>> for NEVec<T> {
+    type Error = crate::Error;
+
+    fn try_from(vec: Vec<T>) -> Result<Self, Self::Error> {
+        NEVec::try_from_vec(vec).ok_or(crate::Error::Empty)
     }
 }
 
@@ -1146,12 +1146,7 @@ mod tests {
         let mut n = nev![1, 2, 3];
         let v = vec![4, 5, 6];
         n.extend(v);
-        assert_eq!(n, nev![1, 2, 3, 4, 5, 6]);
-    }
 
-    fn debug_impl() {
-        let actual = format!("{:?}", nev![0, 1, 2, 3]);
-        let expected = format!("{:?}", vec![0, 1, 2, 3]);
-        assert_eq!(expected, actual);
+        assert_eq!(n, nev![1, 2, 3, 4, 5, 6]);
     }
 }

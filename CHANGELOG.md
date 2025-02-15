@@ -2,26 +2,6 @@
 
 ## Unreleased
 
-#### Breaking changes
-- `NonEmptyIterator` is now bounded by `IntoIterator` and has default implementations of all methods.
-- `NonEmptyIterator::first()` is renamed to `next()` and the old implementation of `next()` is removed.
-- `NonEmptyIterator::all()` now consumes self
-- `NonEmptyIterator::any()` now consumes self
-- `NonEmptyIterator::nth()` now consumes self
-- `NonEmptyIterator::take()` -> `NonEmptyIterator::take(NonZeroUsize)` and doesn't panic anymore
-- `truncate(usize)` -> `truncate(NonZeroUsize)`
-- `with_capacity()`, `with_capacity_and_hasher()` now take a `NonZeroUsize` instead of a `usize`.
-- `capacity()` now returns a `NonZeroUsize` instead of `usize`.
-- Removed: `NESlice::new(&T, &[T])`
-- `NEVec::new()` is no longer `const`
-- `NEVec::first()` is no longer `const`
-- Consistent API, new naming to align with Rust's naming conventions and indicate the fallibility of the function:
-  - `from_vec` to `try_from_vec`
-  - `from_map` to `try_from_map`
-  - `from_slice` to `try_from_slice`
-  - `from_set` to `try_from_set`.
-- non-empty maps and sets now behave similarly to their possibly empty counter parts: when created from an iterator with duplicates, the last occurence is kept.
-
 #### Changed
 
 - **BREAKING:** Redesign of `NonEmptyIterator`:
@@ -74,7 +54,6 @@
  - Benchmarks for `Vec` versus `NEVec`.
  - Added `.iter()` methods to all collections returning a regular `Iterator`.
 
-
 ## 0.2.9 (2024-08-26)
 
 #### Added
@@ -105,7 +84,6 @@
 
 - Ownership issues in `nem!` when using non-Copy types.
 
-=======
 ## 0.2.5 (2024-04-09)
 
 #### Added
