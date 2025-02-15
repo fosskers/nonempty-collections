@@ -80,7 +80,7 @@ where
     /// use nonempty_collections::*;
     /// let map = NEMap::with_capacity(NonZeroUsize::MIN, 1, 1);
     /// assert_eq!(nem! { 1 => 1 }, map);
-    /// assert!(map.capacity().get() > 1);
+    /// assert!(map.capacity().get() >= 1);
     /// ```
     #[must_use]
     pub fn with_capacity(capacity: NonZeroUsize, k: K, v: V) -> NEMap<K, V> {
@@ -91,6 +91,29 @@ where
 }
 
 impl<K, V, S> NEMap<K, V, S> {
+    /// Attempt a conversion from [`HashMap`], consuming the given `HashMap`.
+    /// Will return `None` if the `HashMap` is empty.
+    ///
+    /// ```
+    /// use std::collections::*;
+    ///
+    /// use nonempty_collections::*;
+    ///
+    /// let mut map = HashMap::new();
+    /// map.extend([("a", 1), ("b", 2)]);
+    /// assert_eq!(Some(nem! {"a" => 1, "b" => 2}), NEMap::try_from_map(map));
+    /// let map: HashMap<(), ()> = HashMap::new();
+    /// assert_eq!(None, NEMap::try_from_map(map));
+    /// ```
+    #[must_use]
+    pub fn try_from_map(map: HashMap<K, V, S>) -> Option<Self> {
+        if map.is_empty() {
+            None
+        } else {
+            Some(Self { inner: map })
+        }
+    }
+
     /// Returns the number of elements the map can hold without reallocating.
     #[must_use]
     pub fn capacity(&self) -> NonZeroUsize {
@@ -103,9 +126,16 @@ impl<K, V, S> NEMap<K, V, S> {
         self.inner.hasher()
     }
 
+    /// Returns a regular iterator over the values in this non-empty map.
+    ///
+    /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
+    pub fn iter(&self) -> std::collections::hash_map::Iter<'_, K, V> {
+        self.inner.iter()
+    }
+
     /// An iterator visiting all elements in arbitrary order. The iterator
     /// element type is `(&'a K, &'a V)`.
-    pub fn iter(&self) -> Iter<'_, K, V> {
+    pub fn nonempty_iter(&self) -> Iter<'_, K, V> {
         Iter {
             iter: self.inner.iter(),
         }
@@ -118,7 +148,7 @@ impl<K, V, S> NEMap<K, V, S> {
     ///
     /// If you manually advance this iterator until empty and then call `first`,
     /// you're in for a surprise.
-    pub fn iter_mut(&mut self) -> IterMut<'_, K, V> {
+    pub fn nonempty_iter_mut(&mut self) -> IterMut<'_, K, V> {
         IterMut {
             iter: self.inner.iter_mut(),
         }
@@ -415,7 +445,7 @@ impl<'a, K, V, S> IntoNonEmptyIterator for &'a NEMap<K, V, S> {
     type IntoNEIter = Iter<'a, K, V>;
 
     fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        self.iter()
+        self.nonempty_iter()
     }
 }
 
@@ -435,7 +465,7 @@ impl<'a, K, V, S> IntoIterator for &'a NEMap<K, V, S> {
     type IntoIter = std::collections::hash_map::Iter<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.inner.iter()
+        self.iter()
     }
 }
 

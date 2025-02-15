@@ -60,7 +60,7 @@ fashioned way with [`NEVec::new()`] or its constructor:
 ```rust
 use nonempty_collections::NEVec;
 
-let mut l = NEVec::from_vec(vec![42, 36, 58]).unwrap();
+let mut l = NEVec::try_from_vec(vec![42, 36, 58]).unwrap();
 assert_eq!(&42, l.first());
 
 l.push(9001);
@@ -77,7 +77,7 @@ let l: NEVec<u32> = nev![42, 36, 58, 9001];
 let v: Vec<u32> = l.into();
 assert_eq!(v, vec![42, 36, 58, 9001]);
 
-let u: Option<NEVec<u32>> = NEVec::from_vec(v);
+let u: Option<NEVec<u32>> = NEVec::try_from_vec(v);
 assert_eq!(Some(nev![42, 36, 58, 9001]), u);
 ```
 
@@ -101,8 +101,8 @@ let v: NEVec<_> = nev![1, 2, 3].into_nonempty_iter().map(|n| n + 1).collect();
 assert_eq!(&2, v.first());
 ```
 
-Consider also [`IteratorExt::to_nonempty_iter`](https://docs.rs/nonempty-collections/latest/nonempty_collections/iter/trait.IteratorExt.html)
-for converting any given [`Iterator`] into a non-empty one, if it contains
+Consider also [`IntoIteratorExt::try_into_nonempty_iter`] for converting any
+given [`Iterator`] and [`IntoIterator`] into a non-empty one, if it contains
 at least one item.
 
 ## Arrays

@@ -69,15 +69,22 @@ impl<K, V, S> NEIndexMap<K, V, S> {
         self.inner.hasher()
     }
 
+    /// Returns a regular iterator over the values in this non-empty index map.
+    ///
+    /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
+    pub fn iter(&self) -> indexmap::map::Iter<'_, K, V> {
+        self.inner.iter()
+    }
+
     /// An iterator visiting all elements in their order.
-    pub fn iter(&self) -> Iter<'_, K, V> {
+    pub fn nonempty_iter(&self) -> Iter<'_, K, V> {
         Iter {
             iter: self.inner.iter(),
         }
     }
 
     /// An iterator visiting all elements in their order.
-    pub fn iter_mut(&mut self) -> IterMut<'_, K, V> {
+    pub fn nonempty_iter_mut(&mut self) -> IterMut<'_, K, V> {
         IterMut {
             iter: self.inner.iter_mut(),
         }
@@ -165,7 +172,7 @@ impl<K, V, S> NEIndexMap<K, V, S> {
 
 impl<K: Debug, V: Debug, S> Debug for NEIndexMap<K, V, S> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_map().entries(self.iter()).finish()
+        f.debug_map().entries(self.nonempty_iter()).finish()
     }
 }
 
@@ -196,6 +203,29 @@ where
     K: Eq + Hash,
     S: BuildHasher,
 {
+    /// Attempt a conversion from [`IndexMap`], consuming the given `IndexMap`.
+    /// Will return `None` if the `IndexMap` is empty.
+    ///
+    /// ```
+    /// use indexmap::*;
+    /// use nonempty_collections::*;
+    ///
+    /// assert_eq!(
+    ///     Some(ne_indexmap! {"a" => 1, "b" => 2}),
+    ///     NEIndexMap::try_from_map(indexmap! {"a" => 1, "b" => 2})
+    /// );
+    /// let m: IndexMap<(), ()> = indexmap! {};
+    /// assert_eq!(None, NEIndexMap::try_from_map(m));
+    /// ```
+    #[must_use]
+    pub fn try_from_map(map: IndexMap<K, V, S>) -> Option<Self> {
+        if map.is_empty() {
+            None
+        } else {
+            Some(Self { inner: map })
+        }
+    }
+
     /// Returns true if the map contains a value.
     ///
     /// ```
@@ -409,7 +439,7 @@ impl<'a, K, V, S> IntoNonEmptyIterator for &'a NEIndexMap<K, V, S> {
     type IntoNEIter = Iter<'a, K, V>;
 
     fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        self.iter()
+        self.nonempty_iter()
     }
 }
 
@@ -429,7 +459,7 @@ impl<'a, K, V, S> IntoIterator for &'a NEIndexMap<K, V, S> {
     type IntoIter = indexmap::map::Iter<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.inner.iter()
+        self.iter()
     }
 }
 

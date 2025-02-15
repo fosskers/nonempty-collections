@@ -228,12 +228,19 @@ impl<T> NEVec<T> {
         self.inner.truncate(len.get());
     }
 
+    /// Returns a regular iterator over the values in this non-empty vector.
+    ///
+    /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
+    pub fn iter(&self) -> std::slice::Iter<'_, T> {
+        self.inner.iter()
+    }
+
     /// ```
     /// use nonempty_collections::*;
     ///
     /// let mut l = nev![42, 36, 58];
     ///
-    /// let mut iter = l.iter();
+    /// let mut iter = l.nonempty_iter();
     /// let (first, mut rest_iter) = iter.next();
     ///
     /// assert_eq!(first, &42);
@@ -241,7 +248,7 @@ impl<T> NEVec<T> {
     /// assert_eq!(rest_iter.next(), Some(&58));
     /// assert_eq!(rest_iter.next(), None);
     /// ```
-    pub fn iter(&self) -> Iter<'_, T> {
+    pub fn nonempty_iter(&self) -> Iter<'_, T> {
         Iter {
             iter: self.inner.iter(),
         }
@@ -256,11 +263,11 @@ impl<T> NEVec<T> {
     ///
     /// let mut l = nev![42, 36, 58];
     ///
-    /// for i in l.iter_mut().into_iter() {
+    /// for i in l.nonempty_iter_mut() {
     ///     *i *= 10;
     /// }
     ///
-    /// let mut iter = l.iter();
+    /// let mut iter = l.nonempty_iter();
     /// let (first, mut rest_iter) = iter.next();
     ///
     /// assert_eq!(first, &420);
@@ -268,19 +275,19 @@ impl<T> NEVec<T> {
     /// assert_eq!(rest_iter.next(), Some(&580));
     /// assert_eq!(rest_iter.next(), None);
     /// ```
-    pub fn iter_mut(&mut self) -> IterMut<'_, T> {
+    pub fn nonempty_iter_mut(&mut self) -> IterMut<'_, T> {
         IterMut {
             inner: self.inner.iter_mut(),
         }
     }
 
-    /// Creates a new non-empty vec by cloning the elments from the slice if it
+    /// Creates a new non-empty vec by cloning the elements from the slice if it
     /// is non-empty, returns `None` otherwise.
     ///
     /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is
-    /// `NEVec` before proceeding with a computation. Using `from_slice` will
-    /// give us a proof that we have a `NEVec` in the `Some` branch, otherwise
-    /// it allows the caller to handle the `None` case.
+    /// `NEVec` before proceeding with a computation. Using `try_from_slice`
+    /// will give us a proof that we have a `NEVec` in the `Some` branch,
+    /// otherwise it allows the caller to handle the `None` case.
     ///
     /// # Example use
     ///
@@ -288,13 +295,14 @@ impl<T> NEVec<T> {
     /// use nonempty_collections::nev;
     /// use nonempty_collections::NEVec;
     ///
-    /// let v_vec = NEVec::from_slice(&[1, 2, 3, 4, 5]);
+    /// let v_vec = NEVec::try_from_slice(&[1, 2, 3, 4, 5]);
     /// assert_eq!(v_vec, Some(nev![1, 2, 3, 4, 5]));
     ///
-    /// let empty_vec: Option<NEVec<&u32>> = NEVec::from_slice(&[]);
+    /// let empty_vec: Option<NEVec<&u32>> = NEVec::try_from_slice(&[]);
     /// assert!(empty_vec.is_none());
     /// ```
-    pub fn from_slice(slice: &[T]) -> Option<NEVec<T>>
+    #[must_use]
+    pub fn try_from_slice(slice: &[T]) -> Option<NEVec<T>>
     where
         T: Clone,
     {
@@ -308,12 +316,12 @@ impl<T> NEVec<T> {
     }
 
     /// Often we have a `Vec` (or slice `&[T]`) but want to ensure that it is
-    /// `NEVec` before proceeding with a computation. Using `from_vec` will give
-    /// us a proof that we have a `NEVec` in the `Some` branch, otherwise it
-    /// allows the caller to handle the `None` case.
+    /// `NEVec` before proceeding with a computation. Using `try_from_vec` will
+    /// give us a proof that we have a `NEVec` in the `Some` branch,
+    /// otherwise it allows the caller to handle the `None` case.
     ///
     /// This version will consume the `Vec` you pass in. If you would rather
-    /// pass the data as a slice then use `NEVec::from_slice`.
+    /// pass the data as a slice then use [`NEVec::try_from_slice`].
     ///
     /// # Example Use
     ///
@@ -321,14 +329,14 @@ impl<T> NEVec<T> {
     /// use nonempty_collections::nev;
     /// use nonempty_collections::NEVec;
     ///
-    /// let v_vec = NEVec::from_vec(vec![1, 2, 3, 4, 5]);
+    /// let v_vec = NEVec::try_from_vec(vec![1, 2, 3, 4, 5]);
     /// assert_eq!(v_vec, Some(nev![1, 2, 3, 4, 5]));
     ///
-    /// let empty_vec: Option<NEVec<&u32>> = NEVec::from_vec(vec![]);
+    /// let empty_vec: Option<NEVec<&u32>> = NEVec::try_from_vec(vec![]);
     /// assert!(empty_vec.is_none());
     /// ```
     #[must_use]
-    pub fn from_vec(vec: Vec<T>) -> Option<NEVec<T>> {
+    pub fn try_from_vec(vec: Vec<T>) -> Option<NEVec<T>> {
         if vec.is_empty() {
             None
         } else {
@@ -823,7 +831,7 @@ impl<T> From<(T, Vec<T>)> for NEVec<T> {
 /// use nonempty_collections::*;
 ///
 /// let v0 = nev![1, 2, 3];
-/// let v1: NEVec<_> = v0.iter().cloned().collect();
+/// let v1: NEVec<_> = v0.nonempty_iter().cloned().collect();
 /// assert_eq!(v0, v1);
 /// ```
 impl<T> FromNonEmptyIterator<T> for NEVec<T> {
@@ -928,7 +936,7 @@ impl<'a, T> IntoNonEmptyIterator for &'a NEVec<T> {
     type IntoNEIter = Iter<'a, T>;
 
     fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        self.iter()
+        self.nonempty_iter()
     }
 }
 
@@ -946,7 +954,7 @@ impl<'a, T> IntoIterator for &'a NEVec<T> {
     type IntoIter = std::slice::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.inner.iter()
+        self.iter()
     }
 }
 
@@ -983,7 +991,7 @@ impl<T> TryFrom<Vec<T>> for NEVec<T> {
     type Error = crate::Error;
 
     fn try_from(vec: Vec<T>) -> Result<Self, Self::Error> {
-        NEVec::from_vec(vec).ok_or(crate::Error::Empty)
+        NEVec::try_from_vec(vec).ok_or(crate::Error::Empty)
     }
 }
 
@@ -1110,7 +1118,7 @@ mod tests {
     fn test_as_slice() {
         let nonempty = NEVec::from((0, vec![1, 2, 3]));
         assert_eq!(
-            crate::NESlice::from_slice(&[0, 1, 2, 3]).unwrap(),
+            crate::NESlice::try_from_slice(&[0, 1, 2, 3]).unwrap(),
             nonempty.as_nonempty_slice(),
         );
     }

@@ -48,7 +48,7 @@ macro_rules! nes {
 /// use nonempty_collections::*;
 ///
 /// let s = nes![1, 1, 2, 2, 3, 3, 4, 4];
-/// let mut v: NEVec<_> = s.iter().collect();
+/// let mut v: NEVec<_> = s.nonempty_iter().collect();
 /// v.sort();
 /// assert_eq!(nev![&1, &2, &3, &4], v);
 /// ```
@@ -63,7 +63,7 @@ macro_rules! nes {
 ///
 /// # Conversion
 ///
-/// If you have a [`HashSet`] but want an `NESet`, try [`NESet::from_set`].
+/// If you have a [`HashSet`] but want an `NESet`, try [`NESet::try_from_set`].
 /// Naturally, this might not succeed.
 ///
 /// If you have an `NESet` but want a `HashSet`, try their corresponding
@@ -123,8 +123,15 @@ impl<T, S> NESet<T, S> {
         self.inner.hasher()
     }
 
+    /// Returns a regular iterator over the values in this non-empty set.
+    ///
+    /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
+    pub fn iter(&self) -> std::collections::hash_set::Iter<'_, T> {
+        self.inner.iter()
+    }
+
     /// An iterator visiting all elements in arbitrary order.
-    pub fn iter(&self) -> Iter<'_, T> {
+    pub fn nonempty_iter(&self) -> Iter<'_, T> {
         Iter {
             iter: self.inner.iter(),
         }
@@ -180,9 +187,15 @@ where
         inner.insert(value);
         NESet { inner }
     }
+}
 
+impl<T, S> NESet<T, S>
+where
+    T: Eq + Hash,
+    S: BuildHasher,
+{
     /// Attempt a conversion from a [`HashSet`], consuming the given `HashSet`.
-    /// Will fail if the `HashSet` is empty.
+    /// Will return `None` if the `HashSet` is empty.
     ///
     /// ```
     /// use std::collections::HashSet;
@@ -191,28 +204,22 @@ where
     /// use nonempty_collections::NESet;
     ///
     /// let mut s = HashSet::new();
-    /// s.insert(1);
-    /// s.insert(2);
-    /// s.insert(3);
+    /// s.extend([1, 2, 3]);
     ///
-    /// let n = NESet::from_set(s);
+    /// let n = NESet::try_from_set(s);
     /// assert_eq!(Some(nes![1, 2, 3]), n);
+    /// let s: HashSet<()> = HashSet::new();
+    /// assert_eq!(None, NESet::try_from_set(s));
     /// ```
     #[must_use]
-    pub fn from_set(set: HashSet<T>) -> Option<NESet<T>> {
+    pub fn try_from_set(set: HashSet<T, S>) -> Option<NESet<T, S>> {
         if set.is_empty() {
             None
         } else {
             Some(NESet { inner: set })
         }
     }
-}
 
-impl<T, S> NESet<T, S>
-where
-    T: Eq + Hash,
-    S: BuildHasher,
-{
     /// Returns true if the set contains a value.
     ///
     /// ```
@@ -461,7 +468,7 @@ impl<'a, T, S> IntoNonEmptyIterator for &'a NESet<T, S> {
     type IntoNEIter = Iter<'a, T>;
 
     fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        self.iter()
+        self.nonempty_iter()
     }
 }
 
@@ -481,7 +488,7 @@ impl<'a, T, S> IntoIterator for &'a NESet<T, S> {
     type IntoIter = std::collections::hash_set::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.inner.iter()
+        self.iter()
     }
 }
 
@@ -489,7 +496,7 @@ impl<'a, T, S> IntoIterator for &'a NESet<T, S> {
 /// use nonempty_collections::*;
 ///
 /// let s0 = nes![1, 2, 3];
-/// let s1: NESet<_> = s0.iter().cloned().collect();
+/// let s1: NESet<_> = s0.nonempty_iter().cloned().collect();
 /// assert_eq!(s0, s1);
 /// ```
 impl<T, S> FromNonEmptyIterator<T> for NESet<T, S>
@@ -640,7 +647,7 @@ mod test {
     #[test]
     fn iter_debug_impl() {
         let expected = format!("{:?}", hashset! {0}.iter());
-        let actual = format!("{:?}", nes! {0}.iter());
+        let actual = format!("{:?}", nes! {0}.nonempty_iter());
         assert_eq!(expected, actual);
     }
 }

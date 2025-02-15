@@ -58,7 +58,7 @@
 //! ```
 //! use nonempty_collections::NEVec;
 //!
-//! let mut l = NEVec::from_vec(vec![42, 36, 58]).unwrap();
+//! let mut l = NEVec::try_from_vec(vec![42, 36, 58]).unwrap();
 //! assert_eq!(&42, l.first());
 //!
 //! l.push(9001);
@@ -75,7 +75,7 @@
 //! let v: Vec<u32> = l.into();
 //! assert_eq!(v, vec![42, 36, 58, 9001]);
 //!
-//! let u: Option<NEVec<u32>> = NEVec::from_vec(v);
+//! let u: Option<NEVec<u32>> = NEVec::try_from_vec(v);
 //! assert_eq!(Some(nev![42, 36, 58, 9001]), u);
 //! ```
 //!
@@ -99,8 +99,8 @@
 //! assert_eq!(&2, v.first());
 //! ```
 //!
-//! Consider also [`IteratorExt::to_nonempty_iter`](crate::iter::IteratorExt)
-//! for converting any given [`Iterator`] into a non-empty one, if it contains
+//! Consider also [`IntoIteratorExt::try_into_nonempty_iter`] for converting any
+//! given [`Iterator`] and [`IntoIterator`] into a non-empty one, if it contains
 //! at least one item.
 //!
 //! # Arrays
@@ -156,7 +156,6 @@ pub use index_map::NEIndexMap;
 pub use iter::FromNonEmptyIterator;
 pub use iter::IntoIteratorExt;
 pub use iter::IntoNonEmptyIterator;
-pub use iter::IteratorExt;
 pub use iter::NonEmptyIterator;
 #[cfg(feature = "itertools")]
 pub use itertools::NonEmptyItertools;

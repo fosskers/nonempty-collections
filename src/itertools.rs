@@ -28,9 +28,9 @@ pub trait NonEmptyItertools: NonEmptyIterator {
     /// use nonempty_collections::*;
     ///
     /// let product = nev![0, 1]
-    ///     .iter()
+    ///     .nonempty_iter()
     ///     .copied()
-    ///     .cartesian_product("αβ".chars().to_nonempty_iter().unwrap())
+    ///     .cartesian_product("αβ".chars().try_into_nonempty_iter().unwrap())
     ///     .collect::<NEVec<_>>();
     /// assert_eq!(nev![(0, 'α'), (0, 'β'), (1, 'α'), (1, 'β')], product);
     /// ```
@@ -54,8 +54,8 @@ pub trait NonEmptyItertools: NonEmptyIterator {
     /// use nonempty_collections::*;
     ///
     /// let data = nev![1, 2, 3, 4, 1, 5];
-    /// assert!(!nev![1, 2, 3, 4, 1, 5].iter().all_unique());
-    /// assert!(nev![2, 3, 4, 1, 5].iter().all_unique());
+    /// assert!(!nev![1, 2, 3, 4, 1, 5].nonempty_iter().all_unique());
+    /// assert!(nev![2, 3, 4, 1, 5].nonempty_iter().all_unique());
     /// ```
     #[must_use]
     fn all_unique(self) -> bool

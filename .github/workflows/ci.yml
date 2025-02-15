@@ -35,7 +35,6 @@ jobs:
       - name: Run tests
         run: just test
 
-
   lint:
     runs-on: ubuntu-latest
 
@@ -67,7 +66,6 @@ jobs:
 
       - name: Run lint
         run: just lint
-
 
   check-readme:
     runs-on: ubuntu-latest

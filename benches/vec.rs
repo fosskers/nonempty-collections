@@ -41,5 +41,5 @@ fn map_nevec(bencher: Bencher, len: usize) {
         .try_into_nonempty_iter()
         .unwrap()
         .collect::<NEVec<_>>();
-    bencher.bench(|| black_box(vec.iter().map(|i| i + 7).collect::<NEVec<_>>()));
+    bencher.bench(|| black_box(vec.nonempty_iter().map(|i| i + 7).collect::<NEVec<_>>()));
 }

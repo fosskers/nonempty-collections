@@ -12,8 +12,8 @@ use crate::iter::NonEmptyIterator;
 /// A non-empty slice. Like [`crate::NEVec`], but guaranteed to have borrowed
 /// contents.
 ///
-/// [`NESlice::from_slice`] is the simplest way to construct this from borrowed
-/// data.
+/// [`NESlice::try_from_slice`] is the simplest way to construct this from
+/// borrowed data.
 ///
 /// Unfortunately there is no macro for this, but if you want one, just use
 /// `nev!` and handle the ownership manually. Also consider
@@ -30,10 +30,10 @@ impl<'a, T> NESlice<'a, T> {
         &self.inner[0]
     }
 
-    /// Using `from_slice` gives a proof that the input slice is non-empty in
-    /// the `Some` branch.
+    /// Using `try_from_slice` gives a proof that the input slice is non-empty
+    /// in the `Some` branch.
     #[must_use]
-    pub const fn from_slice(slice: &'a [T]) -> Option<Self> {
+    pub const fn try_from_slice(slice: &'a [T]) -> Option<Self> {
         if slice.is_empty() {
             None
         } else {
@@ -60,8 +60,15 @@ impl<'a, T> NESlice<'a, T> {
         false
     }
 
-    /// Generates a standard iterator.
-    pub fn iter(&self) -> Iter<'_, T> {
+    /// Returns a regular iterator over the values in this non-empty slice.
+    ///
+    /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
+    pub fn iter(&self) -> std::slice::Iter<'_, T> {
+        self.inner.iter()
+    }
+
+    /// Returns a non-empty iterator.
+    pub fn nonempty_iter(&self) -> Iter<'_, T> {
         Iter {
             iter: self.inner.iter(),
         }
@@ -114,9 +121,7 @@ impl<'a, T> IntoNonEmptyIterator for &'a NESlice<'a, T> {
     type IntoNEIter = Iter<'a, T>;
 
     fn into_nonempty_iter(self) -> Self::IntoNEIter {
-        Iter {
-            iter: self.inner.iter(),
-        }
+        self.nonempty_iter()
     }
 }
 
@@ -136,7 +141,7 @@ impl<'a, T> IntoIterator for &'a NESlice<'a, T> {
     type IntoIter = std::slice::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.inner.iter()
+        self.iter()
     }
 }
 
@@ -183,7 +188,7 @@ impl<'a, T> IntoIterator for NEChunks<'a, T> {
     type IntoIter = FilterMap<Chunks<'a, T>, SliceFilter<'a, T>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.inner.filter_map(|x| NESlice::from_slice(x))
+        self.inner.filter_map(|x| NESlice::try_from_slice(x))
     }
 }
 
@@ -206,7 +211,7 @@ mod tests {
     #[test]
     fn test_from_conversion() {
         let slice = [1, 2, 3, 4, 5];
-        let nonempty_slice = NESlice::from_slice(&slice);
+        let nonempty_slice = NESlice::try_from_slice(&slice);
         let nonempty_slice = nonempty_slice.unwrap();
 
         assert_eq!(nonempty_slice.inner, &[1, 2, 3, 4, 5]);
@@ -215,8 +220,9 @@ mod tests {
     #[test]
     fn test_iter_syntax() {
         let slice = [0, 1, 2, 3];
-        if let Some(nonempty) = NESlice::from_slice(&slice) {
-            for n in nonempty.iter() {
+        let nonempty = NESlice::try_from_slice(&slice);
+        if let Some(nonempty) = nonempty {
+            for n in &nonempty {
                 assert_eq!(*n, *n); // Prove that we're dealing with references.
             }
         }
@@ -227,7 +233,7 @@ mod tests {
         use crate::IntoNonEmptyIterator;
         use crate::NonEmptyIterator;
         let slice = [0usize, 1, 2, 3];
-        let nonempty = NESlice::from_slice(&slice).unwrap();
+        let nonempty = NESlice::try_from_slice(&slice).unwrap();
         for (i, n) in nonempty.into_nonempty_iter().enumerate() {
             assert_eq!(i, *n);
         }

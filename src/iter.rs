@@ -69,8 +69,8 @@ pub trait NonEmptyIterator: IntoIterator {
     /// use nonempty_collections::*;
     ///
     /// let n = nev![2, 2, 2];
+    /// assert!(n.nonempty_iter().all(|n| n % 2 == 0));
     /// assert!(n.iter().all(|n| n % 2 == 0));
-    /// assert!(n.iter().into_iter().all(|n| n % 2 == 0));
     /// ```
     #[must_use]
     fn all<F>(self, f: F) -> bool
@@ -95,8 +95,8 @@ pub trait NonEmptyIterator: IntoIterator {
     /// use nonempty_collections::*;
     ///
     /// let n = nev![1, 1, 1, 2, 1, 1];
-    /// assert!(n.iter().any(|n| n % 2 == 0));
-    /// assert!(!n.iter().any(|n| n % 3 == 0));
+    /// assert!(n.nonempty_iter().any(|n| n % 2 == 0));
+    /// assert!(!n.nonempty_iter().any(|n| n % 3 == 0));
     /// ```
     #[must_use]
     fn any<F>(self, f: F) -> bool
@@ -153,8 +153,8 @@ pub trait NonEmptyIterator: IntoIterator {
     /// }
     ///
     /// let v0 = nev![Foo::A, Foo::B, Foo::C];
-    /// let v1: NEVec<_> = v0.iter().collect();
-    /// let v2: NEVec<_> = v0.iter().cloned().collect();
+    /// let v1: NEVec<_> = v0.nonempty_iter().collect();
+    /// let v2: NEVec<_> = v0.nonempty_iter().cloned().collect();
     ///
     /// assert_eq!(nev![&Foo::A, &Foo::B, &Foo::C], v1);
     /// assert_eq!(nev![Foo::A, Foo::B, Foo::C], v2);
@@ -195,7 +195,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// use nonempty_collections::*;
     ///
     /// let n0 = nev![1, 2, 3, 4];
-    /// let n1 = n0.iter().copied().collect();
+    /// let n1 = n0.nonempty_iter().copied().collect();
     /// assert_eq!(n0, n1);
     /// ```
     fn copied<'a, T>(self) -> Copied<Self::IntoIter>
@@ -217,10 +217,10 @@ pub trait NonEmptyIterator: IntoIterator {
     /// use nonempty_collections::*;
     ///
     /// let n = nev![1];
-    /// assert_eq!(1, n.iter().count().get());
+    /// assert_eq!(1, n.nonempty_iter().count().get());
     ///
     /// let n = nev![1, 2, 3, 4, 5, 6];
-    /// assert_eq!(6, n.iter().count().get());
+    /// assert_eq!(6, n.nonempty_iter().count().get());
     /// ````
     #[must_use]
     fn count(self) -> NonZeroUsize
@@ -239,7 +239,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// use nonempty_collections::*;
     ///
     /// let s = nes!["Doriath", "Gondolin", "Nargothrond"];
-    /// let total: usize = s.iter().enumerate().map(|(c, _)| c).sum();
+    /// let total: usize = s.nonempty_iter().enumerate().map(|(c, _)| c).sum();
     /// assert_eq!(3, total);
     /// ```
     fn enumerate(self) -> Enumerate<Self>
@@ -262,7 +262,11 @@ pub trait NonEmptyIterator: IntoIterator {
     /// use nonempty_collections::*;
     ///
     /// let n = nev![1, 2, 3, 4, 5, 6];
-    /// let v: Vec<_> = n.iter().map(|x| x * 2).filter(|&x| x % 3 == 0).collect();
+    /// let v: Vec<_> = n
+    ///     .nonempty_iter()
+    ///     .map(|x| x * 2)
+    ///     .filter(|&x| x % 3 == 0)
+    ///     .collect();
     /// assert_eq!(vec![6, 12], v);
     /// ```
     fn filter<P>(self, predicate: P) -> std::iter::Filter<<Self as IntoIterator>::IntoIter, P>
@@ -418,7 +422,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// use nonempty_collections::*;
     ///
     /// let s = nes![1, 2, 3];
-    /// let mut v: NEVec<_> = s.iter().map(|n| n * 2).collect();
+    /// let mut v: NEVec<_> = s.nonempty_iter().map(|n| n * 2).collect();
     /// v.sort();
     /// assert_eq!(nev![2, 4, 6], v);
     /// ```
@@ -620,13 +624,13 @@ pub trait NonEmptyIterator: IntoIterator {
     /// use nonempty_collections::*;
     ///
     /// let n = nev![0, 1, 2, 3, 4, 5, 6];
-    /// assert_eq!(Some(&0), n.iter().nth(0));
+    /// assert_eq!(Some(&0), n.nonempty_iter().nth(0));
     ///
     /// let n = nev![0, 1, 2, 3, 4, 5, 6];
-    /// assert_eq!(Some(&6), n.iter().nth(6));
+    /// assert_eq!(Some(&6), n.nonempty_iter().nth(6));
     ///
     /// let n = nev![0, 1, 2, 3, 4, 5, 6];
-    /// assert_eq!(None, n.iter().nth(100));
+    /// assert_eq!(None, n.nonempty_iter().nth(100));
     /// ```
     fn nth(self, n: usize) -> Option<Self::Item>
     where
@@ -645,7 +649,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// use nonempty_collections::*;
     ///
     /// let v = nev![1, 2, 3];
-    /// assert_eq!(Some(&3), v.iter().skip(2).next());
+    /// assert_eq!(Some(&3), v.nonempty_iter().skip(2).next());
     /// ```
     fn skip(self, n: usize) -> std::iter::Skip<<Self as IntoIterator>::IntoIter>
     where
@@ -683,7 +687,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let sum: u32 = nev![1, 2, 3, 4].iter().sum();
+    /// let sum: u32 = nev![1, 2, 3, 4].nonempty_iter().sum();
     /// assert_eq!(10, sum);
     /// ```
     #[must_use]
@@ -712,7 +716,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// use nonempty_collections::*;
     ///
     /// let n: NEVec<_> = nev![1, 2, 3]
-    ///     .iter()
+    ///     .nonempty_iter()
     ///     .map(|n| n * 2)
     ///     .take(NonZeroUsize::new(2).unwrap())
     ///     .collect();
@@ -757,7 +761,7 @@ pub trait NonEmptyIterator: IntoIterator {
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let prod: u32 = nev![1, 2, 3, 4].iter().product();
+    /// let prod: u32 = nev![1, 2, 3, 4].nonempty_iter().product();
     /// assert_eq!(24, prod);
     /// ```
     #[must_use]
@@ -923,7 +927,7 @@ where
 /// ```
 /// use nonempty_collections::*;
 ///
-/// let v: Vec<_> = nev![1, 2, 3].iter().map(|n| n * 2).collect();
+/// let v: Vec<_> = nev![1, 2, 3].nonempty_iter().map(|n| n * 2).collect();
 /// ```
 impl<U, I, F> IntoIterator for Map<I, F>
 where
@@ -1033,7 +1037,7 @@ impl<I> NonEmptyIterator for Take<I> where I: NonEmptyIterator {}
 ///
 /// let v = nev![1, 2, 3];
 /// let r = v
-///     .iter()
+///     .nonempty_iter()
 ///     .take(NonZeroUsize::new(1).unwrap())
 ///     .into_iter()
 ///     .count();
@@ -1354,58 +1358,6 @@ where
     }
 }
 
-/// Convenience trait extending [`Iterator`].
-pub trait IteratorExt {
-    /// The type of the elements being iterated over.
-    type Item;
-
-    /// Which kind of [`NonEmptyIterator`] are we turning this into?
-    type IntoIter: NonEmptyIterator<Item = Self::Item>;
-
-    /// Tries to convert `self` into a [`NonEmptyIterator`].
-    ///
-    /// ```
-    /// use nonempty_collections::*;
-    ///
-    /// let a = vec![1];
-    /// let x = a.into_iter().to_nonempty_iter();
-    /// assert!(x.is_some());
-    ///
-    /// let y = x.unwrap().collect::<NEVec<_>>();
-    /// assert_eq!(y.len().get(), 1);
-    /// ```
-    ///
-    /// ```
-    /// use nonempty_collections::*;
-    ///
-    /// let b: Vec<u8> = vec![];
-    /// let x = b.into_iter().to_nonempty_iter();
-    ///
-    /// assert!(x.is_none());
-    /// ```
-    ///
-    /// To construct non-empty collections directly, consider macros like
-    /// [`crate::nev!`].
-    fn to_nonempty_iter(self) -> Option<Self::IntoIter>;
-}
-
-impl<I, T> IteratorExt for I
-where
-    I: Iterator<Item = T>,
-{
-    type Item = T;
-    type IntoIter = NonEmptyIterAdapter<Peekable<I>>;
-
-    /// Converts this iterator into a non-empty iterator or returns `None` if
-    /// the iterator is empty.
-    fn to_nonempty_iter(self) -> Option<Self::IntoIter> {
-        let mut iter = self.peekable();
-        iter.peek()
-            .is_some()
-            .then_some(NonEmptyIterAdapter { inner: iter })
-    }
-}
-
 /// An adapter for regular iterators that are known to be non-empty.
 #[derive(Clone)]
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
@@ -1476,11 +1428,13 @@ where
 
     type IntoIter = NonEmptyIterAdapter<Peekable<T::IntoIter>>;
 
-    /// Tries to convert `self` into [`NonEmptyIterator`]. Calls `self.next()`
-    /// once. If `self` doesn't return `Some` upon the first call to `next()`,
-    /// returns `None`.
+    /// Converts `self` into a non-empty iterator or returns `None` if
+    /// the iterator is empty.
     fn try_into_nonempty_iter(self) -> Option<Self::IntoIter> {
-        self.into_iter().to_nonempty_iter()
+        let mut iter = self.into_iter().peekable();
+        iter.peek()
+            .is_some()
+            .then_some(NonEmptyIterAdapter { inner: iter })
     }
 }
 
