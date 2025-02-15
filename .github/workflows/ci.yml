@@ -67,6 +67,10 @@ jobs:
       - name: Run lint
         run: just lint
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 17d648a8dc18cff49bb35c6648bd1fe433e2518d
   check-readme:
     runs-on: ubuntu-latest
 
