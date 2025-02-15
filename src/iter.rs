@@ -1447,7 +1447,7 @@ mod tests {
     #[test]
     fn into_hashset() {
         let m = nem!['a' => 1, 'b' => 2, 'c' => 3];
-        let _: HashSet<_> = m.nonempty_values().collect();
+        let _: HashSet<_> = m.values().collect();
     }
 
     #[test]

@@ -97,10 +97,10 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     /// use nonempty_collections::*;
     ///
     /// let m = ne_indexmap! {"Duke" => "Leto", "Doctor" => "Yueh", "Planetologist" => "Kynes"};
-    /// let v = m.nonempty_keys().collect::<NEVec<_>>();
+    /// let v = m.keys().collect::<NEVec<_>>();
     /// assert_eq!(nev![&"Duke", &"Doctor", &"Planetologist"], v);
     /// ```
-    pub fn nonempty_keys(&self) -> Keys<'_, K, V> {
+    pub fn keys(&self) -> Keys<'_, K, V> {
         Keys {
             inner: self.inner.keys(),
         }
@@ -131,9 +131,9 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     /// use nonempty_collections::*;
     ///
     /// let m = ne_indexmap!["Caladan" => "Atreides", "Giedi Prime" => "Harkonnen", "Kaitain" => "Corrino"];
-    /// assert_eq!(vec![&"Atreides", &"Harkonnen", &"Corrino"], m.nonempty_values().collect::<Vec<_>>());
+    /// assert_eq!(vec![&"Atreides", &"Harkonnen", &"Corrino"], m.values().collect::<Vec<_>>());
     /// ```
-    pub fn nonempty_values(&self) -> Values<'_, K, V> {
+    pub fn values(&self) -> Values<'_, K, V> {
         Values {
             inner: self.inner.values(),
         }
@@ -145,11 +145,11 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     /// use nonempty_collections::*;
     ///
     /// let mut m = ne_indexmap![0 => "Fremen".to_string(), 1 => "Crysknife".to_string(), 2 => "Water of Life".to_string()];
-    /// m.nonempty_values_mut().into_iter().for_each(|v| v.truncate(3));
+    /// m.values_mut().into_iter().for_each(|v| v.truncate(3));
     ///
-    /// assert_eq!(vec![&mut "Fre".to_string(), &mut "Cry".to_string(),&mut "Wat".to_string()], m.nonempty_values_mut().collect::<Vec<_>>());
+    /// assert_eq!(vec![&mut "Fre".to_string(), &mut "Cry".to_string(),&mut "Wat".to_string()], m.values_mut().collect::<Vec<_>>());
     /// ```
-    pub fn nonempty_values_mut(&mut self) -> ValuesMut<'_, K, V> {
+    pub fn values_mut(&mut self) -> ValuesMut<'_, K, V> {
         ValuesMut {
             inner: self.inner.values_mut(),
         }
@@ -339,14 +339,14 @@ where
     /// assert_eq!(None, m.insert("Lady", "Jessica"));
     /// assert_eq!(
     ///     vec!["Duke", "Doctor", "Lady"],
-    ///     m.nonempty_keys().copied().collect::<Vec<_>>()
+    ///     m.keys().copied().collect::<Vec<_>>()
     /// );
     ///
     /// // Spoiler alert: there is a different duke at some point
     /// assert_eq!(Some("Leto"), m.insert("Duke", "Paul"));
     /// assert_eq!(
     ///     vec!["Paul", "Yueh", "Jessica"],
-    ///     m.nonempty_values().copied().collect::<Vec<_>>()
+    ///     m.values().copied().collect::<Vec<_>>()
     /// );
     /// ```
     pub fn insert(&mut self, k: K, v: V) -> Option<V> {
@@ -580,7 +580,7 @@ impl<K: Debug, V: Debug> Debug for IntoIter<K, V> {
 /// use nonempty_collections::*;
 ///
 /// let m = ne_indexmap! {"elves" => 3000, "orcs" => 10000};
-/// let v = m.nonempty_keys().copied().collect::<NEVec<_>>();
+/// let v = m.keys().copied().collect::<NEVec<_>>();
 /// assert_eq!(nev!["elves", "orcs"], v);
 /// ```
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
@@ -621,7 +621,7 @@ impl<K: Debug, V: Debug> Debug for Keys<'_, K, V> {
 /// use nonempty_collections::*;
 ///
 /// let m = ne_indexmap! {"elves" => 3000, "orcs" => 10000};
-/// let mut v = m.nonempty_values().copied().collect::<NEVec<_>>();
+/// let mut v = m.values().copied().collect::<NEVec<_>>();
 /// v.sort();
 /// assert_eq!(nev![3000, 10000], v);
 /// ```
@@ -688,52 +688,37 @@ mod test {
     #[test]
     fn test_swap_indices() {
         let mut map = ne_indexmap! { 0 => (), 1 => () };
-        assert_eq!(vec![0, 1], map.nonempty_keys().copied().collect::<Vec<_>>());
+        assert_eq!(vec![0, 1], map.keys().copied().collect::<Vec<_>>());
         map.swap_indices(0, 1);
-        assert_eq!(vec![1, 0], map.nonempty_keys().copied().collect::<Vec<_>>());
+        assert_eq!(vec![1, 0], map.keys().copied().collect::<Vec<_>>());
         map.swap_indices(1, 0);
-        assert_eq!(vec![0, 1], map.nonempty_keys().copied().collect::<Vec<_>>());
+        assert_eq!(vec![0, 1], map.keys().copied().collect::<Vec<_>>());
 
         let mut map = ne_indexmap! { 0 => (), 1 => (), 2 => () };
-        assert_eq!(
-            vec![0, 1, 2],
-            map.nonempty_keys().copied().collect::<Vec<_>>()
-        );
+        assert_eq!(vec![0, 1, 2], map.keys().copied().collect::<Vec<_>>());
         map.swap_indices(0, 1);
-        assert_eq!(
-            vec![1, 0, 2],
-            map.nonempty_keys().copied().collect::<Vec<_>>()
-        );
+        assert_eq!(vec![1, 0, 2], map.keys().copied().collect::<Vec<_>>());
         map.swap_indices(1, 0);
-        assert_eq!(
-            vec![0, 1, 2],
-            map.nonempty_keys().copied().collect::<Vec<_>>()
-        );
+        assert_eq!(vec![0, 1, 2], map.keys().copied().collect::<Vec<_>>());
         map.swap_indices(0, 2);
-        assert_eq!(
-            vec![2, 1, 0],
-            map.nonempty_keys().copied().collect::<Vec<_>>()
-        );
+        assert_eq!(vec![2, 1, 0], map.keys().copied().collect::<Vec<_>>());
         map.swap_indices(1, 2);
-        assert_eq!(
-            vec![2, 0, 1],
-            map.nonempty_keys().copied().collect::<Vec<_>>()
-        );
+        assert_eq!(vec![2, 0, 1], map.keys().copied().collect::<Vec<_>>());
 
         let mut map = ne_indexmap! { 0 => (), 1 => (), 2 => (), 3 => (), 4 => (), 5 => () };
         assert_eq!(
             vec![0, 1, 2, 3, 4, 5],
-            map.nonempty_keys().copied().collect::<Vec<_>>()
+            map.keys().copied().collect::<Vec<_>>()
         );
         map.swap_indices(1, 2);
         assert_eq!(
             vec![0, 2, 1, 3, 4, 5],
-            map.nonempty_keys().copied().collect::<Vec<_>>()
+            map.keys().copied().collect::<Vec<_>>()
         );
         map.swap_indices(0, 3);
         assert_eq!(
             vec![3, 2, 1, 0, 4, 5],
-            map.nonempty_keys().copied().collect::<Vec<_>>()
+            map.keys().copied().collect::<Vec<_>>()
         );
     }
 

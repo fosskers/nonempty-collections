@@ -161,11 +161,11 @@ impl<K, V, S> NEMap<K, V, S> {
     /// use nonempty_collections::*;
     ///
     /// let m = nem!["Valmar" => "Vanyar", "Tirion" => "Noldor", "Alqualondë" => "Teleri"];
-    /// let mut v: NEVec<_> = m.nonempty_keys().collect();
+    /// let mut v: NEVec<_> = m.keys().collect();
     /// v.sort();
     /// assert_eq!(nev![&"Alqualondë", &"Tirion", &"Valmar"], v);
     /// ```
-    pub fn nonempty_keys(&self) -> Keys<'_, K, V> {
+    pub fn keys(&self) -> Keys<'_, K, V> {
         Keys {
             inner: self.inner.keys(),
         }
@@ -198,11 +198,11 @@ impl<K, V, S> NEMap<K, V, S> {
     /// use nonempty_collections::*;
     ///
     /// let m = nem!["Valmar" => "Vanyar", "Tirion" => "Noldor", "Alqualondë" => "Teleri"];
-    /// let mut v: NEVec<_> = m.nonempty_values().collect();
+    /// let mut v: NEVec<_> = m.values().collect();
     /// v.sort();
     /// assert_eq!(nev![&"Noldor", &"Teleri", &"Vanyar"], v);
     /// ```
-    pub fn nonempty_values(&self) -> Values<'_, K, V> {
+    pub fn values(&self) -> Values<'_, K, V> {
         Values {
             inner: self.inner.values(),
         }
