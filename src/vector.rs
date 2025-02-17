@@ -136,6 +136,140 @@ impl<T> NEVec<T> {
         }
     }
 
+    /// Removes and returns the element at position `index` within the vector,
+    /// shifting all elements after it to the left.
+    ///
+    /// If this [`NEVec`] contains only one element, no removal takes place and
+    /// `None` will be returned. If there are more elements, the item at the
+    /// `index` is removed and returned.
+    ///
+    /// Note: Because this shifts over the remaining elements, it has a
+    /// worst-case performance of *O*(*n*). If you don't need the order of
+    /// elements to be preserved, use [`swap_remove`] instead.
+    ///
+    /// [`swap_remove`]: NEVec::swap_remove
+    ///
+    /// # Panics
+    ///
+    /// Panics if `index` is out of bounds and `self.len() > 1`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    ///
+    /// let mut v = nev![1, 2, 3];
+    /// assert_eq!(v.remove(1), Some(2));
+    /// assert_eq!(nev![1, 3], v);
+    /// ```
+    pub fn remove(&mut self, index: usize) -> Option<T> {
+        (self.len() > NonZeroUsize::MIN).then(|| self.inner.remove(index))
+    }
+
+    /// Removes an element from the vector and returns it.
+    ///
+    /// If this [`NEVec`] contains only one element, no removal takes place and
+    /// `None` will be returned. If there are more elements, the item at the
+    /// `index` is removed and returned.
+    ///
+    /// The removed element is replaced by the last element of the vector.
+    ///
+    /// This does not preserve ordering of the remaining elements, but is
+    /// *O*(1). If you need to preserve the element order, use [`remove`]
+    /// instead.
+    ///
+    /// [`remove`]: NEVec::remove
+    ///
+    /// # Panics
+    ///
+    /// Panics if `index` is out of bounds and `self.len() > 1`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    ///
+    /// let mut v = nev![1, 2, 3, 4];
+    /// assert_eq!(v.swap_remove(1), Some(2));
+    /// assert_eq!(nev![1, 4, 3], v);
+    /// ```
+    pub fn swap_remove(&mut self, index: usize) -> Option<T> {
+        (self.len() > NonZeroUsize::MIN).then(|| self.inner.swap_remove(index))
+    }
+
+    /// Retains only the elements specified by the predicate.
+    ///
+    /// In other words, remove all elements `e` for which `f(&e)` returns
+    /// `false`. This method operates in place, visiting each element
+    /// exactly once in the original order, and preserves the order of the
+    /// retained elements.
+    ///
+    /// If there are one or more items retained `Ok(Self)` is returned with the
+    /// remaining items. If all items are removed, the inner `Vec` is returned
+    /// to allowed for reuse of the claimed memory.
+    ///
+    /// # Errors
+    /// Returns `Err` if no elements are retained.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    ///
+    /// let vec = nev![1, 2, 3, 4];
+    /// let vec = vec.retain(|&x| x % 2 == 0);
+    /// assert_eq!(Ok(nev![2, 4]), vec);
+    /// ```
+    pub fn retain<F>(self, mut f: F) -> Result<Self, Vec<T>>
+    where
+        F: FnMut(&T) -> bool,
+    {
+        self.retain_mut(|item| f(item))
+    }
+
+    /// Retains only the elements specified by the predicate, passing a mutable
+    /// reference to it.
+    ///
+    /// In other words, remove all elements `e` such that `f(&mut e)` returns
+    /// `false`. This method operates in place, visiting each element
+    /// exactly once in the original order, and preserves the order of the
+    /// retained elements.
+    ///
+    /// If there are one or more items retained `Ok(Self)` is returned with the
+    /// remaining items. If all items are removed, the inner `Vec` is returned
+    /// to allowed for reuse of the claimed memory.
+    ///
+    /// # Errors
+    /// Returns `Err` if no elements are retained.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    ///
+    /// let vec = nev![1, 2, 3, 4];
+    /// let vec = vec.retain_mut(|x| {
+    ///     if *x <= 3 {
+    ///         *x += 1;
+    ///         true
+    ///     } else {
+    ///         false
+    ///     }
+    /// });
+    /// assert_eq!(Ok(nev![2, 3, 4]), vec);
+    /// ```
+    pub fn retain_mut<F>(mut self, f: F) -> Result<Self, Vec<T>>
+    where
+        F: FnMut(&mut T) -> bool,
+    {
+        self.inner.retain_mut(f);
+        if self.inner.is_empty() {
+            Err(self.inner)
+        } else {
+            Ok(self)
+        }
+    }
+
     /// Inserts an element at position index within the vector, shifting all
     /// elements after it to the right.
     ///
@@ -1181,5 +1315,66 @@ mod tests {
             *x -= 1;
         }
         assert_eq!(nev![0, 1, 2, 3], v);
+    }
+
+    #[test]
+    fn retain() {
+        // retain all
+        let v = nev![0, 1, 2, 3];
+        let result = v.retain(|_| true);
+        assert_eq!(
+            Ok(nev![0, 1, 2, 3]),
+            result,
+            "retaining all values should not change anything"
+        );
+        // retain none
+        let v = nev![0, 1, 2, 3];
+        let result = v.retain(|_| false);
+        assert_eq!(
+            Err(vec![]),
+            result,
+            "removing all values should return a regular vec"
+        );
+        // retain one
+        let v = nev![3, 7];
+        let result = v.retain_mut(|x| *x == 3);
+        assert_eq!(Ok(nev![3]), result, "only 3 should remain");
+    }
+
+    #[test]
+    fn retain_mut() {
+        // retain all
+        let v = nev![0, 1, 2, 3];
+        let result = v.retain_mut(|x| {
+            *x += 1;
+            true
+        });
+        assert_eq!(
+            Ok(nev![1, 2, 3, 4]),
+            result,
+            "each value must be incremented by 1"
+        );
+        let v = nev![0, 1, 2, 3];
+        // retain none
+        let result = v.retain_mut(|x| {
+            *x += 1;
+            false
+        });
+        assert_eq!(
+            Err(vec![]),
+            result,
+            "removing all values should return a regular vec"
+        );
+        // retain one
+        let v = nev![3, 7];
+        let result = v.retain_mut(|x| {
+            if *x == 3 {
+                *x += 1;
+                true
+            } else {
+                false
+            }
+        });
+        assert_eq!(Ok(nev![4]), result, "only 3+1 = 4 should remain");
     }
 }
