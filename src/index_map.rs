@@ -69,11 +69,19 @@ impl<K, V, S> NEIndexMap<K, V, S> {
         self.inner.hasher()
     }
 
-    /// Returns a regular iterator over the values in this non-empty index map.
+    /// Returns a regular iterator over the entries in this non-empty index map.
     ///
     /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
     pub fn iter(&self) -> indexmap::map::Iter<'_, K, V> {
         self.inner.iter()
+    }
+
+    /// Returns a regular mutable iterator over the entries in this non-empty
+    /// index map.
+    ///
+    /// For a `NonEmptyIterator` see `Self::nonempty_iter_mut()`.
+    pub fn iter_mut(&mut self) -> indexmap::map::IterMut<'_, K, V> {
+        self.inner.iter_mut()
     }
 
     /// An iterator visiting all elements in their order.
@@ -463,6 +471,16 @@ impl<'a, K, V, S> IntoIterator for &'a NEIndexMap<K, V, S> {
     }
 }
 
+impl<'a, K, V, S> IntoIterator for &'a mut NEIndexMap<K, V, S> {
+    type Item = (&'a K, &'a mut V);
+
+    type IntoIter = indexmap::map::IterMut<'a, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
+
 /// ```
 /// use nonempty_collections::*;
 ///
@@ -727,5 +745,20 @@ mod test {
         let expected = format!("{:?}", indexmap! {0 => 10, 1 => 11, 2 => 12});
         let actual = format!("{:?}", ne_indexmap! {0 => 10, 1 => 11, 2 => 12});
         assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn iter_mut() {
+        let mut v = ne_indexmap! {"a" => 0, "b" => 1, "c" => 2};
+
+        v.iter_mut().for_each(|(_k, v)| {
+            *v += 1;
+        });
+        assert_eq!(ne_indexmap! {"a" => 1, "b" => 2, "c" => 3}, v);
+
+        for (_k, v) in &mut v {
+            *v -= 1;
+        }
+        assert_eq!(ne_indexmap! {"a" => 0, "b" => 1, "c" => 2}, v);
     }
 }
