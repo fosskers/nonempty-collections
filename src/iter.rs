@@ -1547,5 +1547,14 @@ mod tests {
         let (first, rest) = iter.next();
         assert_eq!(7, first);
         assert_eq!(vec![1, 2, 3], rest.collect::<Vec<_>>());
+
+        let u = nev![0, 1, 2];
+        let p: NEVec<_> = u
+            .into_nonempty_iter()
+            .map(|n| n + 1)
+            .peekable()
+            .map(|n| n * 2)
+            .collect();
+        assert_eq!(nev![2, 4, 6], p);
     }
 }
