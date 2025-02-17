@@ -235,6 +235,14 @@ impl<T> NEVec<T> {
         self.inner.iter()
     }
 
+    /// Returns a regular mutable iterator over the values in this non-empty
+    /// vector.
+    ///
+    /// For a `NonEmptyIterator` see `Self::nonempty_iter_mut()`.
+    pub fn iter_mut(&mut self) -> std::slice::IterMut<'_, T> {
+        self.inner.iter_mut()
+    }
+
     /// ```
     /// use nonempty_collections::*;
     ///
@@ -958,6 +966,15 @@ impl<'a, T> IntoIterator for &'a NEVec<T> {
     }
 }
 
+impl<'a, T> IntoIterator for &'a mut NEVec<T> {
+    type Item = &'a mut T;
+    type IntoIter = std::slice::IterMut<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
+
 impl<T> std::ops::Index<usize> for NEVec<T> {
     type Output = T;
 
@@ -1148,5 +1165,21 @@ mod tests {
         n.extend(v);
 
         assert_eq!(n, nev![1, 2, 3, 4, 5, 6]);
+    }
+
+    #[test]
+    fn iter_mut() {
+        let mut v = nev![0, 1, 2, 3];
+
+        v.iter_mut().for_each(|x| {
+            *x += 1;
+        });
+
+        assert_eq!(nev![1, 2, 3, 4], v);
+
+        for x in &mut v {
+            *x -= 1;
+        }
+        assert_eq!(nev![0, 1, 2, 3], v);
     }
 }

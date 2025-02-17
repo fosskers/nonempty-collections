@@ -126,11 +126,19 @@ impl<K, V, S> NEMap<K, V, S> {
         self.inner.hasher()
     }
 
-    /// Returns a regular iterator over the values in this non-empty map.
+    /// Returns a regular iterator over the entries in this non-empty map.
     ///
     /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
     pub fn iter(&self) -> std::collections::hash_map::Iter<'_, K, V> {
         self.inner.iter()
+    }
+
+    /// Returns a regular mutable iterator over the entries in this non-empty
+    /// map.
+    ///
+    /// For a `NonEmptyIterator` see `Self::nonempty_iter_mut()`.
+    pub fn iter_mut(&mut self) -> std::collections::hash_map::IterMut<'_, K, V> {
+        self.inner.iter_mut()
     }
 
     /// An iterator visiting all elements in arbitrary order. The iterator
@@ -469,6 +477,16 @@ impl<'a, K, V, S> IntoIterator for &'a NEMap<K, V, S> {
     }
 }
 
+impl<'a, K, V, S> IntoIterator for &'a mut NEMap<K, V, S> {
+    type Item = (&'a K, &'a mut V);
+
+    type IntoIter = std::collections::hash_map::IterMut<'a, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
+}
+
 /// ```
 /// use nonempty_collections::*;
 ///
@@ -676,6 +694,21 @@ mod test {
         assert_eq!(unsafe { NonZeroUsize::new_unchecked(2) }, map.len());
         assert_eq!('c', *map.get(&1).unwrap());
         assert_eq!('b', *map.get(&2).unwrap());
+    }
+
+    #[test]
+    fn iter_mut() {
+        let mut v = nem! {"a" => 0, "b" => 1, "c" => 2};
+
+        v.iter_mut().for_each(|(_k, v)| {
+            *v += 1;
+        });
+        assert_eq!(nem! {"a" => 1, "b" => 2, "c" => 3}, v);
+
+        for (_k, v) in &mut v {
+            *v -= 1;
+        }
+        assert_eq!(nem! {"a" => 0, "b" => 1, "c" => 2}, v);
     }
 }
 
