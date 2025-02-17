@@ -6,7 +6,6 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::hash::BuildHasher;
 use std::hash::Hash;
-use std::iter::Peekable;
 use std::iter::Product;
 use std::iter::Sum;
 use std::num::NonZeroUsize;
@@ -53,6 +52,39 @@ pub trait NonEmptyIterator: IntoIterator {
     {
         let mut iter = self.into_iter();
         (iter.next().unwrap(), iter)
+    }
+
+    /// Creates an iterator which can use the [`peek`] and [`peek_mut`] methods
+    /// to look at the next element of the iterator without consuming it. See
+    /// their documentation for more information.
+    ///
+    /// Note that the underlying iterator is still advanced when this method is
+    /// called. In order to retrieve the next element, [`next`] is called on the
+    /// underlying iterator, hence any side effects (i.e. anything other than
+    /// fetching the next value) of the [`next`] method will occur.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let v = nev![0, 1, 2, 3];
+    /// let iter = v.into_nonempty_iter().peekable();
+    /// assert_eq!(&0, iter.peek());
+    /// ```
+    ///
+    /// [`peek`]: Peekable::peek
+    /// [`peek_mut`]: Peekable::peek_mut
+    /// [`next`]: Iterator::next
+    fn peekable(self) -> Peekable<Self::IntoIter>
+    where
+        Self: Sized,
+    {
+        let mut iter = self.into_iter();
+        Peekable {
+            first: iter.next().unwrap(),
+            rest: iter,
+        }
     }
 
     /// Tests if every element of the iterator matches a predicate.
@@ -1426,7 +1458,7 @@ where
 {
     type Item = T::Item;
 
-    type IntoIter = NonEmptyIterAdapter<Peekable<T::IntoIter>>;
+    type IntoIter = NonEmptyIterAdapter<std::iter::Peekable<T::IntoIter>>;
 
     /// Converts `self` into a non-empty iterator or returns `None` if
     /// the iterator is empty.
@@ -1435,6 +1467,46 @@ where
         iter.peek()
             .is_some()
             .then_some(NonEmptyIterAdapter { inner: iter })
+    }
+}
+
+/// A non-empty iterator with a `peek()` that returns a reference to the first
+/// element.
+///
+/// This `struct` is created by the [`peekable`] method on [`NonEmptyIterator`].
+/// See its documentation for more.
+///
+/// [`peekable`]: NonEmptyIterator::peekable
+#[derive(Debug, Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+pub struct Peekable<I: Iterator> {
+    first: I::Item,
+    rest: I,
+}
+
+impl<I: Iterator> Peekable<I> {
+    /// Returns a reference to the first value without advancing or consuming
+    /// the iterator.
+    pub const fn peek(&self) -> &I::Item {
+        &self.first
+    }
+
+    /// Returns a mutable reference to the first value without advancing or
+    /// consuming the iterator.
+    pub fn peek_mut(&mut self) -> &mut I::Item {
+        &mut self.first
+    }
+}
+
+impl<I: Iterator> NonEmptyIterator for Peekable<I> {}
+
+impl<I: Iterator> IntoIterator for Peekable<I> {
+    type Item = I::Item;
+
+    type IntoIter = std::iter::Chain<std::iter::Once<I::Item>, I>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        std::iter::once(self.first).chain(self.rest)
     }
 }
 
@@ -1456,5 +1528,24 @@ mod tests {
         let h: HashMap<_, _> = m.iter().map(|(k, v)| (*k, *v)).collect();
         let n = NEMap::try_from(h).unwrap();
         assert_eq!(m, n);
+    }
+
+    #[test]
+    fn peekable() {
+        let v = nev![0, 1, 2, 3];
+
+        let iter = v.into_nonempty_iter().peekable();
+        assert_eq!(&0, iter.peek());
+
+        let all = iter.collect::<NEVec<_>>();
+        assert_eq!(nev![0, 1, 2, 3], all);
+
+        let mut iter = all.into_nonempty_iter().peekable();
+
+        *iter.peek_mut() = 7;
+
+        let (first, rest) = iter.next();
+        assert_eq!(7, first);
+        assert_eq!(vec![1, 2, 3], rest.collect::<Vec<_>>());
     }
 }
