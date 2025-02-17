@@ -6,6 +6,7 @@
 
 - `iter_mut()` to `NEVec`, `NEMap`, and `NEIndexMap`
 - `peekable()` to `NonEmptyIterator`
+- `remove()`, `swap_remove()`, `retain()`, and `retain_mut()` to `NEVec`.
 
 ## 0.3.0 (2025-02-15)
 
