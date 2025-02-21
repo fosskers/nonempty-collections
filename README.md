@@ -70,8 +70,8 @@ assert_eq!(l.last(), &9001);
 And if necessary, you're free to convert to and from `Vec`:
 
 ```rust
-use nonempty_collections::nev;
 use nonempty_collections::NEVec;
+use nonempty_collections::nev;
 
 let l: NEVec<u32> = nev![42, 36, 58, 9001];
 let v: Vec<u32> = l.into();

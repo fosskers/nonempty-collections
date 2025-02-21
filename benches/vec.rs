@@ -1,7 +1,7 @@
 //! Benchmarks for `NEVec` versus `Vec`.
 
-use divan::black_box;
 use divan::Bencher;
+use divan::black_box;
 use nonempty_collections::IntoIteratorExt;
 use nonempty_collections::NEVec;
 use nonempty_collections::NonEmptyIterator;

@@ -12,10 +12,10 @@ use serde::Deserialize;
 #[cfg(feature = "serde")]
 use serde::Serialize;
 
-use crate::iter::NonEmptyIterator;
 use crate::FromNonEmptyIterator;
 use crate::IntoIteratorExt;
 use crate::IntoNonEmptyIterator;
+use crate::iter::NonEmptyIterator;
 
 /// Like the [`crate::nev!`] macro, but for Sets. A nice short-hand for
 /// constructing [`NESet`] values.
@@ -200,8 +200,8 @@ where
     /// ```
     /// use std::collections::HashSet;
     ///
-    /// use nonempty_collections::nes;
     /// use nonempty_collections::NESet;
+    /// use nonempty_collections::nes;
     ///
     /// let mut s = HashSet::new();
     /// s.extend([1, 2, 3]);
@@ -674,8 +674,8 @@ where
 mod serde_tests {
     use std::collections::HashSet;
 
-    use crate::nes;
     use crate::NESet;
+    use crate::nes;
 
     #[test]
     fn json() {

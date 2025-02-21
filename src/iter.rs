@@ -12,8 +12,8 @@ use std::num::NonZeroUsize;
 use std::rc::Rc;
 use std::result::Result;
 
-use crate::nev;
 use crate::NEVec;
+use crate::nev;
 
 // Iterator structs which _always_ have something if the source iterator is
 // non-empty:
@@ -1513,8 +1513,8 @@ impl<I: Iterator> IntoIterator for Peekable<I> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::nem;
     use crate::NEMap;
+    use crate::nem;
 
     #[test]
     fn into_hashset() {
