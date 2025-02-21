@@ -20,8 +20,8 @@ use crate::slice::NEChunks;
 /// short-hand for constructing [`NEVec`] values.
 ///
 /// ```
-/// use nonempty_collections::nev;
 /// use nonempty_collections::NEVec;
+/// use nonempty_collections::nev;
 ///
 /// let v = nev![1, 2, 3,];
 /// assert_eq!(v.into_iter().collect::<Vec<_>>(), vec![1, 2, 3]);
@@ -300,8 +300,8 @@ impl<T> NEVec<T> {
     /// # Example use
     ///
     /// ```
-    /// use nonempty_collections::nev;
     /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
     /// let v_vec = NEVec::try_from_slice(&[1, 2, 3, 4, 5]);
     /// assert_eq!(v_vec, Some(nev![1, 2, 3, 4, 5]));
@@ -334,8 +334,8 @@ impl<T> NEVec<T> {
     /// # Example Use
     ///
     /// ```
-    /// use nonempty_collections::nev;
     /// use nonempty_collections::NEVec;
+    /// use nonempty_collections::nev;
     ///
     /// let v_vec = NEVec::try_from_vec(vec![1, 2, 3, 4, 5]);
     /// assert_eq!(v_vec, Some(nev![1, 2, 3, 4, 5]));
@@ -1023,8 +1023,8 @@ impl<T> Extend<T> for NEVec<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::nev;
     use crate::NEVec;
+    use crate::nev;
 
     struct Foo {
         user: String,

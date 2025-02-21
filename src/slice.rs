@@ -202,11 +202,11 @@ impl<T: fmt::Debug> fmt::Debug for NEChunks<'_, T> {
 mod tests {
     use std::num::NonZeroUsize;
 
-    use crate::nev;
-    use crate::slice::NEChunks;
     use crate::NESlice;
     use crate::NEVec;
     use crate::NonEmptyIterator;
+    use crate::nev;
+    use crate::slice::NEChunks;
 
     #[test]
     fn test_from_conversion() {

@@ -10,9 +10,9 @@ use std::hash::BuildHasher;
 use std::hash::Hash;
 use std::num::NonZeroUsize;
 
-use indexmap::indexmap;
 use indexmap::Equivalent;
 use indexmap::IndexMap;
+use indexmap::indexmap;
 
 use crate::FromNonEmptyIterator;
 use crate::IntoNonEmptyIterator;
