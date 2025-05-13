@@ -315,16 +315,14 @@ impl<T> NEVec<T> {
 
     /// Get the last element. Never fails.
     #[must_use]
-    #[allow(clippy::missing_panics_doc)] // never fails
     pub fn last(&self) -> &T {
-        self.inner.last().unwrap()
+        unsafe { self.inner.last().unwrap_unchecked() }
     }
 
     /// Get the last element mutably.
     #[must_use]
-    #[allow(clippy::missing_panics_doc)] // never fails
     pub fn last_mut(&mut self) -> &mut T {
-        self.inner.last_mut().unwrap()
+        unsafe { self.inner.last_mut().unwrap_unchecked() }
     }
 
     /// Check whether an element is contained in the list.
@@ -505,9 +503,8 @@ impl<T> NEVec<T> {
     /// assert_eq!(v.split_first(), (&1, &[][..]));
     /// ```
     #[must_use]
-    #[allow(clippy::missing_panics_doc)] // never fails
     pub fn split_first(&self) -> (&T, &[T]) {
-        self.inner.split_first().unwrap()
+        unsafe { self.inner.split_first().unwrap_unchecked() }
     }
 
     /// Deconstruct a `NEVec` into its first, last, and
