@@ -39,6 +39,7 @@ use crate::slice::NEChunks;
 /// Consider also [`crate::nem!`] and [`crate::nes!`].
 #[macro_export]
 macro_rules! nev {
+    () => {compile_error!("cannot be empty")};
     ($h:expr, $( $x:expr ),* $(,)?) => {{
         let mut v = $crate::NEVec::new($h);
         $( v.push($x); )*
