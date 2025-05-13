@@ -1493,7 +1493,7 @@ impl<I: Iterator> Peekable<I> {
 
     /// Returns a mutable reference to the first value without advancing or
     /// consuming the iterator.
-    pub fn peek_mut(&mut self) -> &mut I::Item {
+    pub const fn peek_mut(&mut self) -> &mut I::Item {
         &mut self.first
     }
 }
