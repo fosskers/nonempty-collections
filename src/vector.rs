@@ -28,9 +28,12 @@ use crate::slice::NEChunks;
 ///
 /// let v = nev![1];
 /// assert_eq!(v.into_iter().collect::<Vec<_>>(), vec![1]);
+/// ```
 ///
-/// // Doesn't compile!
-/// // let v = nev![];
+/// This won't compile!
+/// ``` compile_fail
+/// # use nonempty_collections::nev;
+/// let v = nev![];
 /// ```
 ///
 /// Consider also [`crate::nem!`] and [`crate::nes!`].
