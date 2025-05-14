@@ -20,6 +20,7 @@ use crate::slice::NEChunks;
 /// short-hand for constructing [`NEVec`] values.
 ///
 /// ```
+/// use std::num::NonZeroUsize;
 /// use nonempty_collections::nev;
 /// use nonempty_collections::NEVec;
 ///
@@ -28,6 +29,9 @@ use crate::slice::NEChunks;
 ///
 /// let v = nev![1];
 /// assert_eq!(v.into_iter().collect::<Vec<_>>(), vec![1]);
+///
+/// let v = nev![1; NonZeroUsize::new(3).unwrap()];
+/// assert_eq!(v.into_iter().collect::<Vec<_>>(), vec![1; 3]);
 /// ```
 ///
 /// This won't compile!
