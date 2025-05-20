@@ -44,9 +44,6 @@ use crate::slice::NEChunks;
 #[macro_export]
 macro_rules! nev {
     () => {compile_error!("An NEVec cannot be empty")};
-    ($elem:expr; $n:expr) => {{
-        $crate::vector::from_elem($elem, $n)
-    }};
     ($h:expr, $( $x:expr ),* $(,)?) => {{
         let mut v = $crate::NEVec::new($h);
         $( v.push($x); )*
@@ -54,7 +51,10 @@ macro_rules! nev {
     }};
     ($h:expr) => {
         $crate::NEVec::new($h)
-    }
+    };
+    ($elem:expr; $n:expr) => {{
+        $crate::vector::from_elem($elem, $n)
+    }};
 }
 
 #[doc(hidden)]
