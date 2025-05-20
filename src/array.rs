@@ -22,9 +22,9 @@
 use core::fmt;
 use std::num::NonZeroUsize;
 
-use crate::impl_nonempty_iter_for_arrays;
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
+use crate::impl_nonempty_iter_for_arrays;
 
 /// Provides extension methods for non-empty arrays.
 ///

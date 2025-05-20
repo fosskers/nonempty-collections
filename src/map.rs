@@ -717,8 +717,8 @@ mod test {
 mod serde_tests {
     use std::collections::HashMap;
 
-    use crate::nem;
     use crate::NEMap;
+    use crate::nem;
 
     #[test]
     fn json() {
