@@ -18,6 +18,8 @@ use crate::iter::NonEmptyIterator;
 /// Unfortunately there is no macro for this, but if you want one, just use
 /// `nev!` and handle the ownership manually. Also consider
 /// [`crate::NEVec::as_nonempty_slice`].
+///
+/// If you want access to the inner slice, use [`AsRef`].
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NESlice<'a, T> {
     inner: &'a [T],
@@ -104,6 +106,12 @@ impl<'a, T> NESlice<'a, T> {
         NEChunks {
             inner: self.inner.chunks(chunk_size.get()),
         }
+    }
+}
+
+impl<T> AsRef<[T]> for NESlice<'_, T> {
+    fn as_ref(&self) -> &[T] {
+        self.inner
     }
 }
 
