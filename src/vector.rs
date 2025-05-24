@@ -319,6 +319,9 @@ impl<T> NEVec<T> {
 
     /// Get the last element. Never fails.
     #[must_use]
+    // false positive: to call `last`, `Vec` needs to first
+    // go through `Deref`, and that one's not const
+    #[allow(clippy::missing_const_for_fn)]
     #[allow(clippy::missing_panics_doc)] // never fails
     pub fn last(&self) -> &T {
         self.inner.last().unwrap()
@@ -326,6 +329,9 @@ impl<T> NEVec<T> {
 
     /// Get the last element mutably.
     #[must_use]
+    // false positive: to call `last_mut`, `Vec` needs to first
+    // go through `DerefMut`, and that one's not const
+    #[allow(clippy::missing_const_for_fn)]
     #[allow(clippy::missing_panics_doc)] // never fails
     pub fn last_mut(&mut self) -> &mut T {
         self.inner.last_mut().unwrap()
@@ -509,6 +515,9 @@ impl<T> NEVec<T> {
     /// assert_eq!(v.split_first(), (&1, &[][..]));
     /// ```
     #[must_use]
+    // false positive: to call `last`, `Vec` needs to first
+    // go through `Deref`, and that one's not const
+    #[allow(clippy::missing_const_for_fn)]
     #[allow(clippy::missing_panics_doc)] // never fails
     pub fn split_first(&self) -> (&T, &[T]) {
         self.inner.split_first().unwrap()
