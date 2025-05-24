@@ -164,17 +164,17 @@ impl<K, V, S> NEIndexMap<K, V, S> {
     }
 
     /// Get the first element. Never fails.
-    #[allow(clippy::missing_panics_doc)] // the invariant of NEIndexMap is that its non-empty
     #[must_use]
     pub fn first(&self) -> (&K, &V) {
-        self.inner.first().unwrap()
+        // SAFETY: the invariant of NEIndexMap is that its non-empty
+        unsafe { self.inner.first().unwrap_unchecked() }
     }
 
     /// Get the last element. Never fails.
-    #[allow(clippy::missing_panics_doc)] // the invariant of NEIndexMap is that its non-empty
     #[must_use]
     pub fn last(&self) -> (&K, &V) {
-        self.inner.last().unwrap()
+        // SAFETY: the invariant of NEIndexMap is that its non-empty
+        unsafe { self.inner.last().unwrap_unchecked() }
     }
 }
 
