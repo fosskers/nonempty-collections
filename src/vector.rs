@@ -20,6 +20,7 @@ use crate::slice::NEChunks;
 /// short-hand for constructing [`NEVec`] values.
 ///
 /// ```
+/// use std::num::NonZeroUsize;
 /// use nonempty_collections::nev;
 /// use nonempty_collections::NEVec;
 ///
@@ -28,6 +29,9 @@ use crate::slice::NEChunks;
 ///
 /// let v = nev![1];
 /// assert_eq!(v.into_iter().collect::<Vec<_>>(), vec![1]);
+///
+/// let v = nev![1; NonZeroUsize::new(3).unwrap()];
+/// assert_eq!(v.into_iter().collect::<Vec<_>>(), vec![1; 3]);
 /// ```
 ///
 /// This won't compile!
@@ -47,6 +51,16 @@ macro_rules! nev {
     }};
     ($h:expr) => {
         $crate::NEVec::new($h)
+    };
+    ($elem:expr; $n:expr) => {{
+        $crate::vector::from_elem($elem, $n)
+    }};
+}
+
+#[doc(hidden)]
+pub fn from_elem<T: Clone>(elem: T, n: NonZeroUsize) -> NEVec<T> {
+    NEVec {
+        inner: vec![elem; n.get()],
     }
 }
 
@@ -1161,9 +1175,12 @@ impl<T> Extend<T> for NEVec<T> {
 
 #[cfg(test)]
 mod tests {
+    use std::num::NonZeroUsize;
+
     use crate::nev;
     use crate::NEVec;
 
+    #[derive(Debug, Clone, PartialEq)]
     struct Foo {
         user: String,
     }
@@ -1179,6 +1196,20 @@ mod tests {
 
         let v = nev![a, b];
         assert_eq!("a", v.first().user);
+    }
+
+    #[test]
+    fn macro_semicolon() {
+        let a = Foo {
+            user: "a".to_string(),
+        };
+        let n = NonZeroUsize::new(3).unwrap();
+        let v = nev![a.clone(); n];
+
+        let expected = NEVec {
+            inner: vec![a; n.get()],
+        };
+        assert_eq!(v, expected);
     }
 
     #[test]
