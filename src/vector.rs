@@ -23,7 +23,7 @@ use crate::slice::NEChunks;
 /// use nonempty_collections::nev;
 /// use nonempty_collections::NEVec;
 ///
-/// let v = nev![1, 2, 3,];
+/// let v = nev![1, 2, 3];
 /// assert_eq!(v.into_iter().collect::<Vec<_>>(), vec![1, 2, 3]);
 ///
 /// let v = nev![1];
@@ -35,13 +35,13 @@ use crate::slice::NEChunks;
 ///
 /// This won't compile!
 /// ``` compile_fail
-/// # use nonempty_collections::nev;
+/// use nonempty_collections::nev;
 /// let v = nev![];
 /// ```
 ///
-/// Same as this
+/// Neither will this.
 /// ``` compile_fail
-/// # use nonempty_collections::nev;
+/// use nonempty_collections::nev;
 /// let v = nev![1; 0];
 /// ```
 ///
@@ -58,7 +58,7 @@ macro_rules! nev {
         $crate::NEVec::new($h)
     };
     ($elem:expr; $n:expr) => {{
-        let n = const { ::std::num::NonZero::new($n).unwrap() };
+        let n = const { ::std::num::NonZero::new($n).expect("Length cannot be 0") };
         $crate::vector::from_elem($elem, n)
     }};
 }
