@@ -53,13 +53,8 @@ macro_rules! nev {
         $crate::NEVec::new($h)
     };
     ($elem:expr; $n:expr) => {{
-        let n = const {
-            let n = $n;
-            assert!(n > 0);
-            n
-        };
-
-        $crate::vector::from_elem($elem, unsafe { std::num::NonZeroUsize::new_unchecked(n) })
+        let n = const { ::std::num::NonZero::new($n).unwrap() };
+        $crate::vector::from_elem($elem, n)
     }};
 }
 
