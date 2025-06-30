@@ -30,7 +30,7 @@ use crate::slice::NEChunks;
 /// let v = nev![1];
 /// assert_eq!(v.into_iter().collect::<Vec<_>>(), vec![1]);
 ///
-/// let v = nev![1; NonZeroUsize::new(3).unwrap()];
+/// let v = nev![1; 3];
 /// assert_eq!(v.into_iter().collect::<Vec<_>>(), vec![1; 3]);
 /// ```
 ///
@@ -53,7 +53,13 @@ macro_rules! nev {
         $crate::NEVec::new($h)
     };
     ($elem:expr; $n:expr) => {{
-        $crate::vector::from_elem($elem, $n)
+        let n = const {
+            let n = $n;
+            assert!(n > 0);
+            n
+        };
+
+        $crate::vector::from_elem($elem, unsafe { std::num::NonZeroUsize::new_unchecked(n) })
     }};
 }
 
@@ -1175,8 +1181,6 @@ impl<T> Extend<T> for NEVec<T> {
 
 #[cfg(test)]
 mod tests {
-    use std::num::NonZeroUsize;
-
     use crate::nev;
     use crate::NEVec;
 
@@ -1203,12 +1207,9 @@ mod tests {
         let a = Foo {
             user: "a".to_string(),
         };
-        let n = NonZeroUsize::new(3).unwrap();
-        let v = nev![a.clone(); n];
+        let v = nev![a.clone(); 3];
 
-        let expected = NEVec {
-            inner: vec![a; n.get()],
-        };
+        let expected = NEVec { inner: vec![a; 3] };
         assert_eq!(v, expected);
     }
 
