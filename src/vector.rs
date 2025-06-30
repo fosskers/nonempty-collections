@@ -20,7 +20,6 @@ use crate::slice::NEChunks;
 /// short-hand for constructing [`NEVec`] values.
 ///
 /// ```
-/// use std::num::NonZeroUsize;
 /// use nonempty_collections::nev;
 /// use nonempty_collections::NEVec;
 ///
