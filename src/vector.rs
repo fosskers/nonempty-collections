@@ -40,6 +40,12 @@ use crate::slice::NEChunks;
 /// let v = nev![];
 /// ```
 ///
+/// Same as this
+/// ``` compile_fail
+/// # use nonempty_collections::nev;
+/// let v = nev![1; 0];
+/// ```
+///
 /// Consider also [`crate::nem!`] and [`crate::nes!`].
 #[macro_export]
 macro_rules! nev {
