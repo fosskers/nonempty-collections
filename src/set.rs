@@ -633,6 +633,23 @@ impl<T: fmt::Debug, S> fmt::Debug for NESet<T, S> {
     }
 }
 
+impl<T, S> TryFrom<HashSet<T, S>> for NESet<T, S>
+where
+    T: Eq + Hash,
+    S: BuildHasher + Default,
+{
+    type Error = crate::Error;
+
+    fn try_from(set: HashSet<T, S>) -> Result<Self, Self::Error> {
+        let ne = set
+            .try_into_nonempty_iter()
+            .ok_or(crate::Error::Empty)?
+            .collect();
+
+        Ok(ne)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use maplit::hashset;
@@ -649,23 +666,6 @@ mod test {
         let expected = format!("{:?}", hashset! {0}.iter());
         let actual = format!("{:?}", nes! {0}.nonempty_iter());
         assert_eq!(expected, actual);
-    }
-}
-
-impl<T, S> TryFrom<HashSet<T, S>> for NESet<T, S>
-where
-    T: Eq + Hash,
-    S: BuildHasher + Default,
-{
-    type Error = crate::Error;
-
-    fn try_from(set: HashSet<T, S>) -> Result<Self, Self::Error> {
-        let ne = set
-            .try_into_nonempty_iter()
-            .ok_or(crate::Error::Empty)?
-            .collect();
-
-        Ok(ne)
     }
 }
 
