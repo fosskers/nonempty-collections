@@ -1,6 +1,9 @@
 # `nonempty-collections`
 
 ## Unreleased
+
+#### Added
+
 - `nev![a; n]` syntax (similar to `vec![a; n]`)
 
 ## 0.3.1 (2025-06-14)
