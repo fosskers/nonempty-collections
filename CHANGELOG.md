@@ -1,10 +1,17 @@
 # `nonempty-collections`
 
-## Unreleased
+## 1.0.0 (2025-06-30)
+
+Five months since the big changes and no major issues. If there are, we can now
+fix them in the normal Semver way.
 
 #### Added
 
 - `nev![a; n]` syntax (similar to `vec![a; n]`)
+
+#### Changed
+
+- Bumped the Rust Edition to 2024.
 
 ## 0.3.1 (2025-06-14)
 

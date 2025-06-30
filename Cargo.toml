@@ -1,9 +1,9 @@
 [package]
 name = "nonempty-collections"
-version = "0.3.1"
+version = "1.0.0"
 description = "Correct-by-construction non-empty collections."
 authors = ["Colin Woodbury <colin@fosskers.ca>"]
-edition = "2021"
+edition = "2024"
 license = "MIT"
 repository = "https://github.com/fosskers/nonempty-collections"
 readme = "README.md"
