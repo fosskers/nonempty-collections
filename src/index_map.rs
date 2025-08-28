@@ -397,6 +397,18 @@ where
     }
 }
 
+impl<K, V, S> AsRef<IndexMap<K, V, S>> for NEIndexMap<K, V, S> {
+    fn as_ref(&self) -> &IndexMap<K, V, S> {
+        &self.inner
+    }
+}
+
+impl<K, V, S> AsMut<IndexMap<K, V, S>> for NEIndexMap<K, V, S> {
+    fn as_mut(&mut self) -> &mut IndexMap<K, V, S> {
+        &mut self.inner
+    }
+}
+
 impl<K, V, S> PartialEq for NEIndexMap<K, V, S>
 where
     K: Eq + Hash,

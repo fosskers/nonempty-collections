@@ -425,6 +425,18 @@ where
     }
 }
 
+impl<T, S> AsRef<HashSet<T, S>> for NESet<T, S> {
+    fn as_ref(&self) -> &HashSet<T, S> {
+        &self.inner
+    }
+}
+
+impl<T, S> AsMut<HashSet<T, S>> for NESet<T, S> {
+    fn as_mut(&mut self) -> &mut HashSet<T, S> {
+        &mut self.inner
+    }
+}
+
 impl<T, S> PartialEq for NESet<T, S>
 where
     T: Eq + Hash,
