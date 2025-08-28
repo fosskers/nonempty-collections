@@ -44,7 +44,7 @@ impl<'a, T> NESlice<'a, T> {
     }
 
     #[must_use]
-    pub(crate) const fn from_slice_unchecked(slice: &'a [T]) -> Self {
+    pub(crate) const unsafe fn from_slice_unchecked(slice: &'a [T]) -> Self {
         NESlice { inner: slice }
     }
 

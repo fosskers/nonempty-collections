@@ -808,7 +808,8 @@ impl<T> NEVec<T> {
     /// Yields a `NESlice`.
     #[must_use]
     pub fn as_nonempty_slice(&self) -> crate::NESlice<'_, T> {
-        crate::NESlice::from_slice_unchecked(self.inner.as_slice())
+        // SAFETY: `self.inner` is non-empty by the invariant of `NEVec`
+        unsafe { crate::NESlice::from_slice_unchecked(self.inner.as_slice()) }
     }
 
     /// Removes all but the first of consecutive elements in the vector that
