@@ -382,7 +382,7 @@ where
 impl<K, V, S> PartialEq for NEMap<K, V, S>
 where
     K: Eq + Hash,
-    V: Eq,
+    V: PartialEq,
     S: BuildHasher,
 {
     /// This is an `O(n)` comparison of each key/value pair, one by one.
