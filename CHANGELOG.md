@@ -1,5 +1,15 @@
 # `nonempty-collections`
 
+## 1.0.1 (2025-09-06)
+
+#### Added
+
+- Various `AsRef` imps.
+
+#### Fixed
+
+- Overly restrictive bounds on the `PartialEq` impl for `NEMap`.
+
 ## 1.0.0 (2025-06-30)
 
 Five months since the big changes and no major issues. If there are, we can now
