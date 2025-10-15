@@ -5,6 +5,7 @@
 #### Added
 
 - The `Singleton` trait.
+- `NonEmptyIterator::unzip`.
 
 ## 1.0.1 (2025-09-06)
 

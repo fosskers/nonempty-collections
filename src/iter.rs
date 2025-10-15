@@ -2,6 +2,7 @@
 
 use crate::nev;
 use crate::NEVec;
+use crate::Singleton;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -829,6 +830,34 @@ pub trait NonEmptyIterator: IntoIterator {
         Zip {
             inner: self.into_iter().zip(other),
         }
+    }
+
+    /// Reduce a non-empty iterator of pairs into a pair of concrete containers.
+    ///
+    /// See also [`Iterator::unzip`].
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let v = nev![('a', 1), ('b', 2), ('c', 3)];
+    /// let (a, b): (NEVec<char>, NEVec<usize>) = v.into_nonempty_iter().unzip();
+    ///
+    /// assert_eq!(a, nev!['a', 'b', 'c']);
+    /// assert_eq!(b, nev![1, 2, 3]);
+    /// ```
+    fn unzip<A, B, FromA, FromB>(self) -> (FromA, FromB)
+    where
+        FromA: Singleton<Item = A> + Extend<A>,
+        FromB: Singleton<Item = B> + Extend<B>,
+        Self: Sized + NonEmptyIterator<Item = (A, B)>,
+    {
+        let ((a, b), iter) = self.next();
+        let from_a = Singleton::singleton(a);
+        let from_b = Singleton::singleton(b);
+
+        let mut fused = (from_a, from_b);
+        fused.extend(iter);
+        fused
     }
 
     /// Reduces the elements to a single one, by repeatedly applying a reducing
