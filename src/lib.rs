@@ -178,3 +178,11 @@ impl std::fmt::Display for Error {
         }
     }
 }
+
+/// A type that can be instantiated via a single item - the kindred spirit to
+/// [`Default`].
+pub trait Singleton {
+    type Item;
+
+    fn singleton(item: Self::Item) -> Self;
+}

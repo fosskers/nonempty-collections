@@ -16,6 +16,7 @@ use crate::FromNonEmptyIterator;
 use crate::IntoIteratorExt;
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
+use crate::Singleton;
 
 /// Like the [`crate::nev!`] macro, but for Maps. A nice short-hand for
 /// constructing [`NEMap`] values.
@@ -666,6 +667,23 @@ impl<K: fmt::Debug, V: fmt::Debug, S> fmt::Debug for NEMap<K, V, S> {
 //         self.inner.next().map(|(_, v)| v)
 //     }
 // }
+
+impl<K, V> Singleton for NEMap<K, V>
+where
+    K: Eq + Hash,
+{
+    type Item = (K, V);
+
+    /// ```
+    /// use nonempty_collections::{NEMap, Singleton, nem};
+    ///
+    /// let m = NEMap::singleton(('a', 1));
+    /// assert_eq!(nem!['a' => 1], m);
+    /// ```
+    fn singleton((k, v): Self::Item) -> Self {
+        NEMap::new(k, v)
+    }
+}
 
 #[cfg(test)]
 mod test {

@@ -1,5 +1,7 @@
 //! Non-empty iterators.
 
+use crate::nev;
+use crate::NEVec;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -11,9 +13,6 @@ use std::iter::Sum;
 use std::num::NonZeroUsize;
 use std::rc::Rc;
 use std::result::Result;
-
-use crate::nev;
-use crate::NEVec;
 
 // Iterator structs which _always_ have something if the source iterator is
 // non-empty:

@@ -3,20 +3,19 @@
 //! Unlike `HashMap` and [`crate::NEMap`], these feature a predictable iteration
 //! order.
 
+use crate::FromNonEmptyIterator;
+use crate::IntoNonEmptyIterator;
+use crate::NonEmptyIterator;
+use crate::Singleton;
+use indexmap::indexmap;
+use indexmap::Equivalent;
+use indexmap::IndexMap;
 use std::fmt;
 use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::hash::BuildHasher;
 use std::hash::Hash;
 use std::num::NonZeroUsize;
-
-use indexmap::indexmap;
-use indexmap::Equivalent;
-use indexmap::IndexMap;
-
-use crate::FromNonEmptyIterator;
-use crate::IntoNonEmptyIterator;
-use crate::NonEmptyIterator;
 
 /// Short-hand for constructing [`NEIndexMap`] values.
 ///
@@ -708,6 +707,23 @@ impl<'a, K, V> IntoIterator for ValuesMut<'a, K, V> {
 impl<K: Debug, V: Debug> Debug for ValuesMut<'_, K, V> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         self.inner.fmt(f)
+    }
+}
+
+impl<K, V> Singleton for NEIndexMap<K, V>
+where
+    K: Eq + Hash,
+{
+    type Item = (K, V);
+
+    /// ```
+    /// use nonempty_collections::{NEIndexMap, Singleton, ne_indexmap};
+    ///
+    /// let m = NEIndexMap::singleton(('a', 1));
+    /// assert_eq!(ne_indexmap!['a' => 1], m);
+    /// ```
+    fn singleton((k, v): Self::Item) -> Self {
+        NEIndexMap::new(k, v)
     }
 }
 

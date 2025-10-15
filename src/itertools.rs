@@ -7,13 +7,11 @@
 //! use nonempty_collections::NonEmptyItertools;
 //! ```
 
-use core::fmt;
-use std::fmt::Debug;
-
-use itertools::Itertools;
-
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
+use core::fmt;
+use itertools::Itertools;
+use std::fmt::Debug;
 
 /// A [`NonEmptyIterator`] blanket implementation that provides extra adaptors
 /// and methods, similar to [`Itertools`](https://docs.rs/itertools/) for `Iterator`.

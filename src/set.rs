@@ -16,6 +16,7 @@ use crate::iter::NonEmptyIterator;
 use crate::FromNonEmptyIterator;
 use crate::IntoIteratorExt;
 use crate::IntoNonEmptyIterator;
+use crate::Singleton;
 
 /// Like the [`crate::nev!`] macro, but for Sets. A nice short-hand for
 /// constructing [`NESet`] values.
@@ -659,6 +660,23 @@ where
             .collect();
 
         Ok(ne)
+    }
+}
+
+impl<T> Singleton for NESet<T>
+where
+    T: Eq + Hash,
+{
+    type Item = T;
+
+    /// ```
+    /// use nonempty_collections::{NESet, Singleton, nes};
+    ///
+    /// let s = NESet::singleton(1);
+    /// assert_eq!(nes![1], s);
+    /// ```
+    fn singleton(item: Self::Item) -> Self {
+        NESet::new(item)
     }
 }
 
