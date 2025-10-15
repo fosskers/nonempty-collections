@@ -845,6 +845,19 @@ pub trait NonEmptyIterator: IntoIterator {
     /// assert_eq!(a, nev!['a', 'b', 'c']);
     /// assert_eq!(b, nev![1, 2, 3]);
     /// ```
+    ///
+    /// Fortunately, the [`Extend`] impl of [`crate::NEMap`] naturally fits
+    /// this, thus you can split keys and values cleanly:
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let m = nem!['a' => 1, 'b' => 2, 'c' => 3];
+    /// let (a, b): (NESet<char>, NESet<usize>) = m.into_nonempty_iter().unzip();
+    ///
+    /// assert_eq!(a, nes!['a', 'b', 'c']);
+    /// assert_eq!(b, nes![1, 2, 3]);
+    /// ```
     fn unzip<A, B, FromA, FromB>(self) -> (FromA, FromB)
     where
         FromA: Singleton<Item = A> + Extend<A>,

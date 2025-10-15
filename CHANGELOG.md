@@ -6,12 +6,13 @@
 
 - The `Singleton` trait.
 - `NonEmptyIterator::unzip`.
+- `Extend` impls for `NESet`, `NEMap`, and `NEIndexMap`.
 
 ## 1.0.1 (2025-09-06)
 
 #### Added
 
-- Various `AsRef` imps.
+- Various `AsRef` impls.
 
 #### Fixed
 

@@ -727,6 +727,15 @@ where
     }
 }
 
+impl<K, V> Extend<(K, V)> for NEIndexMap<K, V>
+where
+    K: Eq + Hash,
+{
+    fn extend<I: IntoIterator<Item = (K, V)>>(&mut self, iter: I) {
+        self.inner.extend(iter);
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

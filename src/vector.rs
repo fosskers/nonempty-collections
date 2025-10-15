@@ -1,5 +1,10 @@
 //! Non-empty Vectors.
 
+use crate::iter::FromNonEmptyIterator;
+use crate::iter::IntoNonEmptyIterator;
+use crate::iter::NonEmptyIterator;
+use crate::slice::NEChunks;
+use crate::Singleton;
 use core::fmt;
 use std::cmp::Ordering;
 use std::fmt::Debug;
@@ -10,12 +15,6 @@ use std::num::NonZeroUsize;
 use serde::Deserialize;
 #[cfg(feature = "serde")]
 use serde::Serialize;
-
-use crate::iter::FromNonEmptyIterator;
-use crate::iter::IntoNonEmptyIterator;
-use crate::iter::NonEmptyIterator;
-use crate::slice::NEChunks;
-use crate::Singleton;
 
 /// Like the [`vec!`] macro, but enforces at least one argument. A nice
 /// short-hand for constructing [`NEVec`] values.

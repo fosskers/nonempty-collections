@@ -680,6 +680,15 @@ where
     }
 }
 
+impl<T> Extend<T> for NESet<T>
+where
+    T: Eq + Hash,
+{
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        self.inner.extend(iter);
+    }
+}
+
 #[cfg(test)]
 mod test {
     use maplit::hashset;
