@@ -1,5 +1,13 @@
 # `nonempty-collections`
 
+## Unreleased
+
+#### Added
+
+- `NonEmptyIterator::intersperse`, finally! `Iterator::intersperse` within `std`
+  is still not stabilized after years of waiting, and its annoying to depend on
+  `itertools` just for this.
+
 ## 1.1.0 (2025-10-16)
 
 #### Added

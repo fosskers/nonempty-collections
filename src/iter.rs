@@ -442,6 +442,23 @@ pub trait NonEmptyIterator: IntoIterator {
         NEGroupBy { iter: self, f }
     }
 
+    /// Inject a given value between each item of the [`NonEmptyIterator`].
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let n = nev![1, 2, 3];
+    /// let m: NEVec<_> = n.into_nonempty_iter().intersperse(0).collect();
+    /// assert_eq!(nev![1, 0, 2, 0, 3], m);
+    /// ```
+    fn intersperse(self, item: Self::Item) -> Intersperse<Self>
+    where
+        Self: Sized,
+        Self::Item: Clone,
+    {
+        Intersperse { iter: self, item }
+    }
+
     /// Takes a closure and creates a non-empty iterator which calls that
     /// closure on each element.
     ///
@@ -1548,6 +1565,75 @@ impl<I: Iterator> IntoIterator for Peekable<I> {
 
     fn into_iter(self) -> Self::IntoIter {
         std::iter::once(self.first).chain(self.rest)
+    }
+}
+
+pub struct Intersperse<I>
+where
+    I: NonEmptyIterator,
+{
+    iter: I,
+    item: I::Item,
+}
+
+impl<I> NonEmptyIterator for Intersperse<I>
+where
+    I: NonEmptyIterator,
+    I::Item: Clone,
+{
+}
+
+impl<I> IntoIterator for Intersperse<I>
+where
+    I: NonEmptyIterator,
+    I::Item: Clone,
+{
+    type Item = I::Item;
+
+    type IntoIter = RawIntersperse<<I as IntoIterator>::IntoIter>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let mut iter = self.iter.into_iter();
+
+        let raw = RawIntersperse {
+            item: self.item.clone(),
+            next: iter.next(),
+            iter,
+        };
+
+        raw.into_iter()
+    }
+}
+
+pub struct RawIntersperse<I>
+where
+    I: Iterator,
+{
+    iter: I,
+    item: I::Item,
+    next: Option<I::Item>,
+}
+
+impl<I> Iterator for RawIntersperse<I>
+where
+    I: Iterator,
+    I::Item: Clone,
+{
+    type Item = I::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.next.is_none() {
+            match self.iter.next() {
+                Some(next) => {
+                    self.next = Some(next);
+                    Some(self.item.clone())
+                }
+                // Completely done the iteration.
+                None => None,
+            }
+        } else {
+            self.next.take()
+        }
     }
 }
 
