@@ -1,6 +1,8 @@
 # `nonempty-collections`
 
-## Unreleased
+## 1.2.0 (2025-11-11)
+
+Happy Remembrance Day.
 
 #### Added
 

@@ -1,6 +1,6 @@
 [package]
 name = "nonempty-collections"
-version = "1.1.0"
+version = "1.2.0"
 description = "Correct-by-construction non-empty collections."
 authors = ["Colin Woodbury <colin@fosskers.ca>"]
 edition = "2024"
