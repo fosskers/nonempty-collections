@@ -3,8 +3,11 @@
 use crate::nev;
 use crate::NEVec;
 use crate::Singleton;
+use std::borrow::Cow;
 use std::cell::RefCell;
 use std::cmp::Ordering;
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::hash::BuildHasher;
@@ -12,6 +15,8 @@ use std::hash::Hash;
 use std::iter::Product;
 use std::iter::Sum;
 use std::num::NonZeroUsize;
+use std::path::Path;
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::result::Result;
 
@@ -925,6 +930,63 @@ pub trait FromNonEmptyIterator<T>: Sized {
         I: IntoNonEmptyIterator<Item = T>;
 }
 
+impl FromNonEmptyIterator<()> for () {
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = ()>,
+    {
+        // NOTE: 2025-11-11 Can't just be a short-circuited `()` due to the
+        // potential for side-effects to be occuring within the original
+        // iterator.
+        iter.into_nonempty_iter().into_iter().collect()
+    }
+}
+
+impl FromNonEmptyIterator<String> for String {
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = String>,
+    {
+        iter.into_nonempty_iter().into_iter().collect()
+    }
+}
+
+impl<'a> FromNonEmptyIterator<&'a str> for String {
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = &'a str>,
+    {
+        iter.into_nonempty_iter().into_iter().collect()
+    }
+}
+
+impl<'a> FromNonEmptyIterator<Cow<'a, str>> for String {
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = Cow<'a, str>>,
+    {
+        iter.into_nonempty_iter().into_iter().collect()
+    }
+}
+
+impl FromNonEmptyIterator<char> for String {
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = char>,
+    {
+        iter.into_nonempty_iter().into_iter().collect()
+    }
+}
+
+impl<'a> FromNonEmptyIterator<&'a char> for String {
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = &'a char>,
+    {
+        iter.into_nonempty_iter().into_iter().collect()
+    }
+}
+
 impl<T> FromNonEmptyIterator<T> for Vec<T> {
     fn from_nonempty_iter<I>(iter: I) -> Self
     where
@@ -955,6 +1017,42 @@ where
     fn from_nonempty_iter<I>(iter: I) -> Self
     where
         I: IntoNonEmptyIterator<Item = T>,
+    {
+        iter.into_nonempty_iter().into_iter().collect()
+    }
+}
+
+impl<K, V> FromNonEmptyIterator<(K, V)> for BTreeMap<K, V>
+where
+    K: Ord,
+{
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = (K, V)>,
+    {
+        iter.into_nonempty_iter().into_iter().collect()
+    }
+}
+
+impl<T> FromNonEmptyIterator<T> for BTreeSet<T>
+where
+    T: Ord,
+{
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = T>,
+    {
+        iter.into_nonempty_iter().into_iter().collect()
+    }
+}
+
+impl<P> FromNonEmptyIterator<P> for PathBuf
+where
+    P: AsRef<Path>,
+{
+    fn from_nonempty_iter<I>(iter: I) -> Self
+    where
+        I: IntoNonEmptyIterator<Item = P>,
     {
         iter.into_nonempty_iter().into_iter().collect()
     }
