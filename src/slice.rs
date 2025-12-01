@@ -32,6 +32,13 @@ impl<'a, T> NESlice<'a, T> {
         &self.inner[0]
     }
 
+    /// Get the last element. Never fails.
+    #[must_use]
+    #[allow(clippy::missing_panics_doc)] // never fails
+    pub const fn last(&self) -> &T {
+        &self.inner.last().unwrap()
+    }
+
     /// Using `try_from_slice` gives a proof that the input slice is non-empty
     /// in the `Some` branch.
     #[must_use]
@@ -210,11 +217,11 @@ impl<T: fmt::Debug> fmt::Debug for NEChunks<'_, T> {
 mod tests {
     use std::num::NonZeroUsize;
 
-    use crate::nev;
-    use crate::slice::NEChunks;
     use crate::NESlice;
     use crate::NEVec;
     use crate::NonEmptyIterator;
+    use crate::nev;
+    use crate::slice::NEChunks;
 
     #[test]
     fn test_from_conversion() {
