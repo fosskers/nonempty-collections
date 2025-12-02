@@ -7,6 +7,12 @@ use std::hash::BuildHasher;
 use std::hash::Hash;
 use std::num::NonZeroUsize;
 
+#[cfg(feature = "schemars")]
+use ::{
+    schemars::{JsonSchema, Schema, SchemaGenerator},
+    std::borrow::Cow,
+};
+
 #[cfg(feature = "serde")]
 use serde::Deserialize;
 #[cfg(feature = "serde")]
@@ -694,6 +700,29 @@ where
     }
 }
 
+#[cfg(feature = "schemars")]
+impl<K: JsonSchema, V: JsonSchema> JsonSchema for super::NEMap<K, V> {
+    fn schema_name() -> Cow<'static, str> {
+        HashMap::<K, V>::schema_name()
+    }
+
+    fn json_schema(generator: &mut SchemaGenerator) -> Schema {
+        let mut schema = HashMap::<K, V>::json_schema(generator);
+
+        if let Some(schema_object) = schema.as_object_mut()
+            && schema_object["type"] == "object"
+        {
+            schema_object.insert("minProperties".to_string(), 1.into());
+        }
+
+        schema
+    }
+
+    fn inline_schema() -> bool {
+        HashMap::<K, V>::inline_schema()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::num::NonZeroUsize;
@@ -756,8 +785,8 @@ mod test {
 mod serde_tests {
     use std::collections::HashMap;
 
-    use crate::nem;
     use crate::NEMap;
+    use crate::nem;
 
     #[test]
     fn json() {
@@ -770,5 +799,22 @@ mod serde_tests {
         let j = serde_json::to_string(&empty).unwrap();
         let bad = serde_json::from_str::<NEMap<usize, char>>(&j);
         assert!(bad.is_err());
+    }
+}
+
+#[cfg(feature = "schemars")]
+#[cfg(test)]
+mod schemars_tests {
+    use super::{HashMap, NEMap};
+    use schemars::schema_for;
+
+    #[test]
+    fn test_simple_schema() {
+        let actual = schema_for!(NEMap<String, i32>).to_value();
+
+        let mut expected = schema_for!(HashMap<String, i32>).to_value();
+        expected["minProperties"] = 1.into();
+
+        assert_eq!(expected, actual);
     }
 }

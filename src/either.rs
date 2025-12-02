@@ -32,6 +32,12 @@ use either::Either;
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
 
+#[cfg(feature = "schemars")]
+use ::{
+    schemars::{JsonSchema, Schema, SchemaGenerator},
+    std::borrow::Cow,
+};
+
 /// Non-empty variant of [`either::Either`] that implements
 /// [`NonEmptyIterator`].
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
@@ -90,5 +96,20 @@ where
             NEEither::Left(left) => Either::Left(left.into_iter()),
             NEEither::Right(right) => Either::Right(right.into_iter()),
         }
+    }
+}
+
+#[cfg(feature = "schemars")]
+impl<L: JsonSchema, R: JsonSchema> JsonSchema for NEEither<L, R> {
+    fn schema_name() -> Cow<'static, str> {
+        Either::<L, R>::schema_name()
+    }
+
+    fn json_schema(generator: &mut SchemaGenerator) -> Schema {
+        Either::<L, R>::json_schema(generator)
+    }
+
+    fn inline_schema() -> bool {
+        Either::<L, R>::inline_schema()
     }
 }

@@ -7,15 +7,21 @@ use crate::FromNonEmptyIterator;
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
 use crate::Singleton;
-use indexmap::indexmap;
 use indexmap::Equivalent;
 use indexmap::IndexMap;
+use indexmap::indexmap;
 use std::fmt;
 use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::hash::BuildHasher;
 use std::hash::Hash;
 use std::num::NonZeroUsize;
+
+#[cfg(feature = "schemars")]
+use ::{
+    schemars::{JsonSchema, Schema, SchemaGenerator},
+    std::borrow::Cow,
+};
 
 /// Short-hand for constructing [`NEIndexMap`] values.
 ///
@@ -736,6 +742,29 @@ where
     }
 }
 
+#[cfg(feature = "schemars")]
+impl<K: JsonSchema, V: JsonSchema> JsonSchema for super::NEIndexMap<K, V> {
+    fn schema_name() -> Cow<'static, str> {
+        IndexMap::<K, V>::schema_name()
+    }
+
+    fn json_schema(generator: &mut SchemaGenerator) -> Schema {
+        let mut schema = IndexMap::<K, V>::json_schema(generator);
+
+        if let Some(schema_object) = schema.as_object_mut()
+            && schema_object["type"] == "object"
+        {
+            schema_object.insert("minProperties".to_string(), 1.into());
+        }
+
+        schema
+    }
+
+    fn inline_schema() -> bool {
+        IndexMap::<K, V>::inline_schema()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -797,5 +826,21 @@ mod test {
             *v -= 1;
         }
         assert_eq!(ne_indexmap! {"a" => 0, "b" => 1, "c" => 2}, v);
+    }
+
+    #[cfg(feature = "schemars")]
+    mod schemars_tests {
+        use super::{IndexMap, NEIndexMap};
+        use schemars::schema_for;
+
+        #[test]
+        fn test_simple_schema() {
+            let actual = schema_for!(NEIndexMap<i32, i32>).to_value();
+
+            let mut expected = schema_for!(IndexMap<i32, i32>).to_value();
+            expected["minProperties"] = 1.into();
+
+            assert_eq!(expected, actual);
+        }
     }
 }
