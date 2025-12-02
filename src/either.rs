@@ -38,9 +38,13 @@ use ::{
     std::borrow::Cow,
 };
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 /// Non-empty variant of [`either::Either`] that implements
 /// [`NonEmptyIterator`].
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum NEEither<L, R> {
     /// A value of type `L`.
     Left(L),
@@ -111,5 +115,24 @@ impl<L: JsonSchema, R: JsonSchema> JsonSchema for NEEither<L, R> {
 
     fn inline_schema() -> bool {
         Either::<L, R>::inline_schema()
+    }
+}
+
+#[cfg(all(test, feature = "serde"))]
+mod serde_tests {
+    use super::{Either, NEEither};
+
+    #[test]
+    fn json() {
+        let ne_either: NEEither<i32, f32> = NEEither::Left(123);
+        let ne_either_json = serde_json::to_string(&ne_either).unwrap();
+        let either: Either<i32, f32> = serde_json::from_str(&ne_either_json).unwrap();
+        let either_json = serde_json::to_string(&either).unwrap();
+
+        assert_eq!(&ne_either_json, &either_json);
+
+        let ne_either_2: NEEither<i32, f32> = serde_json::from_str(&either_json).unwrap();
+
+        assert_eq!(&ne_either, &ne_either_2);
     }
 }
