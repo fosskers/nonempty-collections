@@ -79,7 +79,6 @@ macro_rules! nev {
 #[cfg_attr(
     feature = "serde",
     derive(Deserialize, Serialize),
-    serde(bound(serialize = "T: Clone + Serialize")),
     serde(into = "Vec<T>", try_from = "Vec<T>")
 )]
 #[allow(clippy::unsafe_derive_deserialize)] // the non-empty invariant is enforced by the deserialize implementation
