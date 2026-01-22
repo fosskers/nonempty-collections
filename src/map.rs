@@ -725,11 +725,8 @@ impl<K: JsonSchema, V: JsonSchema> JsonSchema for super::NEMap<K, V> {
 
 #[cfg(test)]
 mod test {
-    use std::num::NonZeroUsize;
-
     use maplit::hashmap;
-
-    use crate::nem;
+    use std::num::NonZeroUsize;
 
     struct Foo {
         user: String,
@@ -783,10 +780,9 @@ mod test {
 #[cfg(feature = "serde")]
 #[cfg(test)]
 mod serde_tests {
-    use std::collections::HashMap;
-
     use crate::NEMap;
     use crate::nem;
+    use std::collections::HashMap;
 
     #[test]
     fn json() {

@@ -10,6 +10,7 @@ use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::num::NonZeroUsize;
+use std::slice::SliceIndex;
 
 #[cfg(feature = "schemars")]
 use ::{
@@ -65,15 +66,8 @@ macro_rules! nev {
     };
     ($elem:expr; $n:expr) => {{
         let n = const { ::std::num::NonZero::new($n).expect("Length cannot be 0") };
-        $crate::vector::from_elem($elem, n)
+        $crate::vector::NEVec::from_elem($elem, n)
     }};
-}
-
-#[doc(hidden)]
-pub fn from_elem<T: Clone>(elem: T, n: NonZeroUsize) -> NEVec<T> {
-    NEVec {
-        inner: vec![elem; n.get()],
-    }
 }
 
 /// A non-empty, growable Vector.
@@ -105,6 +99,26 @@ impl<T> NEVec<T> {
     #[must_use]
     pub fn new(head: T) -> Self {
         NEVec { inner: vec![head] }
+    }
+
+    /// Create a new non-empty list by repeating an element a non-zero number of times.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    /// use std::num::NonZeroUsize;
+    ///
+    /// let n = NonZeroUsize::new(3).unwrap();
+    /// let mut v = NEVec::from_elem(1, n);
+    /// assert_eq!(v, nev![1, 1, 1]);
+    /// ```
+    #[must_use]
+    pub fn from_elem(elem: T, n: NonZeroUsize) -> Self
+    where
+        T: Clone,
+    {
+        NEVec {
+            inner: vec![elem; n.get()],
+        }
     }
 
     /// Creates a new `NEVec` with a single element and specified capacity.
@@ -387,11 +401,6 @@ impl<T> NEVec<T> {
         self.inner.get_mut(index)
     }
 
-    /// Truncate the list to a certain size.
-    pub fn truncate(&mut self, len: NonZeroUsize) {
-        self.inner.truncate(len.get());
-    }
-
     /// Returns a regular iterator over the values in this non-empty vector.
     ///
     /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
@@ -451,6 +460,24 @@ impl<T> NEVec<T> {
         IterMut {
             inner: self.inner.iter_mut(),
         }
+    }
+
+    /// Reverses the order of elements in the slice, in place.
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    ///
+    /// let mut n = nev![1, 2, 3];
+    /// n.reverse();
+    /// assert_eq!(nev![3,2,1], n);
+    /// ```
+    pub fn reverse(&mut self) {
+        self.inner.reverse();
+    }
+
+    /// Truncates the list to a certain size.
+    pub fn truncate(&mut self, len: NonZeroUsize) {
+        self.inner.truncate(len.get());
     }
 
     /// Creates a new non-empty vec by cloning the elements from the slice if it
@@ -1152,8 +1179,11 @@ impl<'a, T> IntoIterator for &'a mut NEVec<T> {
     }
 }
 
-impl<T> std::ops::Index<usize> for NEVec<T> {
-    type Output = T;
+impl<T, I> std::ops::Index<I> for NEVec<T>
+where
+    I: SliceIndex<[T]>,
+{
+    type Output = I::Output;
 
     /// ```
     /// use nonempty_collections::nev;
@@ -1163,14 +1193,20 @@ impl<T> std::ops::Index<usize> for NEVec<T> {
     /// assert_eq!(v[0], 1);
     /// assert_eq!(v[1], 2);
     /// assert_eq!(v[3], 4);
+    /// assert_eq!(&v[..], &[1, 2, 3, 4, 5]);
+    /// assert_eq!(&v[2..], &[3, 4, 5]);
+    /// assert_eq!(&v[..2], &[1, 2]);
     /// ```
-    fn index(&self, index: usize) -> &T {
+    fn index(&self, index: I) -> &Self::Output {
         self.inner.index(index)
     }
 }
 
-impl<T> std::ops::IndexMut<usize> for NEVec<T> {
-    fn index_mut(&mut self, index: usize) -> &mut T {
+impl<T, I> std::ops::IndexMut<I> for NEVec<T>
+where
+    I: SliceIndex<[T]>,
+{
+    fn index_mut(&mut self, index: I) -> &mut Self::Output {
         self.inner.index_mut(index)
     }
 }
