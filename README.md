@@ -131,7 +131,7 @@ contains something.
 ## Features
 
 * `serde`: `serde` support.
-* `indexmap`: adds [`NEIndexMap`](https://docs.rs/nonempty-collections/latest/nonempty_collections/index_map/struct.NEIndexMap.html) a non-empty [`IndexMap`](https://docs.rs/indexmap/latest/indexmap/).
+* `indexmap`: adds [`NEIndexMap`](https://docs.rs/nonempty-collections/latest/nonempty_collections/index_map/struct.NEIndexMap.html) a non-empty [`IndexMap`](https://docs.rs/indexmap/latest/indexmap/), and [`NEIndexSet`](https://docs.rs/nonempty-collections/latest/nonempty_collections/index_set/struct.NEIndexSet.html) a non-empty [`IndexSet`](https://docs.rs/indexmap/latest/indexmap/set/).
 * `itertools`: adds [`NonEmptyItertools`](https://docs.rs/nonempty-collections/latest/nonempty_collections/itertools/trait.NonEmptyItertools.html) a non-empty variant of [`itertools`](https://docs.rs/itertools/latest/itertools/).
 * `either`: adds [`NEEither`](https://docs.rs/nonempty-collections/latest/nonempty_collections/either/enum.NEEither.html) a non-empty variant of `Either` from the [`either` crate](https://docs.rs/either/latest/either/).
 * `schemars`: adds [`schemars`](https://docs.rs/schemars/1/schemars/) support.
