@@ -1,10 +1,10 @@
 //! Non-empty Vectors.
 
+use crate::Singleton;
 use crate::iter::FromNonEmptyIterator;
 use crate::iter::IntoNonEmptyIterator;
 use crate::iter::NonEmptyIterator;
 use crate::slice::NEChunks;
-use crate::Singleton;
 use core::fmt;
 use std::cmp::Ordering;
 use std::fmt::Debug;
@@ -1027,8 +1027,14 @@ impl<T> AsRef<Vec<T>> for NEVec<T> {
     }
 }
 
-impl<T> AsMut<Vec<T>> for NEVec<T> {
-    fn as_mut(&mut self) -> &mut Vec<T> {
+impl<T> AsRef<[T]> for NEVec<T> {
+    fn as_ref(&self) -> &[T] {
+        self.inner.as_ref()
+    }
+}
+
+impl<T> AsMut<[T]> for NEVec<T> {
+    fn as_mut(&mut self) -> &mut [T] {
         self.inner.as_mut()
     }
 }
