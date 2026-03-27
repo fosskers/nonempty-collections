@@ -130,6 +130,8 @@ contains something.
 
 ## Features
 
+* `std` (_enabled by default_): adds structures which require the full Rust standard library, such as [`NESet`](https://docs.rs/nonempty-collections/latest/nonempty_collections/set/struct.NESet.html) and [`NEMap`](https://docs.rs/nonempty-collections/latest/nonempty_collections/map/struct.NEMap.html). Disabling this feature adds support for [`no_std` environments](https://docs.rust-embedded.org/book/intro/no-std.html).
+* `alloc`: adds structures which require an allocator, such as [`NEVec`](https://docs.rs/nonempty-collections/latest/nonempty_collections/vector/struct.NEVec.html). The `std` feature enables this feature automatically.
 * `serde`: `serde` support.
 * `indexmap`: adds [`NEIndexMap`](https://docs.rs/nonempty-collections/latest/nonempty_collections/index_map/struct.NEIndexMap.html) a non-empty [`IndexMap`](https://docs.rs/indexmap/latest/indexmap/).
 * `itertools`: adds [`NonEmptyItertools`](https://docs.rs/nonempty-collections/latest/nonempty_collections/itertools/trait.NonEmptyItertools.html) a non-empty variant of [`itertools`](https://docs.rs/itertools/latest/itertools/).

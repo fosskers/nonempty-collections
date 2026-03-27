@@ -3,10 +3,10 @@
 use crate::iter::IntoNonEmptyIterator;
 use crate::iter::NonEmptyIterator;
 use core::fmt;
-use std::iter::FilterMap;
-use std::num::NonZeroUsize;
-use std::ops::Index;
-use std::slice::Chunks;
+use core::iter::FilterMap;
+use core::num::NonZeroUsize;
+use core::ops::Index;
+use core::slice::Chunks;
 
 /// A non-empty slice. Like [`crate::NEVec`], but guaranteed to have borrowed
 /// contents.
@@ -63,6 +63,7 @@ impl<'a, T> NESlice<'a, T> {
         }
     }
 
+    #[cfg_attr(not(feature = "alloc"), expect(unused))]
     #[must_use]
     pub(crate) const unsafe fn from_slice_unchecked(slice: &'a [T]) -> Self {
         NESlice { inner: slice }
@@ -85,7 +86,7 @@ impl<'a, T> NESlice<'a, T> {
     /// Returns a regular iterator over the values in this non-empty slice.
     ///
     /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
-    pub fn iter(&self) -> std::slice::Iter<'_, T> {
+    pub fn iter(&self) -> core::slice::Iter<'_, T> {
         self.inner.iter()
     }
 
@@ -100,7 +101,7 @@ impl<'a, T> NESlice<'a, T> {
     /// at a time, starting at the beginning of the `NESlice`.
     ///
     /// ```
-    /// use std::num::NonZeroUsize;
+    /// use core::num::NonZeroUsize;
     ///
     /// use nonempty_collections::*;
     ///
@@ -156,7 +157,7 @@ impl<'a, T> IntoNonEmptyIterator for &'a NESlice<'a, T> {
 impl<'a, T> IntoIterator for NESlice<'a, T> {
     type Item = &'a T;
 
-    type IntoIter = std::slice::Iter<'a, T>;
+    type IntoIter = core::slice::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner.iter()
@@ -166,7 +167,7 @@ impl<'a, T> IntoIterator for NESlice<'a, T> {
 impl<'a, T> IntoIterator for &'a NESlice<'a, T> {
     type Item = &'a T;
 
-    type IntoIter = std::slice::Iter<'a, T>;
+    type IntoIter = core::slice::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -185,7 +186,7 @@ impl<T> Index<usize> for NESlice<'_, T> {
 #[derive(Debug)]
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Iter<'a, T: 'a> {
-    iter: std::slice::Iter<'a, T>,
+    iter: core::slice::Iter<'a, T>,
 }
 
 impl<T> NonEmptyIterator for Iter<'_, T> {}
@@ -193,7 +194,7 @@ impl<T> NonEmptyIterator for Iter<'_, T> {}
 impl<'a, T> IntoIterator for Iter<'a, T> {
     type Item = &'a T;
 
-    type IntoIter = std::slice::Iter<'a, T>;
+    type IntoIter = core::slice::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
@@ -228,7 +229,9 @@ impl<T: fmt::Debug> fmt::Debug for NEChunks<'_, T> {
 
 #[cfg(test)]
 mod tests {
-    use std::num::NonZeroUsize;
+    use alloc::vec;
+    use alloc::vec::Vec;
+    use core::num::NonZeroUsize;
 
     use crate::nev;
     use crate::slice::NEChunks;
