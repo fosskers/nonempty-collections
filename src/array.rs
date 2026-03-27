@@ -20,7 +20,7 @@
 //! These extensions are only provided for arrays up to size 32.
 
 use core::fmt;
-use std::num::NonZeroUsize;
+use core::num::NonZeroUsize;
 
 use crate::impl_nonempty_iter_for_arrays;
 use crate::IntoNonEmptyIterator;
@@ -62,6 +62,7 @@ pub trait NonEmptyArrayExt<T> {
     fn nonzero_len(&self) -> NonZeroUsize;
 
     /// Moves `self` into a new [`crate::NEVec`].
+    #[cfg(feature = "alloc")]
     fn into_nonempty_vec(self) -> crate::NEVec<T>;
 }
 
@@ -158,6 +159,7 @@ macro_rules! impl_nonempty_iter_for_arrays {
                     unsafe { NonZeroUsize::new_unchecked($i) }
                 }
 
+                #[cfg(feature = "alloc")]
                 fn into_nonempty_vec(self) -> $crate::NEVec<T> {
                     self.into_nonempty_iter().collect()
                 }
@@ -170,6 +172,8 @@ macro_rules! impl_nonempty_iter_for_arrays {
 mod test {
     use crate::IntoNonEmptyIterator;
     use crate::NonEmptyIterator;
+    use alloc::vec;
+    use alloc::vec::Vec;
 
     #[test]
     fn test_iter() {
