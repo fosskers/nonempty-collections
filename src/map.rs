@@ -1,11 +1,15 @@
 //! Non-empty [`HashMap`]s.
 
+// Rust's standard maps require an allocator, and hash-based maps require a secure random-number generator.
+// TODO: Consider an abstraction around BTreeMap so this can be used in no_std `alloc` environments
+#![cfg(feature = "std")]
+
 use core::fmt;
-use std::borrow::Borrow;
+use core::borrow::Borrow;
 use std::collections::HashMap;
-use std::hash::BuildHasher;
-use std::hash::Hash;
-use std::num::NonZeroUsize;
+use core::hash::BuildHasher;
+use core::hash::Hash;
+use core::num::NonZeroUsize;
 
 #[cfg(feature = "serde")]
 use serde::Deserialize;
@@ -696,8 +700,9 @@ where
 
 #[cfg(test)]
 mod test {
+    use alloc::string::String;
+    use core::num::NonZeroUsize;
     use maplit::hashmap;
-    use std::num::NonZeroUsize;
 
     struct Foo {
         user: String,
@@ -752,7 +757,7 @@ mod test {
 #[cfg(test)]
 mod serde_tests {
     use crate::NEMap;
-    use std::collections::HashMap;
+    use std::collections::hash_map::HashMap;
 
     #[test]
     fn json() {

@@ -6,6 +6,7 @@
 
 - vector: `NEVec::reverse`, mysteriously missing until this point.
 - vector: Support for `rand::seq::SliceRandom`, exposing a `shuffle` function for `NEVec`.
+- New `std` and `alloc` features (enabled by default). Disabling `std` enables support for `no_std` environments.
 
 ## 1.3.0 (2026-01-13)
 

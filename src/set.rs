@@ -1,11 +1,15 @@
 //! Non-empty Sets.
 
+// Rust's standard sets require an allocator, and hash-based sets require a secure random-number generator.
+// TODO: Consider an abstraction around BTreeSet so this can be used in no_std `alloc` environments
+#![cfg(feature = "std")]
+
 use core::fmt;
-use std::borrow::Borrow;
+use core::borrow::Borrow;
 use std::collections::HashSet;
-use std::hash::BuildHasher;
-use std::hash::Hash;
-use std::num::NonZeroUsize;
+use core::hash::BuildHasher;
+use core::hash::Hash;
+use core::num::NonZeroUsize;
 
 #[cfg(feature = "serde")]
 use serde::Deserialize;
@@ -712,7 +716,7 @@ mod test {
 #[cfg(test)]
 mod serde_tests {
     use crate::NESet;
-    use std::collections::HashSet;
+    use std::collections::hash_set::HashSet;
 
     #[test]
     fn json() {
