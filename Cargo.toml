@@ -33,11 +33,12 @@ all-features = true
 [features]
 arbitrary = ["dep:arbitrary", "indexmap/arbitrary"]
 default = ["std"]
-alloc = ["itertools?/use_alloc", "serde?/alloc"]
+alloc = ["itertools?/use_alloc", "rand?/alloc", "serde?/alloc"]
 std = [
   "alloc",
   "either?/std",
   "indexmap?/std",
   "itertools?/use_std",
+  "rand?/std",
   "serde?/std",
 ]
