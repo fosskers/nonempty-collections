@@ -133,6 +133,7 @@
 //! * `itertools`: adds [`NonEmptyItertools`](crate::itertools::NonEmptyItertools) a non-empty variant of [`itertools`](https://docs.rs/itertools/latest/itertools/).
 //! * `either`: adds [`NEEither`](crate::either::NEEither) a non-empty variant of `Either` from the [`either` crate](https://docs.rs/either/latest/either/).
 //! * `schemars`: adds [`schemars`](https://docs.rs/schemars/1/schemars/) support.
+//! * `rand`: adds `NEVec` support for `SliceRandom`.
 
 pub mod array;
 pub mod iter;
