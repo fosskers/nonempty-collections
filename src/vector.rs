@@ -1271,6 +1271,35 @@ impl<T: JsonSchema> JsonSchema for NEVec<T> {
     }
 }
 
+#[cfg(feature = "rand")]
+impl<T> rand::seq::IndexedRandom for NEVec<T> {
+    fn len(&self) -> usize {
+        self.inner.len()
+    }
+}
+
+#[cfg(feature = "rand")]
+impl<T> rand::seq::SliceRandom for NEVec<T> {
+    fn shuffle<R>(&mut self, rng: &mut R)
+    where
+        R: rand::Rng + ?Sized,
+    {
+        self.inner.shuffle(rng)
+    }
+
+    fn partial_shuffle<R>(
+        &mut self,
+        rng: &mut R,
+        amount: usize,
+    ) -> (&mut [Self::Output], &mut [Self::Output])
+    where
+        Self::Output: Sized,
+        R: rand::Rng + ?Sized,
+    {
+        self.inner.partial_shuffle(rng, amount)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::NEVec;
@@ -1357,6 +1386,17 @@ mod tests {
 
             Ok(())
         }
+    }
+
+    #[cfg(feature = "rand")]
+    #[test]
+    fn slice_random() {
+        use rand::seq::SliceRandom;
+
+        let mut n = nev![1, 2, 3, 4];
+        let mut rng = rand::rng();
+        n.shuffle(&mut rng);
+        assert_eq!(4, n.len().get());
     }
 
     #[test]
