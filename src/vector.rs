@@ -1,16 +1,22 @@
 //! Non-empty Vectors.
 
+use crate::Singleton;
 use crate::iter::FromNonEmptyIterator;
 use crate::iter::IntoNonEmptyIterator;
 use crate::iter::NonEmptyIterator;
 use crate::slice::NEChunks;
-use crate::Singleton;
 use core::fmt;
 use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::num::NonZeroUsize;
 use std::slice::SliceIndex;
+
+#[cfg(feature = "schemars")]
+use ::{
+    schemars::{JsonSchema, Schema, SchemaGenerator},
+    std::borrow::Cow,
+};
 
 #[cfg(feature = "serde")]
 use serde::Deserialize;
@@ -1242,6 +1248,29 @@ impl<T> Singleton for NEVec<T> {
     }
 }
 
+#[cfg(feature = "schemars")]
+impl<T: JsonSchema> JsonSchema for NEVec<T> {
+    fn schema_name() -> Cow<'static, str> {
+        Vec::<T>::schema_name()
+    }
+
+    fn json_schema(generator: &mut SchemaGenerator) -> Schema {
+        let mut schema = Vec::<T>::json_schema(generator);
+
+        if let Some(schema_object) = schema.as_object_mut()
+            && schema_object["type"] == "array"
+        {
+            schema_object.insert("minItems".to_string(), 1.into());
+        }
+
+        schema
+    }
+
+    fn inline_schema() -> bool {
+        Vec::<T>::inline_schema()
+    }
+}
+
 #[cfg(feature = "rand")]
 impl<T> rand::seq::IndexedRandom for NEVec<T> {
     fn len(&self) -> usize {
@@ -1274,6 +1303,7 @@ impl<T> rand::seq::SliceRandom for NEVec<T> {
 #[cfg(test)]
 mod tests {
     use crate::NEVec;
+    use crate::nev;
 
     #[derive(Debug, Clone, PartialEq)]
     struct Foo {
@@ -1514,5 +1544,21 @@ mod tests {
             }
         });
         assert_eq!(Ok(nev![4]), result, "only 3+1 = 4 should remain");
+    }
+
+    #[cfg(feature = "schemars")]
+    mod schemars {
+        use super::NEVec;
+        use schemars::schema_for;
+
+        #[test]
+        fn test_simple_schema() {
+            let actual = schema_for!(NEVec<i32>).to_value();
+
+            let mut expected = schema_for!(Vec<i32>).to_value();
+            expected["minItems"] = 1.into();
+
+            assert_eq!(expected, actual);
+        }
     }
 }

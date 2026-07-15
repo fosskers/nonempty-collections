@@ -14,8 +14,14 @@ categories = ["data-structures"]
 either = { version = "1.0", optional = true }
 indexmap = { version = "2.7", optional = true }
 itertools = { version = "0.15", optional = true, features = ["use_alloc"] }
+schemars = { version = "1.1.0", optional = true }
 rand = { version = "0.10", optional = true }
 serde = { version = "1.0", features = ["serde_derive"], optional = true }
+
+[features]
+indexmap = ["dep:indexmap", "schemars?/indexmap2"]
+either = ["dep:either", "schemars?/either1"]
+serde = ["dep:serde", "indexmap?/serde", "either?/serde"]
 
 [dev-dependencies]
 serde_json = "1.0"

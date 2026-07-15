@@ -4,18 +4,27 @@
 //! order.
 
 use crate::FromNonEmptyIterator;
+use crate::IntoIteratorExt;
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
 use crate::Singleton;
-use indexmap::indexmap;
 use indexmap::Equivalent;
 use indexmap::IndexMap;
+use indexmap::indexmap;
 use std::fmt;
 use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::hash::BuildHasher;
 use std::hash::Hash;
 use std::num::NonZeroUsize;
+
+#[cfg(feature = "schemars")]
+use ::{
+    schemars::{JsonSchema, Schema, SchemaGenerator},
+    std::borrow::Cow,
+};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// Short-hand for constructing [`NEIndexMap`] values.
 ///
@@ -51,8 +60,31 @@ macro_rules! ne_indexmap {
 /// assert_eq!(2, m.len().get());
 /// ```
 #[derive(Clone)]
+#[cfg_attr(
+    feature = "serde",
+    derive(Deserialize, Serialize),
+    serde(bound(
+        serialize = "K: Eq + Hash + Clone + Serialize, V: Clone + Serialize, S: Clone + BuildHasher",
+        deserialize = "K: Eq + Hash + Clone + Deserialize<'de>, V: Deserialize<'de>, S: Default + BuildHasher"
+    )),
+    serde(into = "IndexMap<K, V, S>", try_from = "IndexMap<K, V, S>")
+)]
 pub struct NEIndexMap<K, V, S = std::collections::hash_map::RandomState> {
     inner: IndexMap<K, V, S>,
+}
+
+impl<K, V, S> TryFrom<IndexMap<K, V, S>> for NEIndexMap<K, V, S>
+where
+    K: Eq + Hash,
+    S: BuildHasher + Default,
+{
+    type Error = crate::Error;
+
+    fn try_from(map: IndexMap<K, V, S>) -> Result<Self, Self::Error> {
+        map.try_into_nonempty_iter()
+            .map(NonEmptyIterator::collect)
+            .ok_or(crate::Error::Empty)
+    }
 }
 
 impl<K, V, S> NEIndexMap<K, V, S> {
@@ -736,6 +768,29 @@ where
     }
 }
 
+#[cfg(feature = "schemars")]
+impl<K: JsonSchema, V: JsonSchema> JsonSchema for super::NEIndexMap<K, V> {
+    fn schema_name() -> Cow<'static, str> {
+        IndexMap::<K, V>::schema_name()
+    }
+
+    fn json_schema(generator: &mut SchemaGenerator) -> Schema {
+        let mut schema = IndexMap::<K, V>::json_schema(generator);
+
+        if let Some(schema_object) = schema.as_object_mut()
+            && schema_object["type"] == "object"
+        {
+            schema_object.insert("minProperties".to_string(), 1.into());
+        }
+
+        schema
+    }
+
+    fn inline_schema() -> bool {
+        IndexMap::<K, V>::inline_schema()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -797,5 +852,43 @@ mod test {
             *v -= 1;
         }
         assert_eq!(ne_indexmap! {"a" => 0, "b" => 1, "c" => 2}, v);
+    }
+
+    #[cfg(feature = "serde")]
+    #[cfg(test)]
+    mod serde_tests {
+        use indexmap::IndexMap;
+
+        use crate::NEIndexMap;
+        use crate::ne_indexmap;
+
+        #[test]
+        fn json() {
+            let map0 = ne_indexmap![1 => 'a', 2 => 'b', 1 => 'c'];
+            let j = serde_json::to_string(&map0).unwrap();
+            let map1 = serde_json::from_str(&j).unwrap();
+            assert_eq!(map0, map1);
+
+            let empty: IndexMap<usize, char> = IndexMap::new();
+            let j = serde_json::to_string(&empty).unwrap();
+            let bad = serde_json::from_str::<NEIndexMap<usize, char>>(&j);
+            assert!(bad.is_err());
+        }
+    }
+
+    #[cfg(feature = "schemars")]
+    mod schemars_tests {
+        use super::{IndexMap, NEIndexMap};
+        use schemars::schema_for;
+
+        #[test]
+        fn test_simple_schema() {
+            let actual = schema_for!(NEIndexMap<i32, i32>).to_value();
+
+            let mut expected = schema_for!(IndexMap<i32, i32>).to_value();
+            expected["minProperties"] = 1.into();
+
+            assert_eq!(expected, actual);
+        }
     }
 }

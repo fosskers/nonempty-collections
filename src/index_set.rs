@@ -1,8 +1,8 @@
-//! Non-empty Sets.
+//! Non-empty IndexSets.
 
 use core::fmt;
+use indexmap::IndexSet;
 use std::borrow::Borrow;
-use std::collections::HashSet;
 use std::hash::BuildHasher;
 use std::hash::Hash;
 use std::num::NonZeroUsize;
@@ -24,37 +24,37 @@ use crate::IntoNonEmptyIterator;
 use crate::Singleton;
 use crate::iter::NonEmptyIterator;
 
-/// Like the [`crate::nev!`] macro, but for Sets. A nice short-hand for
-/// constructing [`NESet`] values.
+/// Like the [`crate::nev!`] macro, but for IndexSets. A nice short-hand for
+/// constructing [`NEIndexSet`] values.
 ///
 /// ```
-/// use nonempty_collections::nes;
+/// use nonempty_collections::ne_indexset;
 ///
-/// let s = nes![1, 2, 2, 3,];
+/// let s = ne_indexset![1, 2, 2, 3,];
 /// assert_eq!(3, s.len().get());
 /// ```
 #[macro_export]
-macro_rules! nes {
+macro_rules! ne_indexset {
     ($h:expr, $( $x:expr ),* $(,)?) => {{
-        let mut set = $crate::NESet::new($h);
+        let mut set = $crate::NEIndexSet::new($h);
         $( set.insert($x); )*
         set
     }};
     ($h:expr) => {
-        $crate::NESet::new($h)
+        $crate::NEIndexSet::new($h)
     }
 }
 
-/// A non-empty, growable `HashSet`.
+/// A non-empty, growable `IndexSet`.
 ///
 /// # Construction and Access
 ///
-/// The [`nes`] macro is the simplest way to construct an `NESet`:
+/// The [`ne_indexset`] macro is the simplest way to construct an `NEIndexSet`:
 ///
 /// ```
 /// use nonempty_collections::*;
 ///
-/// let s = nes![1, 1, 2, 2, 3, 3, 4, 4];
+/// let s = ne_indexset![1, 1, 2, 2, 3, 3, 4, 4];
 /// let mut v: NEVec<_> = s.nonempty_iter().collect();
 /// v.sort();
 /// assert_eq!(nev![&1, &2, &3, &4], v);
@@ -62,36 +62,36 @@ macro_rules! nes {
 ///
 ///
 /// ```
-/// use nonempty_collections::nes;
+/// use nonempty_collections::ne_indexset;
 ///
-/// let s = nes!["Fëanor", "Fingolfin", "Finarfin"];
+/// let s = ne_indexset!["Fëanor", "Fingolfin", "Finarfin"];
 /// assert!(s.contains(&"Fëanor"));
 /// ```
 ///
 /// # Conversion
 ///
-/// If you have a [`HashSet`] but want an `NESet`, try [`NESet::try_from_set`].
+/// If you have a [`IndexSet`] but want an `NEIndexSet`, try [`NEIndexSet::try_from_set`].
 /// Naturally, this might not succeed.
 ///
-/// If you have an `NESet` but want a `HashSet`, try their corresponding
+/// If you have an `NEIndexSet` but want a `IndexSet`, try their corresponding
 /// [`From`] instance. This will always succeed.
 ///
 /// ```
-/// use std::collections::HashSet;
+/// use indexmap::set::IndexSet;
 ///
-/// use nonempty_collections::nes;
+/// use nonempty_collections::ne_indexset;
 ///
-/// let n0 = nes![1, 2, 3];
-/// let s0 = HashSet::from(n0);
+/// let n0 = ne_indexset![1, 2, 3];
+/// let s0 = IndexSet::from(n0);
 ///
 /// // Or just use `Into`.
-/// let n1 = nes![1, 2, 3];
-/// let s1: HashSet<_> = n1.into();
+/// let n1 = ne_indexset![1, 2, 3];
+/// let s1: IndexSet<_> = n1.into();
 /// ```
 ///
-/// # API Differences with [`HashSet`]
+/// # API Differences with [`IndexSet`]
 ///
-/// Note that the following methods aren't implemented for `NESet`:
+/// Note that the following methods aren't implemented for `NEIndexSet`:
 ///
 /// - `clear`
 /// - `drain`
@@ -110,14 +110,14 @@ macro_rules! nes {
         serialize = "T: Eq + Hash + Clone + Serialize, S: Clone + BuildHasher",
         deserialize = "T: Eq + Hash + Deserialize<'de>, S: Default + BuildHasher"
     )),
-    serde(into = "HashSet<T, S>", try_from = "HashSet<T, S>")
+    serde(into = "IndexSet<T, S>", try_from = "IndexSet<T, S>")
 )]
 #[derive(Clone)]
-pub struct NESet<T, S = std::collections::hash_map::RandomState> {
-    inner: HashSet<T, S>,
+pub struct NEIndexSet<T, S = std::collections::hash_map::RandomState> {
+    inner: IndexSet<T, S>,
 }
 
-impl<T, S> NESet<T, S> {
+impl<T, S> NEIndexSet<T, S> {
     /// Returns the number of elements the set can hold without reallocating.
     #[must_use]
     pub fn capacity(&self) -> NonZeroUsize {
@@ -133,7 +133,7 @@ impl<T, S> NESet<T, S> {
     /// Returns a regular iterator over the values in this non-empty set.
     ///
     /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
-    pub fn iter(&self) -> std::collections::hash_set::Iter<'_, T> {
+    pub fn iter(&self) -> indexmap::set::Iter<'_, T> {
         self.inner.iter()
     }
 
@@ -147,9 +147,9 @@ impl<T, S> NESet<T, S> {
     /// Returns the number of elements in the set. Always 1 or more.
     ///
     /// ```
-    /// use nonempty_collections::nes;
+    /// use nonempty_collections::ne_indexset;
     ///
-    /// let s = nes![1, 2, 3];
+    /// let s = ne_indexset![1, 2, 3];
     /// assert_eq!(3, s.len().get());
     /// ```
     #[must_use]
@@ -157,82 +157,82 @@ impl<T, S> NESet<T, S> {
         unsafe { NonZeroUsize::new_unchecked(self.inner.len()) }
     }
 
-    /// A `NESet` is never empty.
-    #[deprecated(since = "0.1.0", note = "A NESet is never empty.")]
+    /// A `NEIndexSet` is never empty.
+    #[deprecated(since = "0.1.0", note = "A NEIndexSet is never empty.")]
     #[must_use]
     pub const fn is_empty(&self) -> bool {
         false
     }
 }
 
-impl<T> NESet<T>
+impl<T> NEIndexSet<T>
 where
     T: Eq + Hash,
 {
-    /// Creates a new `NESet` with a single element.
+    /// Creates a new `NEIndexSet` with a single element.
     #[must_use]
     pub fn new(value: T) -> Self {
-        let mut inner = HashSet::new();
+        let mut inner = IndexSet::new();
         inner.insert(value);
         Self { inner }
     }
 
-    /// Creates a new `NESet` with a single element and specified capacity.
+    /// Creates a new `NEIndexSet` with a single element and specified capacity.
     ///
     /// ```
     /// use std::hash::RandomState;
     /// use std::num::NonZeroUsize;
     ///
     /// use nonempty_collections::*;
-    /// let set = NESet::with_capacity(NonZeroUsize::MIN, "hello");
-    /// assert_eq!(nes! {"hello"}, set);
+    /// let set = NEIndexSet::with_capacity(NonZeroUsize::MIN, "hello");
+    /// assert_eq!(ne_indexset! {"hello"}, set);
     /// assert!(set.capacity().get() >= 1);
     /// ```
     #[must_use]
-    pub fn with_capacity(capacity: NonZeroUsize, value: T) -> NESet<T> {
-        let mut inner = HashSet::with_capacity(capacity.get());
+    pub fn with_capacity(capacity: NonZeroUsize, value: T) -> NEIndexSet<T> {
+        let mut inner = IndexSet::with_capacity(capacity.get());
         inner.insert(value);
-        NESet { inner }
+        NEIndexSet { inner }
     }
 }
 
-impl<T, S> NESet<T, S>
+impl<T, S> NEIndexSet<T, S>
 where
     T: Eq + Hash,
     S: BuildHasher,
 {
-    /// Attempt a conversion from a [`HashSet`], consuming the given `HashSet`.
-    /// Will return `None` if the `HashSet` is empty.
+    /// Attempt a conversion from a [`IndexSet`], consuming the given `IndexSet`.
+    /// Will return `None` if the `IndexSet` is empty.
     ///
     /// ```
-    /// use std::collections::HashSet;
+    /// use indexmap::set::IndexSet;
     ///
-    /// use nonempty_collections::nes;
-    /// use nonempty_collections::NESet;
+    /// use nonempty_collections::ne_indexset;
+    /// use nonempty_collections::NEIndexSet;
     ///
-    /// let mut s = HashSet::new();
+    /// let mut s = IndexSet::new();
     /// s.extend([1, 2, 3]);
     ///
-    /// let n = NESet::try_from_set(s);
-    /// assert_eq!(Some(nes![1, 2, 3]), n);
-    /// let s: HashSet<()> = HashSet::new();
-    /// assert_eq!(None, NESet::try_from_set(s));
+    /// let n = NEIndexSet::try_from_set(s);
+    /// assert_eq!(Some(ne_indexset![1, 2, 3]), n);
+    /// let s: IndexSet<()> = IndexSet::new();
+    /// assert_eq!(None, NEIndexSet::try_from_set(s));
     /// ```
     #[must_use]
-    pub fn try_from_set(set: HashSet<T, S>) -> Option<NESet<T, S>> {
+    pub fn try_from_set(set: IndexSet<T, S>) -> Option<NEIndexSet<T, S>> {
         if set.is_empty() {
             None
         } else {
-            Some(NESet { inner: set })
+            Some(NEIndexSet { inner: set })
         }
     }
 
     /// Returns true if the set contains a value.
     ///
     /// ```
-    /// use nonempty_collections::nes;
+    /// use nonempty_collections::ne_indexset;
     ///
-    /// let s = nes![1, 2, 3];
+    /// let s = ne_indexset![1, 2, 3];
     /// assert!(s.contains(&3));
     /// assert!(!s.contains(&10));
     /// ```
@@ -249,18 +249,18 @@ where
     /// in `self` but not in `other`.
     ///
     /// ```
-    /// use nonempty_collections::nes;
+    /// use nonempty_collections::ne_indexset;
     ///
-    /// let s0 = nes![1, 2, 3];
-    /// let s1 = nes![3, 4, 5];
+    /// let s0 = ne_indexset![1, 2, 3];
+    /// let s1 = ne_indexset![3, 4, 5];
     /// let mut v: Vec<_> = s0.difference(&s1).collect();
     /// v.sort();
     /// assert_eq!(vec![&1, &2], v);
     /// ```
     pub fn difference<'a>(
         &'a self,
-        other: &'a NESet<T, S>,
-    ) -> std::collections::hash_set::Difference<'a, T, S> {
+        other: &'a NEIndexSet<T, S>,
+    ) -> indexmap::set::Difference<'a, T, S> {
         self.inner.difference(&other.inner)
     }
 
@@ -271,9 +271,9 @@ where
     /// and `Eq` on the borrowed form must match those for the value type.
     ///
     /// ```
-    /// use nonempty_collections::nes;
+    /// use nonempty_collections::ne_indexset;
     ///
-    /// let s = nes![1, 2, 3];
+    /// let s = ne_indexset![1, 2, 3];
     /// assert_eq!(Some(&3), s.get(&3));
     /// assert_eq!(None, s.get(&10));
     /// ```
@@ -293,9 +293,9 @@ where
     /// If the set did have this value present, `false` is returned.
     ///
     /// ```
-    /// use nonempty_collections::nes;
+    /// use nonempty_collections::ne_indexset;
     ///
-    /// let mut s = nes![1, 2, 3];
+    /// let mut s = ne_indexset![1, 2, 3];
     /// assert_eq!(false, s.insert(2));
     /// assert_eq!(true, s.insert(4));
     /// ```
@@ -307,18 +307,18 @@ where
     /// are both in `self` and `other`.
     ///
     /// ```
-    /// use nonempty_collections::nes;
+    /// use nonempty_collections::ne_indexset;
     ///
-    /// let s0 = nes![1, 2, 3];
-    /// let s1 = nes![3, 4, 5];
+    /// let s0 = ne_indexset![1, 2, 3];
+    /// let s1 = ne_indexset![3, 4, 5];
     /// let mut v: Vec<_> = s0.intersection(&s1).collect();
     /// v.sort();
     /// assert_eq!(vec![&3], v);
     /// ```
     pub fn intersection<'a>(
         &'a self,
-        other: &'a NESet<T, S>,
-    ) -> std::collections::hash_set::Intersection<'a, T, S> {
+        other: &'a NEIndexSet<T, S>,
+    ) -> indexmap::set::Intersection<'a, T, S> {
         self.inner.intersection(&other.inner)
     }
 
@@ -326,14 +326,14 @@ where
     /// This is equivalent to checking for an empty intersection.
     ///
     /// ```
-    /// use nonempty_collections::nes;
+    /// use nonempty_collections::ne_indexset;
     ///
-    /// let s0 = nes![1, 2, 3];
-    /// let s1 = nes![4, 5, 6];
+    /// let s0 = ne_indexset![1, 2, 3];
+    /// let s1 = ne_indexset![4, 5, 6];
     /// assert!(s0.is_disjoint(&s1));
     /// ```
     #[must_use]
-    pub fn is_disjoint(&self, other: &NESet<T, S>) -> bool {
+    pub fn is_disjoint(&self, other: &NEIndexSet<T, S>) -> bool {
         self.inner.is_disjoint(&other.inner)
     }
 
@@ -341,16 +341,16 @@ where
     /// at least all the values in `self`.
     ///
     /// ```
-    /// use nonempty_collections::nes;
+    /// use nonempty_collections::ne_indexset;
     ///
-    /// let sub = nes![1, 2, 3];
-    /// let sup = nes![1, 2, 3, 4];
+    /// let sub = ne_indexset![1, 2, 3];
+    /// let sup = ne_indexset![1, 2, 3, 4];
     ///
     /// assert!(sub.is_subset(&sup));
     /// assert!(!sup.is_subset(&sub));
     /// ```
     #[must_use]
-    pub fn is_subset(&self, other: &NESet<T, S>) -> bool {
+    pub fn is_subset(&self, other: &NEIndexSet<T, S>) -> bool {
         self.inner.is_subset(&other.inner)
     }
 
@@ -358,16 +358,16 @@ where
     /// contains at least all the values in `other`.
     ///
     /// ```
-    /// use nonempty_collections::nes;
+    /// use nonempty_collections::ne_indexset;
     ///
-    /// let sub = nes![1, 2, 3];
-    /// let sup = nes![1, 2, 3, 4];
+    /// let sub = ne_indexset![1, 2, 3];
+    /// let sup = ne_indexset![1, 2, 3, 4];
     ///
     /// assert!(sup.is_superset(&sub));
     /// assert!(!sub.is_superset(&sup));
     /// ```
     #[must_use]
-    pub fn is_superset(&self, other: &NESet<T, S>) -> bool {
+    pub fn is_superset(&self, other: &NEIndexSet<T, S>) -> bool {
         self.inner.is_superset(&other.inner)
     }
 
@@ -378,7 +378,7 @@ where
     }
 
     /// Reserves capacity for at least `additional` more elements to be inserted
-    /// in the `NESet`. The collection may reserve more space to avoid frequent
+    /// in the `NEIndexSet`. The collection may reserve more space to avoid frequent
     /// reallocations.
     ///
     /// # Panics
@@ -403,59 +403,63 @@ where
     /// ```
     /// use nonempty_collections::*;
     ///
-    /// let s0 = nes![1, 2, 3];
-    /// let s1 = nes![3, 4, 5];
+    /// let s0 = ne_indexset![1, 2, 3];
+    /// let s1 = ne_indexset![3, 4, 5];
     /// let mut v: NEVec<_> = s0.union(&s1).collect();
     /// v.sort();
     /// assert_eq!(nev![&1, &2, &3, &4, &5], v);
     /// ```
-    pub fn union<'a>(&'a self, other: &'a NESet<T, S>) -> Union<'a, T, S> {
+    pub fn union<'a>(&'a self, other: &'a NEIndexSet<T, S>) -> Union<'a, T, S> {
         Union {
             inner: self.inner.union(&other.inner),
         }
     }
 
-    /// See [`HashSet::with_capacity_and_hasher`].
+    /// See [`IndexSet::with_capacity_and_hasher`].
     #[must_use]
-    pub fn with_capacity_and_hasher(capacity: NonZeroUsize, hasher: S, value: T) -> NESet<T, S> {
-        let mut inner = HashSet::with_capacity_and_hasher(capacity.get(), hasher);
+    pub fn with_capacity_and_hasher(
+        capacity: NonZeroUsize,
+        hasher: S,
+        value: T,
+    ) -> NEIndexSet<T, S> {
+        let mut inner = IndexSet::with_capacity_and_hasher(capacity.get(), hasher);
         inner.insert(value);
-        NESet { inner }
+        NEIndexSet { inner }
     }
 
-    /// See [`HashSet::with_hasher`].
+    /// See [`IndexSet::with_hasher`].
     #[must_use]
-    pub fn with_hasher(hasher: S, value: T) -> NESet<T, S> {
-        let mut inner = HashSet::with_hasher(hasher);
+    pub fn with_hasher(hasher: S, value: T) -> NEIndexSet<T, S> {
+        let mut inner = IndexSet::with_hasher(hasher);
         inner.insert(value);
-        NESet { inner }
+        NEIndexSet { inner }
     }
 }
 
-impl<T, S> AsRef<HashSet<T, S>> for NESet<T, S> {
-    fn as_ref(&self) -> &HashSet<T, S> {
+impl<T, S> AsRef<IndexSet<T, S>> for NEIndexSet<T, S> {
+    fn as_ref(&self) -> &IndexSet<T, S> {
         &self.inner
     }
 }
 
-impl<T, S> AsMut<HashSet<T, S>> for NESet<T, S> {
-    fn as_mut(&mut self) -> &mut HashSet<T, S> {
+impl<T, S> AsMut<IndexSet<T, S>> for NEIndexSet<T, S> {
+    fn as_mut(&mut self) -> &mut IndexSet<T, S> {
         &mut self.inner
     }
 }
 
-impl<T, S> PartialEq for NESet<T, S>
+impl<T, S> PartialEq for NEIndexSet<T, S>
 where
     T: Eq + Hash,
     S: BuildHasher,
 {
     /// ```
-    /// use nonempty_collections::nes;
+    /// use nonempty_collections::ne_indexset;
     ///
-    /// let s0 = nes![1, 2, 3];
-    /// let s1 = nes![1, 2, 3];
-    /// let s2 = nes![1, 2];
-    /// let s3 = nes![1, 2, 3, 4];
+    /// let s0 = ne_indexset![1, 2, 3];
+    /// let s1 = ne_indexset![1, 2, 3];
+    /// let s2 = ne_indexset![1, 2];
+    /// let s3 = ne_indexset![1, 2, 3, 4];
     ///
     /// assert!(s0 == s1);
     /// assert!(s0 != s2);
@@ -466,14 +470,14 @@ where
     }
 }
 
-impl<T, S> Eq for NESet<T, S>
+impl<T, S> Eq for NEIndexSet<T, S>
 where
     T: Eq + Hash,
     S: BuildHasher,
 {
 }
 
-impl<T, S> IntoNonEmptyIterator for NESet<T, S> {
+impl<T, S> IntoNonEmptyIterator for NEIndexSet<T, S> {
     type IntoNEIter = IntoIter<T>;
 
     fn into_nonempty_iter(self) -> Self::IntoNEIter {
@@ -483,7 +487,7 @@ impl<T, S> IntoNonEmptyIterator for NESet<T, S> {
     }
 }
 
-impl<'a, T, S> IntoNonEmptyIterator for &'a NESet<T, S> {
+impl<'a, T, S> IntoNonEmptyIterator for &'a NEIndexSet<T, S> {
     type IntoNEIter = Iter<'a, T>;
 
     fn into_nonempty_iter(self) -> Self::IntoNEIter {
@@ -491,20 +495,20 @@ impl<'a, T, S> IntoNonEmptyIterator for &'a NESet<T, S> {
     }
 }
 
-impl<T, S> IntoIterator for NESet<T, S> {
+impl<T, S> IntoIterator for NEIndexSet<T, S> {
     type Item = T;
 
-    type IntoIter = std::collections::hash_set::IntoIter<T>;
+    type IntoIter = indexmap::set::IntoIter<T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner.into_iter()
     }
 }
 
-impl<'a, T, S> IntoIterator for &'a NESet<T, S> {
+impl<'a, T, S> IntoIterator for &'a NEIndexSet<T, S> {
     type Item = &'a T;
 
-    type IntoIter = std::collections::hash_set::Iter<'a, T>;
+    type IntoIter = indexmap::set::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -514,11 +518,11 @@ impl<'a, T, S> IntoIterator for &'a NESet<T, S> {
 /// ```
 /// use nonempty_collections::*;
 ///
-/// let s0 = nes![1, 2, 3];
-/// let s1: NESet<_> = s0.nonempty_iter().cloned().collect();
+/// let s0 = ne_indexset![1, 2, 3];
+/// let s1: NEIndexSet<_> = s0.nonempty_iter().cloned().collect();
 /// assert_eq!(s0, s1);
 /// ```
-impl<T, S> FromNonEmptyIterator<T> for NESet<T, S>
+impl<T, S> FromNonEmptyIterator<T> for NEIndexSet<T, S>
 where
     T: Eq + Hash,
     S: BuildHasher + Default,
@@ -527,30 +531,30 @@ where
     /// use nonempty_collections::*;
     ///
     /// let v = nev![1, 1, 2, 3, 2];
-    /// let s = NESet::from_nonempty_iter(v);
+    /// let s = NEIndexSet::from_nonempty_iter(v);
     ///
-    /// assert_eq!(nes![1, 2, 3], s);
+    /// assert_eq!(ne_indexset![1, 2, 3], s);
     /// ```
     fn from_nonempty_iter<I>(iter: I) -> Self
     where
         I: IntoNonEmptyIterator<Item = T>,
     {
-        NESet {
+        NEIndexSet {
             inner: iter.into_nonempty_iter().into_iter().collect(),
         }
     }
 }
 
-/// A non-empty iterator over the values of an [`NESet`].
+/// A non-empty iterator over the values of an [`NEIndexSet`].
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Iter<'a, T: 'a> {
-    iter: std::collections::hash_set::Iter<'a, T>,
+    iter: indexmap::set::Iter<'a, T>,
 }
 
 impl<'a, T: 'a> IntoIterator for Iter<'a, T> {
     type Item = &'a T;
 
-    type IntoIter = std::collections::hash_set::Iter<'a, T>;
+    type IntoIter = indexmap::set::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
@@ -565,16 +569,16 @@ impl<T: fmt::Debug> fmt::Debug for Iter<'_, T> {
     }
 }
 
-/// An owned non-empty iterator over the values of an [`NESet`].
+/// An owned non-empty iterator over the values of an [`NEIndexSet`].
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct IntoIter<T> {
-    iter: std::collections::hash_set::IntoIter<T>,
+    iter: indexmap::set::IntoIter<T>,
 }
 
 impl<T> IntoIterator for IntoIter<T> {
     type Item = T;
 
-    type IntoIter = std::collections::hash_set::IntoIter<T>;
+    type IntoIter = indexmap::set::IntoIter<T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
@@ -589,10 +593,10 @@ impl<T: fmt::Debug> fmt::Debug for IntoIter<T> {
     }
 }
 
-/// A non-empty iterator producing elements in the union of two [`NESet`]s.
+/// A non-empty iterator producing elements in the union of two [`NEIndexSet`]s.
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Union<'a, T: 'a, S: 'a> {
-    inner: std::collections::hash_set::Union<'a, T, S>,
+    inner: indexmap::set::Union<'a, T, S>,
 }
 
 impl<'a, T, S> IntoIterator for Union<'a, T, S>
@@ -602,7 +606,7 @@ where
 {
     type Item = &'a T;
 
-    type IntoIter = std::collections::hash_set::Union<'a, T, S>;
+    type IntoIter = indexmap::set::Union<'a, T, S>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner
@@ -626,40 +630,40 @@ where
     }
 }
 
-impl<T, S> From<NESet<T, S>> for HashSet<T, S>
+impl<T, S> From<NEIndexSet<T, S>> for IndexSet<T, S>
 where
     T: Eq + Hash,
     S: BuildHasher,
 {
     /// ```
-    /// use std::collections::HashSet;
+    /// use indexmap::set::IndexSet;
     ///
-    /// use nonempty_collections::nes;
+    /// use nonempty_collections::ne_indexset;
     ///
-    /// let s: HashSet<_> = nes![1, 2, 3].into();
+    /// let s: IndexSet<_> = ne_indexset![1, 2, 3].into();
     /// let mut v: Vec<_> = s.into_iter().collect();
     /// v.sort();
     /// assert_eq!(vec![1, 2, 3], v);
     /// ```
-    fn from(s: NESet<T, S>) -> Self {
+    fn from(s: NEIndexSet<T, S>) -> Self {
         s.inner
     }
 }
 
-impl<T: fmt::Debug, S> fmt::Debug for NESet<T, S> {
+impl<T: fmt::Debug, S> fmt::Debug for NEIndexSet<T, S> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.inner.fmt(f)
     }
 }
 
-impl<T, S> TryFrom<HashSet<T, S>> for NESet<T, S>
+impl<T, S> TryFrom<IndexSet<T, S>> for NEIndexSet<T, S>
 where
     T: Eq + Hash,
     S: BuildHasher + Default,
 {
     type Error = crate::Error;
 
-    fn try_from(set: HashSet<T, S>) -> Result<Self, Self::Error> {
+    fn try_from(set: IndexSet<T, S>) -> Result<Self, Self::Error> {
         let ne = set
             .try_into_nonempty_iter()
             .ok_or(crate::Error::Empty)?
@@ -669,24 +673,24 @@ where
     }
 }
 
-impl<T> Singleton for NESet<T>
+impl<T> Singleton for NEIndexSet<T>
 where
     T: Eq + Hash,
 {
     type Item = T;
 
     /// ```
-    /// use nonempty_collections::{NESet, Singleton, nes};
+    /// use nonempty_collections::{NEIndexSet, Singleton, ne_indexset};
     ///
-    /// let s = NESet::singleton(1);
-    /// assert_eq!(nes![1], s);
+    /// let s = NEIndexSet::singleton(1);
+    /// assert_eq!(ne_indexset![1], s);
     /// ```
     fn singleton(item: Self::Item) -> Self {
-        NESet::new(item)
+        NEIndexSet::new(item)
     }
 }
 
-impl<T> Extend<T> for NESet<T>
+impl<T> Extend<T> for NEIndexSet<T>
 where
     T: Eq + Hash,
 {
@@ -696,13 +700,13 @@ where
 }
 
 #[cfg(feature = "schemars")]
-impl<T: JsonSchema> JsonSchema for super::NESet<T> {
+impl<T: JsonSchema> JsonSchema for super::NEIndexSet<T> {
     fn schema_name() -> Cow<'static, str> {
-        HashSet::<T>::schema_name()
+        IndexSet::<T>::schema_name()
     }
 
     fn json_schema(generator: &mut SchemaGenerator) -> Schema {
-        let mut schema = HashSet::<T>::json_schema(generator);
+        let mut schema = IndexSet::<T>::json_schema(generator);
 
         if let Some(schema_object) = schema.as_object_mut()
             && schema_object["type"] == "array"
@@ -714,7 +718,7 @@ impl<T: JsonSchema> JsonSchema for super::NESet<T> {
     }
 
     fn inline_schema() -> bool {
-        HashSet::<T>::inline_schema()
+        IndexSet::<T>::inline_schema()
     }
 }
 
@@ -725,14 +729,14 @@ mod test {
     #[test]
     fn debug_impl() {
         let expected = format!("{:?}", hashset! {0});
-        let actual = format!("{:?}", nes! {0});
+        let actual = format!("{:?}", ne_indexset! {0});
         assert_eq!(expected, actual);
     }
 
     #[test]
     fn iter_debug_impl() {
         let expected = format!("{:?}", hashset! {0}.iter());
-        let actual = format!("{:?}", nes! {0}.nonempty_iter());
+        let actual = format!("{:?}", ne_indexset! {0}.nonempty_iter());
         assert_eq!(expected, actual);
     }
 }
@@ -740,20 +744,21 @@ mod test {
 #[cfg(feature = "serde")]
 #[cfg(test)]
 mod serde_tests {
-    use crate::NESet;
-    use crate::nes;
-    use std::collections::HashSet;
+    use crate::NEIndexSet;
+    #[allow(unused)]
+    use crate::ne_indexset;
+    use indexmap::set::IndexSet;
 
     #[test]
     fn json() {
-        let set0 = nes![1, 1, 2, 3, 2, 1, 4];
+        let set0 = ne_indexset![1, 1, 2, 3, 2, 1, 4];
         let j = serde_json::to_string(&set0).unwrap();
         let set1 = serde_json::from_str(&j).unwrap();
         assert_eq!(set0, set1);
 
-        let empty: HashSet<usize> = HashSet::new();
+        let empty: IndexSet<usize> = IndexSet::new();
         let j = serde_json::to_string(&empty).unwrap();
-        let bad = serde_json::from_str::<NESet<usize>>(&j);
+        let bad = serde_json::from_str::<NEIndexSet<usize>>(&j);
         assert!(bad.is_err());
     }
 }
@@ -761,14 +766,14 @@ mod serde_tests {
 #[cfg(feature = "schemars")]
 #[cfg(test)]
 mod schemars_tests {
-    use super::{HashSet, NESet};
+    use super::{IndexSet, NEIndexSet};
     use schemars::schema_for;
 
     #[test]
     fn test_simple_schema() {
-        let actual = schema_for!(NESet<i32>).to_value();
+        let actual = schema_for!(NEIndexSet<i32>).to_value();
 
-        let mut expected = schema_for!(HashSet<i32>).to_value();
+        let mut expected = schema_for!(IndexSet<i32>).to_value();
         expected["minItems"] = 1.into();
 
         assert_eq!(expected, actual);
