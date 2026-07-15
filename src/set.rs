@@ -7,16 +7,22 @@ use std::hash::BuildHasher;
 use std::hash::Hash;
 use std::num::NonZeroUsize;
 
+#[cfg(feature = "schemars")]
+use ::{
+    schemars::{JsonSchema, Schema, SchemaGenerator},
+    std::borrow::Cow,
+};
+
 #[cfg(feature = "serde")]
 use serde::Deserialize;
 #[cfg(feature = "serde")]
 use serde::Serialize;
 
-use crate::iter::NonEmptyIterator;
 use crate::FromNonEmptyIterator;
 use crate::IntoIteratorExt;
 use crate::IntoNonEmptyIterator;
 use crate::Singleton;
+use crate::iter::NonEmptyIterator;
 
 /// Like the [`crate::nev!`] macro, but for Sets. A nice short-hand for
 /// constructing [`NESet`] values.
@@ -689,6 +695,29 @@ where
     }
 }
 
+#[cfg(feature = "schemars")]
+impl<T: JsonSchema> JsonSchema for super::NESet<T> {
+    fn schema_name() -> Cow<'static, str> {
+        HashSet::<T>::schema_name()
+    }
+
+    fn json_schema(generator: &mut SchemaGenerator) -> Schema {
+        let mut schema = HashSet::<T>::json_schema(generator);
+
+        if let Some(schema_object) = schema.as_object_mut()
+            && schema_object["type"] == "array"
+        {
+            schema_object.insert("minItems".to_string(), 1.into());
+        }
+
+        schema
+    }
+
+    fn inline_schema() -> bool {
+        HashSet::<T>::inline_schema()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use maplit::hashset;
@@ -712,6 +741,7 @@ mod test {
 #[cfg(test)]
 mod serde_tests {
     use crate::NESet;
+    use crate::nes;
     use std::collections::HashSet;
 
     #[test]
@@ -725,5 +755,22 @@ mod serde_tests {
         let j = serde_json::to_string(&empty).unwrap();
         let bad = serde_json::from_str::<NESet<usize>>(&j);
         assert!(bad.is_err());
+    }
+}
+
+#[cfg(feature = "schemars")]
+#[cfg(test)]
+mod schemars_tests {
+    use super::{HashSet, NESet};
+    use schemars::schema_for;
+
+    #[test]
+    fn test_simple_schema() {
+        let actual = schema_for!(NESet<i32>).to_value();
+
+        let mut expected = schema_for!(HashSet<i32>).to_value();
+        expected["minItems"] = 1.into();
+
+        assert_eq!(expected, actual);
     }
 }
