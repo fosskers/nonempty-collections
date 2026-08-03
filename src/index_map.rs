@@ -7,9 +7,9 @@ use crate::FromNonEmptyIterator;
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
 use crate::Singleton;
-use indexmap::indexmap;
 use indexmap::Equivalent;
 use indexmap::IndexMap;
+use indexmap::indexmap;
 use std::fmt;
 use std::fmt::Debug;
 use std::fmt::Formatter;
@@ -756,6 +756,24 @@ where
 {
     fn extend<I: IntoIterator<Item = (K, V)>>(&mut self, iter: I) {
         self.inner.extend(iter);
+    }
+}
+
+#[cfg(feature = "arbitrary")]
+impl<'a, K, V> arbitrary::Arbitrary<'a> for NEIndexMap<K, V>
+where
+    K: Eq + Hash + arbitrary::Arbitrary<'a>,
+    V: arbitrary::Arbitrary<'a>,
+{
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        let key = K::arbitrary(u)?;
+        let value = V::arbitrary(u)?;
+        let tail = IndexMap::<K, V>::arbitrary(u)?;
+
+        let mut map = Self::new(key, value);
+        map.extend(tail);
+
+        Ok(map)
     }
 }
 

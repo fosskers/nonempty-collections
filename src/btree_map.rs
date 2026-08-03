@@ -622,6 +622,24 @@ where
     }
 }
 
+#[cfg(feature = "arbitrary")]
+impl<'a, K, V> arbitrary::Arbitrary<'a> for NEBTreeMap<K, V>
+where
+    K: Ord + arbitrary::Arbitrary<'a>,
+    V: arbitrary::Arbitrary<'a>,
+{
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        let key = K::arbitrary(u)?;
+        let value = V::arbitrary(u)?;
+        let tail = BTreeMap::<K, V>::arbitrary(u)?;
+
+        let mut map = Self::new(key, value);
+        map.extend(tail);
+
+        Ok(map)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use maplit::hashmap;

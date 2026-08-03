@@ -10,11 +10,11 @@ use serde::Deserialize;
 #[cfg(feature = "serde")]
 use serde::Serialize;
 
-use crate::iter::NonEmptyIterator;
 use crate::FromNonEmptyIterator;
 use crate::IntoIteratorExt;
 use crate::IntoNonEmptyIterator;
 use crate::Singleton;
+use crate::iter::NonEmptyIterator;
 
 /// Like the [`crate::nes!`] macro, but for Binary Tree Sets.
 ///
@@ -591,6 +591,22 @@ where
 {
     fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
         self.inner.extend(iter);
+    }
+}
+
+#[cfg(feature = "arbitrary")]
+impl<'a, T> arbitrary::Arbitrary<'a> for NEBTreeSet<T>
+where
+    T: Ord + arbitrary::Arbitrary<'a>,
+{
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        let head = T::arbitrary(u)?;
+        let tail = BTreeSet::<T>::arbitrary(u)?;
+
+        let mut map = Self::new(head);
+        map.extend(tail);
+
+        Ok(map)
     }
 }
 

@@ -92,3 +92,18 @@ where
         }
     }
 }
+
+#[cfg(feature = "arbitrary")]
+impl<'a, L, R> arbitrary::Arbitrary<'a> for NEEither<L, R>
+where
+    L: arbitrary::Arbitrary<'a>,
+    R: arbitrary::Arbitrary<'a>,
+{
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        if u.arbitrary()? {
+            Ok(NEEither::Left(L::arbitrary(u)?))
+        } else {
+            Ok(NEEither::Right(R::arbitrary(u)?))
+        }
+    }
+}

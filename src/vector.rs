@@ -1,10 +1,10 @@
 //! Non-empty [`Vec`]s.
 
+use crate::Singleton;
 use crate::iter::FromNonEmptyIterator;
 use crate::iter::IntoNonEmptyIterator;
 use crate::iter::NonEmptyIterator;
 use crate::slice::NEChunks;
-use crate::Singleton;
 use core::fmt;
 use std::cmp::Ordering;
 use std::fmt::Debug;
@@ -1267,6 +1267,18 @@ impl<T> rand::seq::SliceRandom for NEVec<T> {
         R: rand::Rng + ?Sized,
     {
         self.inner.partial_shuffle(rng, amount)
+    }
+}
+
+#[cfg(feature = "arbitrary")]
+impl<'a, T> arbitrary::Arbitrary<'a> for NEVec<T>
+where
+    T: arbitrary::Arbitrary<'a>,
+{
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        let head = T::arbitrary(u)?;
+        let tail = Vec::arbitrary(u)?;
+        Ok(Self::from((head, tail)))
     }
 }
 

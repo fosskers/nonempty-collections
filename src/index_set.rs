@@ -7,11 +7,11 @@ use std::hash::BuildHasher;
 use std::hash::Hash;
 use std::num::NonZeroUsize;
 
-use crate::iter::NonEmptyIterator;
 use crate::FromNonEmptyIterator;
 use crate::IntoIteratorExt;
 use crate::IntoNonEmptyIterator;
 use crate::Singleton;
+use crate::iter::NonEmptyIterator;
 
 /// Like the [`crate::nes!`] macro, but for IndexSets.
 ///
@@ -674,6 +674,22 @@ where
 {
     fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
         self.inner.extend(iter);
+    }
+}
+
+#[cfg(feature = "arbitrary")]
+impl<'a, T> arbitrary::Arbitrary<'a> for NEIndexSet<T>
+where
+    T: Eq + Hash + arbitrary::Arbitrary<'a>,
+{
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        let head = T::arbitrary(u)?;
+        let tail = IndexSet::<T>::arbitrary(u)?;
+
+        let mut map = Self::new(head);
+        map.extend(tail);
+
+        Ok(map)
     }
 }
 
