@@ -1,5 +1,11 @@
 # `nonempty-collections`
 
+## Unreleased
+
+#### Added
+
+- `Arbitrary` impls for the main collection types.
+
 ## 1.4.0 (2026-07-28)
 
 #### Added

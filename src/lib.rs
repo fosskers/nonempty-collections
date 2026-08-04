@@ -133,11 +133,12 @@
 //!
 //! # Features
 //!
-//! * `serde`: `serde` support.
+//! * `arbitrary`: adds `Arbitrary` trait impls for each collection.
+//! * `either`: adds [`NEEither`](crate::either::NEEither) a non-empty variant of `Either` from the [`either` crate](https://docs.rs/either/latest/either/).
 //! * `indexmap`: adds [`NEIndexMap`](crate::index_map::NEIndexMap) a non-empty [`IndexMap`](https://docs.rs/indexmap/latest/indexmap/).
 //! * `itertools`: adds [`NonEmptyItertools`](crate::itertools::NonEmptyItertools) a non-empty variant of [`itertools`](https://docs.rs/itertools/latest/itertools/).
-//! * `either`: adds [`NEEither`](crate::either::NEEither) a non-empty variant of `Either` from the [`either` crate](https://docs.rs/either/latest/either/).
 //! * `rand`: adds `NEVec` support for `SliceRandom`.
+//! * `serde`: `serde` support.
 
 pub mod array;
 pub mod btree_map;
