@@ -1026,8 +1026,14 @@ impl<T> AsRef<Vec<T>> for NEVec<T> {
     }
 }
 
-impl<T> AsMut<Vec<T>> for NEVec<T> {
-    fn as_mut(&mut self) -> &mut Vec<T> {
+impl<T> AsRef<[T]> for NEVec<T> {
+    fn as_ref(&self) -> &[T] {
+        self.inner.as_ref()
+    }
+}
+
+impl<T> AsMut<[T]> for NEVec<T> {
+    fn as_mut(&mut self) -> &mut [T] {
         self.inner.as_mut()
     }
 }
