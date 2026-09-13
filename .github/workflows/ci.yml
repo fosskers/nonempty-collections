@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  NO_STD_TARGET: thumbv6m-none-eabi
 
 jobs:
   build:
@@ -19,5 +20,17 @@ jobs:
       - name: Cache Dependencies
         uses: Swatinem/rust-cache@v2
 
+      - name: Run clippy
+        run: cargo clippy --all-features --all-targets
+
       - name: Run tests
         run: cargo test --all-features
+
+      - name: Prepare no_std target
+        run: rustup target add $NO_STD_TARGET
+
+      - name: Build with no_std and no alloc
+        run: cargo build --verbose --release --target $NO_STD_TARGET --no-default-features
+
+      - name: Build with no_std
+        run: cargo build --verbose --release --target $NO_STD_TARGET --no-default-features --features alloc

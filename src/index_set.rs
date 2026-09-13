@@ -1,11 +1,14 @@
 //! Non-empty IndexSets.
 
+// The standard `RandomState` requires libstd.
+#![cfg(all(feature = "indexmap", feature = "std"))]
+
+use core::borrow::Borrow;
 use core::fmt;
+use core::hash::BuildHasher;
+use core::hash::Hash;
+use core::num::NonZeroUsize;
 use indexmap::IndexSet;
-use std::borrow::Borrow;
-use std::hash::BuildHasher;
-use std::hash::Hash;
-use std::num::NonZeroUsize;
 
 use crate::FromNonEmptyIterator;
 use crate::IntoIteratorExt;

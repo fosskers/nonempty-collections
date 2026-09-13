@@ -5,6 +5,7 @@
 #### Added
 
 - `Arbitrary` impls for the main collection types.
+- New `std` and `alloc` features (enabled by default). Disabling `std` enables support for `no_std` environments.
 
 ## 1.4.0 (2026-07-28)
 

@@ -1,16 +1,21 @@
 //! Non-empty [`Vec`]s.
 
+// Rust's standard Vec requires an allocator.
+#![cfg(feature = "alloc")]
+
 use crate::Singleton;
 use crate::iter::FromNonEmptyIterator;
 use crate::iter::IntoNonEmptyIterator;
 use crate::iter::NonEmptyIterator;
 use crate::slice::NEChunks;
+use alloc::vec;
+use alloc::vec::Vec;
+use core::cmp::Ordering;
 use core::fmt;
-use std::cmp::Ordering;
-use std::fmt::Debug;
-use std::fmt::Formatter;
-use std::num::NonZeroUsize;
-use std::slice::SliceIndex;
+use core::fmt::Debug;
+use core::fmt::Formatter;
+use core::num::NonZeroUsize;
+use core::slice::SliceIndex;
 
 #[cfg(feature = "serde")]
 use serde::Deserialize;
@@ -58,7 +63,7 @@ macro_rules! nev {
         $crate::NEVec::new($h)
     };
     ($elem:expr; $n:expr) => {{
-        let n = const { ::std::num::NonZero::new($n).expect("Length cannot be 0") };
+        let n = const { ::core::num::NonZero::new($n).expect("Length cannot be 0") };
         $crate::vector::NEVec::from_elem($elem, n)
     }};
 }
@@ -397,7 +402,7 @@ impl<T> NEVec<T> {
     /// Returns a regular iterator over the values in this non-empty vector.
     ///
     /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
-    pub fn iter(&self) -> std::slice::Iter<'_, T> {
+    pub fn iter(&self) -> core::slice::Iter<'_, T> {
         self.inner.iter()
     }
 
@@ -405,7 +410,7 @@ impl<T> NEVec<T> {
     /// vector.
     ///
     /// For a `NonEmptyIterator` see `Self::nonempty_iter_mut()`.
-    pub fn iter_mut(&mut self) -> std::slice::IterMut<'_, T> {
+    pub fn iter_mut(&mut self) -> core::slice::IterMut<'_, T> {
         self.inner.iter_mut()
     }
 
@@ -1053,7 +1058,7 @@ impl<T> FromNonEmptyIterator<T> for NEVec<T> {
 /// A non-empty iterator over the values of an [`NEVec`].
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Iter<'a, T: 'a> {
-    iter: std::slice::Iter<'a, T>,
+    iter: core::slice::Iter<'a, T>,
 }
 
 impl<T> NonEmptyIterator for Iter<'_, T> {}
@@ -1061,7 +1066,7 @@ impl<T> NonEmptyIterator for Iter<'_, T> {}
 impl<'a, T> IntoIterator for Iter<'a, T> {
     type Item = &'a T;
 
-    type IntoIter = std::slice::Iter<'a, T>;
+    type IntoIter = core::slice::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
@@ -1087,7 +1092,7 @@ impl<T: Debug> Debug for Iter<'_, T> {
 #[derive(Debug)]
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct IterMut<'a, T: 'a> {
-    inner: std::slice::IterMut<'a, T>,
+    inner: core::slice::IterMut<'a, T>,
 }
 
 impl<T> NonEmptyIterator for IterMut<'_, T> {}
@@ -1095,7 +1100,7 @@ impl<T> NonEmptyIterator for IterMut<'_, T> {}
 impl<'a, T> IntoIterator for IterMut<'a, T> {
     type Item = &'a mut T;
 
-    type IntoIter = std::slice::IterMut<'a, T>;
+    type IntoIter = core::slice::IterMut<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner
@@ -1106,7 +1111,7 @@ impl<'a, T> IntoIterator for IterMut<'a, T> {
 #[derive(Clone)]
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct IntoIter<T> {
-    inner: std::vec::IntoIter<T>,
+    inner: alloc::vec::IntoIter<T>,
 }
 
 impl<T> NonEmptyIterator for IntoIter<T> {}
@@ -1114,7 +1119,7 @@ impl<T> NonEmptyIterator for IntoIter<T> {}
 impl<T> IntoIterator for IntoIter<T> {
     type Item = T;
 
-    type IntoIter = std::vec::IntoIter<T>;
+    type IntoIter = alloc::vec::IntoIter<T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner
@@ -1147,7 +1152,7 @@ impl<'a, T> IntoNonEmptyIterator for &'a NEVec<T> {
 
 impl<T> IntoIterator for NEVec<T> {
     type Item = T;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
+    type IntoIter = alloc::vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner.into_iter()
@@ -1156,7 +1161,7 @@ impl<T> IntoIterator for NEVec<T> {
 
 impl<'a, T> IntoIterator for &'a NEVec<T> {
     type Item = &'a T;
-    type IntoIter = std::slice::Iter<'a, T>;
+    type IntoIter = core::slice::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -1165,14 +1170,14 @@ impl<'a, T> IntoIterator for &'a NEVec<T> {
 
 impl<'a, T> IntoIterator for &'a mut NEVec<T> {
     type Item = &'a mut T;
-    type IntoIter = std::slice::IterMut<'a, T>;
+    type IntoIter = core::slice::IterMut<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter_mut()
     }
 }
 
-impl<T, I> std::ops::Index<I> for NEVec<T>
+impl<T, I> core::ops::Index<I> for NEVec<T>
 where
     I: SliceIndex<[T]>,
 {
@@ -1195,7 +1200,7 @@ where
     }
 }
 
-impl<T, I> std::ops::IndexMut<I> for NEVec<T>
+impl<T, I> core::ops::IndexMut<I> for NEVec<T>
 where
     I: SliceIndex<[T]>,
 {
@@ -1352,7 +1357,7 @@ mod tests {
         struct SimpleSerializable(i32);
 
         #[test]
-        fn test_simple_round_trip() -> Result<(), Box<dyn std::error::Error>> {
+        fn test_simple_round_trip() -> Result<(), Box<dyn core::error::Error>> {
             // Given
             let mut v = NEVec::new(SimpleSerializable(42));
             v.push(SimpleSerializable(777));

@@ -1,9 +1,12 @@
 //! Non-empty [`BTreeSet`]s.
 
+// Rust's standard sets require an allocator.
+#![cfg(feature = "alloc")]
+
+use alloc::collections::BTreeSet;
+use core::borrow::Borrow;
 use core::fmt;
-use std::borrow::Borrow;
-use std::collections::BTreeSet;
-use std::num::NonZeroUsize;
+use core::num::NonZeroUsize;
 
 #[cfg(feature = "serde")]
 use serde::Deserialize;
@@ -120,7 +123,7 @@ where
     /// Returns a regular iterator over the values in this non-empty set.
     ///
     /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
-    pub fn iter(&self) -> std::collections::btree_set::Iter<'_, T> {
+    pub fn iter(&self) -> alloc::collections::btree_set::Iter<'_, T> {
         self.inner.iter()
     }
 
@@ -203,7 +206,7 @@ where
     pub fn difference<'a>(
         &'a self,
         other: &'a NEBTreeSet<T>,
-    ) -> std::collections::btree_set::Difference<'a, T> {
+    ) -> alloc::collections::btree_set::Difference<'a, T> {
         self.inner.difference(&other.inner)
     }
 
@@ -261,7 +264,7 @@ where
     pub fn intersection<'a>(
         &'a self,
         other: &'a NEBTreeSet<T>,
-    ) -> std::collections::btree_set::Intersection<'a, T> {
+    ) -> alloc::collections::btree_set::Intersection<'a, T> {
         self.inner.intersection(&other.inner)
     }
 
@@ -400,7 +403,7 @@ where
 impl<T> IntoIterator for NEBTreeSet<T> {
     type Item = T;
 
-    type IntoIter = std::collections::btree_set::IntoIter<T>;
+    type IntoIter = alloc::collections::btree_set::IntoIter<T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner.into_iter()
@@ -413,7 +416,7 @@ where
 {
     type Item = &'a T;
 
-    type IntoIter = std::collections::btree_set::Iter<'a, T>;
+    type IntoIter = alloc::collections::btree_set::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -452,13 +455,13 @@ where
 /// A non-empty iterator over the values of an [`NEBTreeSet`].
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Iter<'a, T: 'a> {
-    iter: std::collections::btree_set::Iter<'a, T>,
+    iter: alloc::collections::btree_set::Iter<'a, T>,
 }
 
 impl<'a, T: 'a> IntoIterator for Iter<'a, T> {
     type Item = &'a T;
 
-    type IntoIter = std::collections::btree_set::Iter<'a, T>;
+    type IntoIter = alloc::collections::btree_set::Iter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
@@ -476,13 +479,13 @@ impl<T: fmt::Debug> fmt::Debug for Iter<'_, T> {
 /// An owned non-empty iterator over the values of an [`NEBTreeSet`].
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct IntoIter<T> {
-    iter: std::collections::btree_set::IntoIter<T>,
+    iter: alloc::collections::btree_set::IntoIter<T>,
 }
 
 impl<T> IntoIterator for IntoIter<T> {
     type Item = T;
 
-    type IntoIter = std::collections::btree_set::IntoIter<T>;
+    type IntoIter = alloc::collections::btree_set::IntoIter<T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
@@ -500,7 +503,7 @@ impl<T: fmt::Debug> fmt::Debug for IntoIter<T> {
 /// A non-empty iterator producing elements in the union of two [`NEBTreeSet`]s.
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Union<'a, T: 'a> {
-    inner: std::collections::btree_set::Union<'a, T>,
+    inner: alloc::collections::btree_set::Union<'a, T>,
 }
 
 impl<'a, T> IntoIterator for Union<'a, T>
@@ -509,7 +512,7 @@ where
 {
     type Item = &'a T;
 
-    type IntoIter = std::collections::btree_set::Union<'a, T>;
+    type IntoIter = alloc::collections::btree_set::Union<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner
@@ -633,7 +636,7 @@ mod test {
 #[cfg(test)]
 mod serde_tests {
     use crate::NEBTreeSet;
-    use std::collections::BTreeSet;
+    use alloc::collections::BTreeSet;
 
     #[test]
     fn json() {

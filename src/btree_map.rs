@@ -1,9 +1,12 @@
 //! Non-empty [`BTreeMap`]s.
 
+// Rust's standard maps require an allocator.
+#![cfg(feature = "alloc")]
+
+use alloc::collections::BTreeMap;
+use core::borrow::Borrow;
 use core::fmt;
-use std::borrow::Borrow;
-use std::collections::BTreeMap;
-use std::num::NonZeroUsize;
+use core::num::NonZeroUsize;
 
 #[cfg(feature = "serde")]
 use serde::Deserialize;
@@ -99,7 +102,7 @@ impl<K, V> NEBTreeMap<K, V> {
     /// Returns a regular iterator over the entries in this non-empty map.
     ///
     /// For a `NonEmptyIterator` see `Self::nonempty_iter()`.
-    pub fn iter(&self) -> std::collections::btree_map::Iter<'_, K, V> {
+    pub fn iter(&self) -> alloc::collections::btree_map::Iter<'_, K, V> {
         self.inner.iter()
     }
 
@@ -107,7 +110,7 @@ impl<K, V> NEBTreeMap<K, V> {
     /// map.
     ///
     /// For a `NonEmptyIterator` see `Self::nonempty_iter_mut()`.
-    pub fn iter_mut(&mut self) -> std::collections::btree_map::IterMut<'_, K, V> {
+    pub fn iter_mut(&mut self) -> alloc::collections::btree_map::IterMut<'_, K, V> {
         self.inner.iter_mut()
     }
 
@@ -402,7 +405,7 @@ impl<'a, K, V> IntoNonEmptyIterator for &'a NEBTreeMap<K, V> {
 impl<K, V> IntoIterator for NEBTreeMap<K, V> {
     type Item = (K, V);
 
-    type IntoIter = std::collections::btree_map::IntoIter<K, V>;
+    type IntoIter = alloc::collections::btree_map::IntoIter<K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner.into_iter()
@@ -412,7 +415,7 @@ impl<K, V> IntoIterator for NEBTreeMap<K, V> {
 impl<'a, K, V> IntoIterator for &'a NEBTreeMap<K, V> {
     type Item = (&'a K, &'a V);
 
-    type IntoIter = std::collections::btree_map::Iter<'a, K, V>;
+    type IntoIter = alloc::collections::btree_map::Iter<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
@@ -422,7 +425,7 @@ impl<'a, K, V> IntoIterator for &'a NEBTreeMap<K, V> {
 impl<'a, K, V> IntoIterator for &'a mut NEBTreeMap<K, V> {
     type Item = (&'a K, &'a mut V);
 
-    type IntoIter = std::collections::btree_map::IterMut<'a, K, V>;
+    type IntoIter = alloc::collections::btree_map::IterMut<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter_mut()
@@ -454,7 +457,7 @@ where
 /// A non-empty iterator over the entries of an [`NEBTreeMap`].
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Iter<'a, K: 'a, V: 'a> {
-    iter: std::collections::btree_map::Iter<'a, K, V>,
+    iter: alloc::collections::btree_map::Iter<'a, K, V>,
 }
 
 impl<K, V> NonEmptyIterator for Iter<'_, K, V> {}
@@ -462,7 +465,7 @@ impl<K, V> NonEmptyIterator for Iter<'_, K, V> {}
 impl<'a, K, V> IntoIterator for Iter<'a, K, V> {
     type Item = (&'a K, &'a V);
 
-    type IntoIter = std::collections::btree_map::Iter<'a, K, V>;
+    type IntoIter = alloc::collections::btree_map::Iter<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
@@ -478,7 +481,7 @@ impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for Iter<'_, K, V> {
 /// A non-empty iterator over mutable values of an [`NEBTreeMap`].
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct IterMut<'a, K: 'a, V: 'a> {
-    iter: std::collections::btree_map::IterMut<'a, K, V>,
+    iter: alloc::collections::btree_map::IterMut<'a, K, V>,
 }
 
 impl<K, V> NonEmptyIterator for IterMut<'_, K, V> {}
@@ -486,7 +489,7 @@ impl<K, V> NonEmptyIterator for IterMut<'_, K, V> {}
 impl<'a, K, V> IntoIterator for IterMut<'a, K, V> {
     type Item = (&'a K, &'a mut V);
 
-    type IntoIter = std::collections::btree_map::IterMut<'a, K, V>;
+    type IntoIter = alloc::collections::btree_map::IterMut<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
@@ -501,7 +504,7 @@ impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for IterMut<'_, K, V> {
 
 /// A non-empty iterator over the entries of an [`NEBTreeMap`].
 pub struct IntoIter<K, V> {
-    iter: std::collections::btree_map::IntoIter<K, V>,
+    iter: alloc::collections::btree_map::IntoIter<K, V>,
 }
 
 impl<K, V> NonEmptyIterator for IntoIter<K, V> {}
@@ -509,7 +512,7 @@ impl<K, V> NonEmptyIterator for IntoIter<K, V> {}
 impl<K, V> IntoIterator for IntoIter<K, V> {
     type Item = (K, V);
 
-    type IntoIter = std::collections::btree_map::IntoIter<K, V>;
+    type IntoIter = alloc::collections::btree_map::IntoIter<K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter
@@ -525,7 +528,7 @@ impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for IntoIter<K, V> {
 /// A non-empty iterator over the keys of an [`NEBTreeMap`].
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Keys<'a, K: 'a, V: 'a> {
-    inner: std::collections::btree_map::Keys<'a, K, V>,
+    inner: alloc::collections::btree_map::Keys<'a, K, V>,
 }
 
 impl<K, V> NonEmptyIterator for Keys<'_, K, V> {}
@@ -533,7 +536,7 @@ impl<K, V> NonEmptyIterator for Keys<'_, K, V> {}
 impl<'a, K, V> IntoIterator for Keys<'a, K, V> {
     type Item = &'a K;
 
-    type IntoIter = std::collections::btree_map::Keys<'a, K, V>;
+    type IntoIter = alloc::collections::btree_map::Keys<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner
@@ -549,7 +552,7 @@ impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for Keys<'_, K, V> {
 /// A non-empty iterator over the values of an [`NEBTreeMap`].
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Values<'a, K: 'a, V: 'a> {
-    inner: std::collections::btree_map::Values<'a, K, V>,
+    inner: alloc::collections::btree_map::Values<'a, K, V>,
 }
 
 impl<K, V> NonEmptyIterator for Values<'_, K, V> {}
@@ -557,7 +560,7 @@ impl<K, V> NonEmptyIterator for Values<'_, K, V> {}
 impl<'a, K, V> IntoIterator for Values<'a, K, V> {
     type Item = &'a V;
 
-    type IntoIter = std::collections::btree_map::Values<'a, K, V>;
+    type IntoIter = alloc::collections::btree_map::Values<'a, K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.inner
@@ -585,7 +588,7 @@ impl<K: fmt::Debug, V: fmt::Debug> fmt::Debug for NEBTreeMap<K, V> {
 //     type Item = &'a mut V;
 
 //     type Iter = Skip<Chain<Once<&'a mut V>,
-// std::collections::btree_map::IterMut<'a, K, V>>>;
+// alloc::collections::btree_map::IterMut<'a, K, V>>>;
 
 //     fn first(self) -> (Self::Item, Self::Iter) {
 //         (self.head_val, self.inner.skip(1))
@@ -642,8 +645,8 @@ where
 
 #[cfg(test)]
 mod test {
+    use core::num::NonZeroUsize;
     use maplit::hashmap;
-    use std::num::NonZeroUsize;
 
     struct Foo {
         user: String,
@@ -698,7 +701,7 @@ mod test {
 #[cfg(test)]
 mod serde_tests {
     use crate::NEBTreeMap;
-    use std::collections::BTreeMap;
+    use alloc::collections::BTreeMap;
 
     #[test]
     fn json() {

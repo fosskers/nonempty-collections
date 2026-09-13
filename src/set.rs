@@ -1,11 +1,14 @@
 //! Non-empty [`HashSet`]s.
 
+// Rust's standard sets require an allocator, and hash-based sets require a secure random-number generator.
+#![cfg(feature = "std")]
+
+use core::borrow::Borrow;
 use core::fmt;
-use std::borrow::Borrow;
+use core::hash::BuildHasher;
+use core::hash::Hash;
+use core::num::NonZeroUsize;
 use std::collections::HashSet;
-use std::hash::BuildHasher;
-use std::hash::Hash;
-use std::num::NonZeroUsize;
 
 #[cfg(feature = "serde")]
 use serde::Deserialize;

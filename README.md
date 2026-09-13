@@ -141,5 +141,7 @@ contains something.
 * `itertools`: adds `NonEmptyItertools` a non-empty variant of [`itertools`](https://docs.rs/itertools/latest/itertools/).
 * `rand`: adds `NEVec` support for `SliceRandom`.
 * `serde`: `serde` support.
+* `std` (_enabled by default_): adds structures which require the full Rust standard library, such as [`NESet`](https://docs.rs/nonempty-collections/latest/nonempty_collections/set/struct.NESet.html) and [`NEMap`](https://docs.rs/nonempty-collections/latest/nonempty_collections/map/struct.NEMap.html). Disabling this feature adds support for [`no_std` environments](https://docs.rust-embedded.org/book/intro/no-std.html).
+* `alloc`: adds structures which require an allocator, such as [`NEVec`](https://docs.rs/nonempty-collections/latest/nonempty_collections/vector/struct.NEVec.html). The `std` feature enables this feature automatically.
 
 <!-- cargo-rdme end -->

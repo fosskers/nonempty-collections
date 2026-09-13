@@ -1,4 +1,10 @@
 #![allow(rustdoc::redundant_explicit_links)] // the explicit links are needed for cargo rdme
+#![deny(clippy::alloc_instead_of_core)]
+#![deny(clippy::std_instead_of_alloc)]
+#![deny(clippy::std_instead_of_core)]
+#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, doc(auto_cfg))]
 
 //! Non-empty variants of the standard collections.
 //!
@@ -139,34 +145,51 @@
 //! * `itertools`: adds [`NonEmptyItertools`](crate::itertools::NonEmptyItertools) a non-empty variant of [`itertools`](https://docs.rs/itertools/latest/itertools/).
 //! * `rand`: adds `NEVec` support for `SliceRandom`.
 //! * `serde`: `serde` support.
+//! * `std` (_enabled by default_): adds structures which require the full Rust standard library, such as [`NESet`](crate::set::NESet) and [`NEMap`](crate::map::NEMap). Disabling this feature adds support for [`no_std` environments](https://docs.rust-embedded.org/book/intro/no-std.html).
+//! * `alloc`: adds structures which require an allocator, such as [`NEVec`](crate::vector::NEVec). The `std` feature enables this feature automatically.
+
+extern crate core;
+
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
+#[cfg(any(test, feature = "std"))]
+extern crate std;
 
 pub mod array;
+#[cfg(feature = "alloc")]
 pub mod btree_map;
+#[cfg(feature = "alloc")]
 pub mod btree_set;
 pub mod iter;
+#[cfg(feature = "std")]
 pub mod map;
+#[cfg(feature = "std")]
 pub mod set;
 pub mod slice;
+#[cfg(feature = "alloc")]
 pub mod vector;
 
 #[cfg(feature = "either")]
 pub mod either;
-#[cfg(feature = "indexmap")]
+#[cfg(all(feature = "indexmap", feature = "std"))]
 pub mod index_map;
-#[cfg(feature = "indexmap")]
+#[cfg(all(feature = "indexmap", feature = "std"))]
 pub mod index_set;
 #[cfg(feature = "itertools")]
 pub mod itertools;
 
 pub use array::ArrayNonEmptyIterator;
 pub use array::NonEmptyArrayExt;
+#[cfg(feature = "alloc")]
 pub use btree_map::NEBTreeMap;
+#[cfg(feature = "alloc")]
 pub use btree_set::NEBTreeSet;
 #[cfg(feature = "either")]
 pub use either::NEEither;
-#[cfg(feature = "indexmap")]
+#[cfg(all(feature = "indexmap", feature = "std"))]
 pub use index_map::NEIndexMap;
-#[cfg(feature = "indexmap")]
+#[cfg(all(feature = "indexmap", feature = "std"))]
 pub use index_set::NEIndexSet;
 pub use iter::FromNonEmptyIterator;
 pub use iter::IntoIteratorExt;
@@ -174,9 +197,12 @@ pub use iter::IntoNonEmptyIterator;
 pub use iter::NonEmptyIterator;
 #[cfg(feature = "itertools")]
 pub use itertools::NonEmptyItertools;
+#[cfg(feature = "std")]
 pub use map::NEMap;
+#[cfg(feature = "std")]
 pub use set::NESet;
 pub use slice::NESlice;
+#[cfg(feature = "alloc")]
 pub use vector::NEVec;
 
 /// Errors typically involving type conversions.
@@ -186,8 +212,8 @@ pub enum Error {
     Empty,
 }
 
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for Error {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Error::Empty => write!(f, "Given collection was empty"),
         }

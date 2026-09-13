@@ -3,19 +3,21 @@
 //! Unlike `HashMap` and [`crate::NEMap`], these feature a predictable iteration
 //! order.
 
+#![cfg(all(feature = "indexmap", feature = "std"))]
+
 use crate::FromNonEmptyIterator;
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
 use crate::Singleton;
+use core::fmt;
+use core::fmt::Debug;
+use core::fmt::Formatter;
+use core::hash::BuildHasher;
+use core::hash::Hash;
+use core::num::NonZeroUsize;
 use indexmap::Equivalent;
 use indexmap::IndexMap;
 use indexmap::indexmap;
-use std::fmt;
-use std::fmt::Debug;
-use std::fmt::Formatter;
-use std::hash::BuildHasher;
-use std::hash::Hash;
-use std::num::NonZeroUsize;
 
 /// Like the [`crate::nem!`] macro, but for IndexMaps.
 ///
@@ -538,7 +540,7 @@ where
     }
 }
 
-impl<K, V> std::ops::Index<usize> for NEIndexMap<K, V> {
+impl<K, V> core::ops::Index<usize> for NEIndexMap<K, V> {
     type Output = V;
 
     fn index(&self, index: usize) -> &V {

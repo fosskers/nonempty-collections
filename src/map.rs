@@ -1,11 +1,14 @@
 //! Non-empty [`HashMap`]s.
 
+// Rust's standard maps require an allocator, and hash-based maps require a secure random-number generator.
+#![cfg(feature = "std")]
+
+use core::borrow::Borrow;
 use core::fmt;
-use std::borrow::Borrow;
+use core::hash::BuildHasher;
+use core::hash::Hash;
+use core::num::NonZeroUsize;
 use std::collections::HashMap;
-use std::hash::BuildHasher;
-use std::hash::Hash;
-use std::num::NonZeroUsize;
 
 #[cfg(feature = "serde")]
 use serde::Deserialize;
@@ -713,8 +716,8 @@ where
 
 #[cfg(test)]
 mod test {
+    use core::num::NonZeroUsize;
     use maplit::hashmap;
-    use std::num::NonZeroUsize;
 
     struct Foo {
         user: String,
