@@ -1,5 +1,6 @@
 //! Non-empty IndexSets.
 
+// The standard `RandomState` requires libstd.
 #![cfg(all(feature = "indexmap", feature = "std"))]
 
 use core::borrow::Borrow;
