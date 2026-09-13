@@ -39,7 +39,7 @@ use std::{collections::HashMap, collections::HashSet, path::Path, path::PathBuf}
 
 /// Creates an iterator that yields an element exactly once.
 ///
-/// See also [`std::iter::once`].
+/// See also [`core::iter::once`].
 pub fn once<T>(value: T) -> Once<T> {
     Once::new(value)
 }
@@ -1115,7 +1115,7 @@ impl<I: NonEmptyIterator> IntoNonEmptyIterator for I {
     }
 }
 
-/// Similar to [`std::iter::Map`], but with additional non-emptiness guarantees.
+/// Similar to [`core::iter::Map`], but with additional non-emptiness guarantees.
 #[derive(Clone)]
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Map<I: NonEmptyIterator, F> {
@@ -1160,7 +1160,7 @@ where
 
 /// An iterator that clones the elements of an underlying iterator.
 ///
-/// See also [`std::iter::Cloned`].
+/// See also [`core::iter::Cloned`].
 #[derive(Clone)]
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Cloned<I> {
@@ -1196,7 +1196,7 @@ impl<I: core::fmt::Debug> core::fmt::Debug for Cloned<I> {
 
 /// An iterator that yields the current count and the element during iteration.
 ///
-/// See also [`std::iter::Enumerate`].
+/// See also [`core::iter::Enumerate`].
 #[derive(Clone)]
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Enumerate<I> {
@@ -1345,7 +1345,7 @@ impl<T: core::fmt::Debug> core::fmt::Debug for Once<T> {
 /// A non-empty iterator that copies the elements of an underlying non-empty
 /// iterator.
 ///
-/// See also [`std::iter::Copied`].
+/// See also [`core::iter::Copied`].
 #[derive(Clone)]
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Copied<I> {
@@ -1384,7 +1384,7 @@ where
 
 /// A non-empty iterator that "zips up" its sources.
 ///
-/// See also [`std::iter::Zip`].
+/// See also [`core::iter::Zip`].
 #[derive(Clone)]
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Zip<A, B> {
@@ -1517,7 +1517,7 @@ where
 
 /// Flatten nested, non-empty structures.
 ///
-/// See also [`std::iter::FlatMap`].
+/// See also [`core::iter::FlatMap`].
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
 pub struct FlatMap<I, U: IntoIterator, F> {
     inner: core::iter::FlatMap<I, U, F>,

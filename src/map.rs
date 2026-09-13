@@ -1,15 +1,14 @@
 //! Non-empty [`HashMap`]s.
 
 // Rust's standard maps require an allocator, and hash-based maps require a secure random-number generator.
-// TODO: Consider an abstraction around BTreeMap so this can be used in no_std `alloc` environments
 #![cfg(feature = "std")]
 
-use core::fmt;
 use core::borrow::Borrow;
-use std::collections::HashMap;
+use core::fmt;
 use core::hash::BuildHasher;
 use core::hash::Hash;
 use core::num::NonZeroUsize;
+use std::collections::HashMap;
 
 #[cfg(feature = "serde")]
 use serde::Deserialize;

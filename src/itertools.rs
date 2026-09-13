@@ -10,8 +10,8 @@
 use crate::IntoNonEmptyIterator;
 use crate::NonEmptyIterator;
 use core::fmt;
+use core::fmt::Debug;
 use itertools::Itertools;
-use std::fmt::Debug;
 
 /// A [`NonEmptyIterator`] blanket implementation that provides extra adaptors
 /// and methods, similar to [`Itertools`](https://docs.rs/itertools/) for `Iterator`.
@@ -59,7 +59,7 @@ pub trait NonEmptyItertools: NonEmptyIterator {
     fn all_unique(self) -> bool
     where
         Self: Sized,
-        Self::Item: Eq + std::hash::Hash,
+        Self::Item: Eq + core::hash::Hash,
     {
         self.into_iter().all_unique()
     }

@@ -1,4 +1,7 @@
 #![allow(rustdoc::redundant_explicit_links)] // the explicit links are needed for cargo rdme
+#![deny(clippy::alloc_instead_of_core)]
+#![deny(clippy::std_instead_of_alloc)]
+#![deny(clippy::std_instead_of_core)]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(docsrs, doc(auto_cfg))]
@@ -154,7 +157,9 @@ extern crate alloc;
 extern crate std;
 
 pub mod array;
+#[cfg(feature = "alloc")]
 pub mod btree_map;
+#[cfg(feature = "alloc")]
 pub mod btree_set;
 pub mod iter;
 #[cfg(feature = "std")]
@@ -167,22 +172,24 @@ pub mod vector;
 
 #[cfg(feature = "either")]
 pub mod either;
-#[cfg(feature = "indexmap")]
+#[cfg(all(feature = "indexmap", feature = "std"))]
 pub mod index_map;
-#[cfg(feature = "indexmap")]
+#[cfg(all(feature = "indexmap", feature = "std"))]
 pub mod index_set;
 #[cfg(feature = "itertools")]
 pub mod itertools;
 
 pub use array::ArrayNonEmptyIterator;
 pub use array::NonEmptyArrayExt;
+#[cfg(feature = "alloc")]
 pub use btree_map::NEBTreeMap;
+#[cfg(feature = "alloc")]
 pub use btree_set::NEBTreeSet;
 #[cfg(feature = "either")]
 pub use either::NEEither;
-#[cfg(feature = "indexmap")]
+#[cfg(all(feature = "indexmap", feature = "std"))]
 pub use index_map::NEIndexMap;
-#[cfg(feature = "indexmap")]
+#[cfg(all(feature = "indexmap", feature = "std"))]
 pub use index_set::NEIndexSet;
 pub use iter::FromNonEmptyIterator;
 pub use iter::IntoIteratorExt;
