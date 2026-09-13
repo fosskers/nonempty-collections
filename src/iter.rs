@@ -1760,8 +1760,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::NEMap;
     use crate::nem;
+    use crate::NEMap;
 
     #[test]
     fn into_hashset() {
