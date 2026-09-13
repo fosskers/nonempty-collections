@@ -730,7 +730,7 @@ mod test {
 #[cfg(test)]
 mod serde_tests {
     use crate::NESet;
-    use std::collections::hash_set::HashSet;
+    use std::collections::HashSet;
 
     #[test]
     fn json() {

@@ -1290,9 +1290,6 @@ where
 #[cfg(test)]
 mod tests {
     use crate::NEVec;
-    use alloc::format;
-    use alloc::string::{String, ToString};
-    use alloc::vec;
 
     #[derive(Debug, Clone, PartialEq)]
     struct Foo {

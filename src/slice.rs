@@ -229,8 +229,6 @@ impl<T: fmt::Debug> fmt::Debug for NEChunks<'_, T> {
 
 #[cfg(test)]
 mod tests {
-    use alloc::vec;
-    use alloc::vec::Vec;
     use core::num::NonZeroUsize;
 
     use crate::nev;

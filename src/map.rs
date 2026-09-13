@@ -716,7 +716,6 @@ where
 
 #[cfg(test)]
 mod test {
-    use alloc::string::String;
     use core::num::NonZeroUsize;
     use maplit::hashmap;
 
@@ -773,7 +772,7 @@ mod test {
 #[cfg(test)]
 mod serde_tests {
     use crate::NEMap;
-    use std::collections::hash_map::HashMap;
+    use std::collections::HashMap;
 
     #[test]
     fn json() {

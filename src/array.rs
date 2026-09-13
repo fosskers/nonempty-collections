@@ -172,8 +172,6 @@ macro_rules! impl_nonempty_iter_for_arrays {
 mod test {
     use crate::IntoNonEmptyIterator;
     use crate::NonEmptyIterator;
-    use alloc::vec;
-    use alloc::vec::Vec;
 
     #[test]
     fn test_iter() {

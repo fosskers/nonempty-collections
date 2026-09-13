@@ -1762,8 +1762,6 @@ mod tests {
     use super::*;
     use crate::NEMap;
     use crate::nem;
-    use alloc::vec;
-    use alloc::vec::Vec;
 
     #[test]
     fn into_hashset() {
