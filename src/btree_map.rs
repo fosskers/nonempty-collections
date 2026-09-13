@@ -1,5 +1,6 @@
 //! Non-empty [`BTreeMap`]s.
 
+// Rust's standard maps require an allocator.
 #![cfg(feature = "alloc")]
 
 use alloc::collections::BTreeMap;

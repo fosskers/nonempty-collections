@@ -1,5 +1,6 @@
 //! Non-empty [`BTreeSet`]s.
 
+// Rust's standard sets require an allocator.
 #![cfg(feature = "alloc")]
 
 use alloc::collections::BTreeSet;
