@@ -135,6 +135,7 @@
 //!
 //! * `arbitrary`: adds `Arbitrary` trait impls for each collection.
 //! * `either`: adds [`NEEither`](crate::either::NEEither) a non-empty variant of `Either` from the [`either` crate](https://docs.rs/either/latest/either/).
+//! * `futures`: adds [`join::join_all`] and [`join::try_join_all`] for non-empty iterators of futures, using the [`futures-util`](https://docs.rs/futures-util) crate.
 //! * `indexmap`: adds [`NEIndexMap`](crate::index_map::NEIndexMap) a non-empty [`IndexMap`](https://docs.rs/indexmap/latest/indexmap/).
 //! * `itertools`: adds [`NonEmptyItertools`](crate::itertools::NonEmptyItertools) a non-empty variant of [`itertools`](https://docs.rs/itertools/latest/itertools/).
 //! * `rand`: adds `NEVec` support for `SliceRandom`.
@@ -157,6 +158,8 @@ pub mod index_map;
 pub mod index_set;
 #[cfg(feature = "itertools")]
 pub mod itertools;
+#[cfg(feature = "futures")]
+pub mod join;
 
 pub use array::ArrayNonEmptyIterator;
 pub use array::NonEmptyArrayExt;

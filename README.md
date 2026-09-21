@@ -137,6 +137,7 @@ contains something.
 
 * `arbitrary`: adds `Arbitrary` trait impls for each collection.
 * `either`: adds `NEEither` a non-empty variant of `Either` from the [`either` crate](https://docs.rs/either/latest/either/).
+* `futures`: adds `join::join_all` and `join::try_join_all` for non-empty iterators of futures, using the [`futures-util`](https://docs.rs/futures-util) crate.
 * `indexmap`: adds `NEIndexMap` a non-empty [`IndexMap`](https://docs.rs/indexmap/latest/indexmap/).
 * `itertools`: adds `NonEmptyItertools` a non-empty variant of [`itertools`](https://docs.rs/itertools/latest/itertools/).
 * `rand`: adds `NEVec` support for `SliceRandom`.
