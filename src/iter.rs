@@ -41,6 +41,26 @@ pub fn once<T>(value: T) -> Once<T> {
     Once::new(value)
 }
 
+/// Creates a new iterator that endlessly repeats a single element.
+///
+/// Since `repeat` produces an infinite sequence, it is always non-empty.
+///
+/// See also [`std::iter::repeat`].
+///
+/// ```
+/// use core::num::NonZeroUsize;
+///
+/// use nonempty_collections::*;
+///
+/// let fours = iter::repeat(4);
+///
+/// assert_eq!(4, fours.clone().next().0);
+/// assert_eq!(3, fours.take(NonZeroUsize::new(3).unwrap()).count().get());
+/// ```
+pub fn repeat<T: Clone>(value: T) -> Repeat<T> {
+    Repeat::new(value)
+}
+
 /// An [`Iterator`] that is guaranteed to have at least one item.
 ///
 /// By implementing `NonEmptyIterator` for a type the implementor is responsible
@@ -1425,6 +1445,39 @@ impl<T> IntoIterator for Once<T> {
 }
 
 impl<T: std::fmt::Debug> std::fmt::Debug for Once<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+/// A non-empty iterator that endlessly repeats a single element.
+#[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+pub struct Repeat<T> {
+    inner: std::iter::Repeat<T>,
+}
+
+impl<T: Clone> Repeat<T> {
+    pub(crate) fn new(value: T) -> Repeat<T> {
+        Repeat {
+            inner: std::iter::repeat(value),
+        }
+    }
+}
+
+impl<T: Clone> NonEmptyIterator for Repeat<T> {}
+
+impl<T: Clone> IntoIterator for Repeat<T> {
+    type Item = T;
+
+    type IntoIter = std::iter::Repeat<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner
+    }
+}
+
+impl<T: Clone + std::fmt::Debug> std::fmt::Debug for Repeat<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
     }
