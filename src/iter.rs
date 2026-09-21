@@ -1081,6 +1081,47 @@ where
     }
 }
 
+/// See also [`Option`]'s [`FromIterator`] impl.
+impl<T, V> FromNonEmptyIterator<Option<T>> for Option<V>
+where
+    V: FromNonEmptyIterator<T>,
+{
+    /// Takes each element in the [`NonEmptyIterator`]: if it is
+    /// [`None`][Option::None], no further elements are taken, and the
+    /// [`None`][Option::None] is returned. Should no [`None`][Option::None]
+    /// occur, a container of type `V` containing the values of each
+    /// [`Option`] is returned.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let v = nev![Some(1), Some(2), Some(3)];
+    /// let r: Option<NEVec<i32>> = v.into_nonempty_iter().collect();
+    /// assert_eq!(Some(nev![1, 2, 3]), r);
+    ///
+    /// let v = nev![Some(1), None, Some(3)];
+    /// let r: Option<NEVec<i32>> = v.into_nonempty_iter().collect();
+    /// assert_eq!(None, r);
+    /// ```
+    fn from_nonempty_iter<I>(iter: I) -> Option<V>
+    where
+        I: IntoNonEmptyIterator<Item = Option<T>>,
+    {
+        let (head, rest) = iter.into_nonempty_iter().next();
+        let head: T = head?;
+
+        let mut buf = NEVec::new(head);
+
+        for item in rest {
+            let item: T = item?;
+            buf.push(item);
+        }
+        let new_iter = buf.into_nonempty_iter();
+        let output: V = FromNonEmptyIterator::from_nonempty_iter(new_iter);
+        Some(output)
+    }
+}
+
 /// Conversion into a [`NonEmptyIterator`].
 pub trait IntoNonEmptyIterator: IntoIterator {
     /// Which kind of [`NonEmptyIterator`] are we turning this into?
