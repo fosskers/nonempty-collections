@@ -895,6 +895,30 @@ pub trait NonEmptyIterator: IntoIterator {
         fused
     }
 
+    /// Reverses a non-empty iterator's direction.
+    ///
+    /// Usually, iterators iterate from left to right. After using `rev()`, a
+    /// non-empty iterator will instead iterate from right to left.
+    ///
+    /// See also [`Iterator::rev`].
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let n = nev![1, 2, 3];
+    /// let r: NEVec<_> = n.into_nonempty_iter().rev().collect();
+    /// assert_eq!(nev![3, 2, 1], r);
+    /// ```
+    fn rev(self) -> Rev<Self>
+    where
+        Self: Sized,
+        Self::IntoIter: DoubleEndedIterator,
+    {
+        Rev {
+            iter: self.into_iter().rev(),
+        }
+    }
+
     /// Reduces the elements to a single one, by repeatedly applying a reducing
     /// operation.
     ///
@@ -1289,6 +1313,46 @@ impl<I> std::fmt::Debug for Take<I>
 where
     I: NonEmptyIterator,
     I::IntoIter: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.iter.fmt(f)
+    }
+}
+
+/// A non-empty iterator that iterates in reverse.
+///
+/// See also [`std::iter::Rev`].
+#[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+pub struct Rev<I: NonEmptyIterator> {
+    iter: std::iter::Rev<I::IntoIter>,
+}
+
+impl<I> NonEmptyIterator for Rev<I>
+where
+    I: NonEmptyIterator,
+    I::IntoIter: DoubleEndedIterator,
+{
+}
+
+impl<I> IntoIterator for Rev<I>
+where
+    I: NonEmptyIterator,
+    I::IntoIter: DoubleEndedIterator,
+{
+    type Item = I::Item;
+
+    type IntoIter = std::iter::Rev<I::IntoIter>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter
+    }
+}
+
+impl<I> std::fmt::Debug for Rev<I>
+where
+    I: NonEmptyIterator,
+    I::IntoIter: DoubleEndedIterator + std::fmt::Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.iter.fmt(f)
