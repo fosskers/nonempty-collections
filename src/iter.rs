@@ -81,6 +81,27 @@ pub fn repeat_n<T: Clone>(value: T, count: NonZeroUsize) -> RepeatN<T> {
     RepeatN::new(value, count)
 }
 
+/// Creates a non-empty iterator over the half-open range
+/// `start..(start + len.get())`.
+///
+/// Unlike a plain [`Range`](std::ops::Range), which can be empty (e.g.
+/// `5..5`), this is guaranteed non-empty by construction: `len` can never be
+/// `0`.
+///
+/// ```
+/// use core::num::NonZeroUsize;
+///
+/// use nonempty_collections::*;
+///
+/// let r: NEVec<_> = iter::range_len(2, NonZeroUsize::new(3).unwrap()).collect();
+/// assert_eq!(nev![2, 3, 4], r);
+/// ```
+pub fn range_len(start: usize, len: NonZeroUsize) -> RangeLen {
+    RangeLen {
+        inner: start..start + len.get(),
+    }
+}
+
 /// An [`Iterator`] that is guaranteed to have at least one item.
 ///
 /// By implementing `NonEmptyIterator` for a type the implementor is responsible
@@ -1534,6 +1555,33 @@ impl<T: Clone> IntoIterator for RepeatN<T> {
 }
 
 impl<T: Clone + std::fmt::Debug> std::fmt::Debug for RepeatN<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+/// A non-empty iterator over a range of `usize`s.
+///
+/// See also [`std::ops::Range`].
+#[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+pub struct RangeLen {
+    inner: std::ops::Range<usize>,
+}
+
+impl NonEmptyIterator for RangeLen {}
+
+impl IntoIterator for RangeLen {
+    type Item = usize;
+
+    type IntoIter = std::ops::Range<usize>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner
+    }
+}
+
+impl std::fmt::Debug for RangeLen {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
     }
