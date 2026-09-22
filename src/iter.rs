@@ -61,6 +61,26 @@ pub fn repeat<T: Clone>(value: T) -> Repeat<T> {
     Repeat::new(value)
 }
 
+/// Creates a new non-empty iterator that repeats a single element a given
+/// number of times.
+///
+/// Unlike [`std::iter::repeat_n`], `count` is a [`NonZeroUsize`], so the
+/// result is always non-empty.
+///
+/// See also [`std::iter::repeat_n`].
+///
+/// ```
+/// use core::num::NonZeroUsize;
+///
+/// use nonempty_collections::*;
+///
+/// let r: NEVec<_> = iter::repeat_n(4, NonZeroUsize::new(3).unwrap()).collect();
+/// assert_eq!(nev![4, 4, 4], r);
+/// ```
+pub fn repeat_n<T: Clone>(value: T, count: NonZeroUsize) -> RepeatN<T> {
+    RepeatN::new(value, count)
+}
+
 /// An [`Iterator`] that is guaranteed to have at least one item.
 ///
 /// By implementing `NonEmptyIterator` for a type the implementor is responsible
@@ -1478,6 +1498,42 @@ impl<T: Clone> IntoIterator for Repeat<T> {
 }
 
 impl<T: Clone + std::fmt::Debug> std::fmt::Debug for Repeat<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+/// A non-empty iterator that repeats a single element a given number of
+/// times.
+///
+/// See also [`std::iter::RepeatN`].
+#[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+pub struct RepeatN<T> {
+    inner: std::iter::RepeatN<T>,
+}
+
+impl<T: Clone> RepeatN<T> {
+    pub(crate) fn new(value: T, count: NonZeroUsize) -> RepeatN<T> {
+        RepeatN {
+            inner: std::iter::repeat_n(value, count.get()),
+        }
+    }
+}
+
+impl<T: Clone> NonEmptyIterator for RepeatN<T> {}
+
+impl<T: Clone> IntoIterator for RepeatN<T> {
+    type Item = T;
+
+    type IntoIter = std::iter::RepeatN<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner
+    }
+}
+
+impl<T: Clone + std::fmt::Debug> std::fmt::Debug for RepeatN<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
     }
