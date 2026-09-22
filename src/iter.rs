@@ -88,6 +88,20 @@ pub fn repeat_n<T: Clone>(value: T, count: NonZeroUsize) -> RepeatN<T> {
 /// `5..5`), this is guaranteed non-empty by construction: `len` can never be
 /// `0`.
 ///
+/// # Panics
+///
+/// Panics if `start + len.get()` overflows `usize`. If `start` and `len` are
+/// both known at compile time (e.g. inside a `const` item), this is a
+/// `const fn`, so the overflow is instead caught as a compile error:
+///
+/// ```compile_fail
+/// use core::num::NonZeroUsize;
+///
+/// use nonempty_collections::*;
+///
+/// const BAD: RangeLen = iter::range_len(usize::MAX - 1, NonZeroUsize::new(5).unwrap());
+/// ```
+///
 /// ```
 /// use core::num::NonZeroUsize;
 ///
@@ -96,10 +110,11 @@ pub fn repeat_n<T: Clone>(value: T, count: NonZeroUsize) -> RepeatN<T> {
 /// let r: NEVec<_> = iter::range_len(2, NonZeroUsize::new(3).unwrap()).collect();
 /// assert_eq!(nev![2, 3, 4], r);
 /// ```
-pub fn range_len(start: usize, len: NonZeroUsize) -> RangeLen {
-    RangeLen {
-        inner: start..start + len.get(),
-    }
+pub const fn range_len(start: usize, len: NonZeroUsize) -> RangeLen {
+    let end = start
+        .checked_add(len.get())
+        .expect("range_len: `start + len` overflows `usize`");
+    RangeLen { inner: start..end }
 }
 
 /// An [`Iterator`] that is guaranteed to have at least one item.
@@ -2007,6 +2022,12 @@ mod tests {
     fn into_hashset() {
         let m = nem!['a' => 1, 'b' => 2, 'c' => 3];
         let _: HashSet<_> = m.values().collect();
+    }
+
+    #[test]
+    #[should_panic(expected = "overflows `usize`")]
+    fn range_len_overflow_panics() {
+        let _ = range_len(usize::MAX - 1, NonZeroUsize::new(5).unwrap());
     }
 
     #[test]
