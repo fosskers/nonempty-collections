@@ -30,6 +30,9 @@ use std::result::Result;
 // - [x] Enumerate
 // - [x] Map
 // - [x] Once
+// - [x] Repeat
+// - [x] RepeatN (count is a NonZeroUsize)
+// - [x] Rev
 // - [ ] Scan
 // - [x] Take
 // - [x] Zip (if both are nonempty)
@@ -39,6 +42,82 @@ use std::result::Result;
 /// See also [`std::iter::once`].
 pub fn once<T>(value: T) -> Once<T> {
     Once::new(value)
+}
+
+/// Creates a new iterator that endlessly repeats a single element.
+///
+/// Since `repeat` produces an infinite sequence, it is always non-empty.
+///
+/// See also [`std::iter::repeat`].
+///
+/// ```
+/// use core::num::NonZeroUsize;
+///
+/// use nonempty_collections::*;
+///
+/// let fours = iter::repeat(4);
+///
+/// assert_eq!(4, fours.clone().next().0);
+/// assert_eq!(3, fours.take(NonZeroUsize::new(3).unwrap()).count().get());
+/// ```
+pub fn repeat<T: Clone>(value: T) -> Repeat<T> {
+    Repeat::new(value)
+}
+
+/// Creates a new non-empty iterator that repeats a single element a given
+/// number of times.
+///
+/// Unlike [`std::iter::repeat_n`], `count` is a [`NonZeroUsize`], so the
+/// result is always non-empty.
+///
+/// See also [`std::iter::repeat_n`].
+///
+/// ```
+/// use core::num::NonZeroUsize;
+///
+/// use nonempty_collections::*;
+///
+/// let r: NEVec<_> = iter::repeat_n(4, NonZeroUsize::new(3).unwrap()).collect();
+/// assert_eq!(nev![4, 4, 4], r);
+/// ```
+pub fn repeat_n<T: Clone>(value: T, count: NonZeroUsize) -> RepeatN<T> {
+    RepeatN::new(value, count)
+}
+
+/// Creates a non-empty iterator over the half-open range
+/// `start..(start + len.get())`.
+///
+/// Unlike a plain [`Range`](std::ops::Range), which can be empty (e.g.
+/// `5..5`), this is guaranteed non-empty by construction: `len` can never be
+/// `0`.
+///
+/// # Panics
+///
+/// Panics if `start + len.get()` overflows `usize`. If `start` and `len` are
+/// both known at compile time (e.g. inside a `const` item), this is a
+/// `const fn`, so the overflow is instead caught as a compile error:
+///
+/// ```compile_fail
+/// use core::num::NonZeroUsize;
+///
+/// use nonempty_collections::*;
+///
+/// const BAD: RangeLen = iter::range_len(usize::MAX - 1, NonZeroUsize::new(5).unwrap());
+/// ```
+///
+/// ```
+/// use core::num::NonZeroUsize;
+///
+/// use nonempty_collections::*;
+///
+/// let r: NEVec<_> = iter::range_len(2, NonZeroUsize::new(3).unwrap()).collect();
+/// assert_eq!(nev![2, 3, 4], r);
+/// ```
+pub const fn range_len(start: usize, len: NonZeroUsize) -> RangeLen {
+    let end = start
+        .checked_add(len.get())
+        .expect("range_len: `start + len` overflows `usize`");
+    RangeLen { inner: start..end }
 }
 
 /// An [`Iterator`] that is guaranteed to have at least one item.
@@ -895,6 +974,30 @@ pub trait NonEmptyIterator: IntoIterator {
         fused
     }
 
+    /// Reverses a non-empty iterator's direction.
+    ///
+    /// Usually, iterators iterate from left to right. After using `rev()`, a
+    /// non-empty iterator will instead iterate from right to left.
+    ///
+    /// See also [`Iterator::rev`].
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let n = nev![1, 2, 3];
+    /// let r: NEVec<_> = n.into_nonempty_iter().rev().collect();
+    /// assert_eq!(nev![3, 2, 1], r);
+    /// ```
+    fn rev(self) -> Rev<Self>
+    where
+        Self: Sized,
+        Self::IntoIter: DoubleEndedIterator,
+    {
+        Rev {
+            iter: self.into_iter().rev(),
+        }
+    }
+
     /// Reduces the elements to a single one, by repeatedly applying a reducing
     /// operation.
     ///
@@ -1081,6 +1184,47 @@ where
     }
 }
 
+/// See also [`Option`]'s [`FromIterator`] impl.
+impl<T, V> FromNonEmptyIterator<Option<T>> for Option<V>
+where
+    V: FromNonEmptyIterator<T>,
+{
+    /// Takes each element in the [`NonEmptyIterator`]: if it is
+    /// [`None`][Option::None], no further elements are taken, and the
+    /// [`None`][Option::None] is returned. Should no [`None`][Option::None]
+    /// occur, a container of type `V` containing the values of each
+    /// [`Option`] is returned.
+    ///
+    /// ```
+    /// use nonempty_collections::*;
+    ///
+    /// let v = nev![Some(1), Some(2), Some(3)];
+    /// let r: Option<NEVec<i32>> = v.into_nonempty_iter().collect();
+    /// assert_eq!(Some(nev![1, 2, 3]), r);
+    ///
+    /// let v = nev![Some(1), None, Some(3)];
+    /// let r: Option<NEVec<i32>> = v.into_nonempty_iter().collect();
+    /// assert_eq!(None, r);
+    /// ```
+    fn from_nonempty_iter<I>(iter: I) -> Option<V>
+    where
+        I: IntoNonEmptyIterator<Item = Option<T>>,
+    {
+        let (head, rest) = iter.into_nonempty_iter().next();
+        let head: T = head?;
+
+        let mut buf = NEVec::new(head);
+
+        for item in rest {
+            let item: T = item?;
+            buf.push(item);
+        }
+        let new_iter = buf.into_nonempty_iter();
+        let output: V = FromNonEmptyIterator::from_nonempty_iter(new_iter);
+        Some(output)
+    }
+}
+
 /// Conversion into a [`NonEmptyIterator`].
 pub trait IntoNonEmptyIterator: IntoIterator {
     /// Which kind of [`NonEmptyIterator`] are we turning this into?
@@ -1254,6 +1398,46 @@ where
     }
 }
 
+/// A non-empty iterator that iterates in reverse.
+///
+/// See also [`std::iter::Rev`].
+#[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+pub struct Rev<I: NonEmptyIterator> {
+    iter: std::iter::Rev<I::IntoIter>,
+}
+
+impl<I> NonEmptyIterator for Rev<I>
+where
+    I: NonEmptyIterator,
+    I::IntoIter: DoubleEndedIterator,
+{
+}
+
+impl<I> IntoIterator for Rev<I>
+where
+    I: NonEmptyIterator,
+    I::IntoIter: DoubleEndedIterator,
+{
+    type Item = I::Item;
+
+    type IntoIter = std::iter::Rev<I::IntoIter>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter
+    }
+}
+
+impl<I> std::fmt::Debug for Rev<I>
+where
+    I: NonEmptyIterator,
+    I::IntoIter: DoubleEndedIterator + std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.iter.fmt(f)
+    }
+}
+
 /// A non-empty iterator that links two iterators together, in a chain.
 #[derive(Clone)]
 #[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
@@ -1320,6 +1504,102 @@ impl<T> IntoIterator for Once<T> {
 }
 
 impl<T: std::fmt::Debug> std::fmt::Debug for Once<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+/// A non-empty iterator that endlessly repeats a single element.
+#[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+pub struct Repeat<T> {
+    inner: std::iter::Repeat<T>,
+}
+
+impl<T: Clone> Repeat<T> {
+    pub(crate) fn new(value: T) -> Repeat<T> {
+        Repeat {
+            inner: std::iter::repeat(value),
+        }
+    }
+}
+
+impl<T: Clone> NonEmptyIterator for Repeat<T> {}
+
+impl<T: Clone> IntoIterator for Repeat<T> {
+    type Item = T;
+
+    type IntoIter = std::iter::Repeat<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner
+    }
+}
+
+impl<T: Clone + std::fmt::Debug> std::fmt::Debug for Repeat<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+/// A non-empty iterator that repeats a single element a given number of
+/// times.
+///
+/// See also [`std::iter::RepeatN`].
+#[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+pub struct RepeatN<T> {
+    inner: std::iter::RepeatN<T>,
+}
+
+impl<T: Clone> RepeatN<T> {
+    pub(crate) fn new(value: T, count: NonZeroUsize) -> RepeatN<T> {
+        RepeatN {
+            inner: std::iter::repeat_n(value, count.get()),
+        }
+    }
+}
+
+impl<T: Clone> NonEmptyIterator for RepeatN<T> {}
+
+impl<T: Clone> IntoIterator for RepeatN<T> {
+    type Item = T;
+
+    type IntoIter = std::iter::RepeatN<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner
+    }
+}
+
+impl<T: Clone + std::fmt::Debug> std::fmt::Debug for RepeatN<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.inner.fmt(f)
+    }
+}
+
+/// A non-empty iterator over a range of `usize`s.
+///
+/// See also [`std::ops::Range`].
+#[derive(Clone)]
+#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+pub struct RangeLen {
+    inner: std::ops::Range<usize>,
+}
+
+impl NonEmptyIterator for RangeLen {}
+
+impl IntoIterator for RangeLen {
+    type Item = usize;
+
+    type IntoIter = std::ops::Range<usize>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner
+    }
+}
+
+impl std::fmt::Debug for RangeLen {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.inner.fmt(f)
     }
@@ -1745,6 +2025,12 @@ mod tests {
     fn into_hashset() {
         let m = nem!['a' => 1, 'b' => 2, 'c' => 3];
         let _: HashSet<_> = m.values().collect();
+    }
+
+    #[test]
+    #[should_panic(expected = "overflows `usize`")]
+    fn range_len_overflow_panics() {
+        let _ = range_len(usize::MAX - 1, NonZeroUsize::new(5).unwrap());
     }
 
     #[test]
