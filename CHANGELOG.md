@@ -5,6 +5,13 @@
 #### Added
 
 - `Arbitrary` impls for the main collection types.
+- A `FromNonEmptyIterator` instance for `Option`, meaning you can `collect`
+  into a guaranteed `Option<NEVec<...>>` (or other nonempty type).
+- `NonEmptyIterator::rev`.
+- `iter::repeat` and `iter::repeat_n`, non-empty variants of `std::iter::repeat`
+  and `std::iter::repeat_n`.
+- `iter::range_len`, a non-empty range built from a `start` and a `NonZeroUsize`
+  length.
 
 ## 1.4.0 (2026-07-28)
 

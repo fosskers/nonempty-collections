@@ -30,6 +30,9 @@ use std::result::Result;
 // - [x] Enumerate
 // - [x] Map
 // - [x] Once
+// - [x] Repeat
+// - [x] RepeatN (count is a NonZeroUsize)
+// - [x] Rev
 // - [ ] Scan
 // - [x] Take
 // - [x] Zip (if both are nonempty)
