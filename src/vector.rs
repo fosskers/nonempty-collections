@@ -838,6 +838,23 @@ impl<T> NEVec<T> {
         unsafe { crate::NESlice::from_slice_unchecked(self.inner.as_slice()) }
     }
 
+    /// Extracts a slice containing the entire nonempty vector.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use nonempty_collections::nev;
+    /// use std::io::{self, Write};
+    ///
+    /// let v = nev![1, 2, 3, 5, 8];
+    /// v.as_slice();
+    /// io::sink().write(buffer.as_slice()).unwrap();
+    /// ```
+    #[must_use]
+    pub const fn as_slice(&self) -> &[T] {
+        self.inner.as_slice()
+    }
+
     /// Removes all but the first of consecutive elements in the vector that
     /// resolve to the same key.
     ///
@@ -1022,6 +1039,12 @@ impl<T> From<(T, Vec<T>)> for NEVec<T> {
 
 impl<T> AsRef<Vec<T>> for NEVec<T> {
     fn as_ref(&self) -> &Vec<T> {
+        self.inner.as_ref()
+    }
+}
+
+impl<T> AsRef<[T]> for NEVec<T> {
+    fn as_ref(&self) -> &[T] {
         self.inner.as_ref()
     }
 }

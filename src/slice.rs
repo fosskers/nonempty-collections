@@ -129,6 +129,14 @@ impl<'a, T> NESlice<'a, T> {
     }
 }
 
+/// Converts a reference to T into a nonempty slice of length 1 (without copying).
+#[must_use]
+pub const fn from_ref<T>(s: &T) -> NESlice<'_, T> {
+    NESlice {
+        inner: std::slice::from_ref(s),
+    }
+}
+
 impl<T> AsRef<[T]> for NESlice<'_, T> {
     fn as_ref(&self) -> &[T] {
         self.inner
