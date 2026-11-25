@@ -1184,7 +1184,7 @@ impl<I: NonEmptyIterator> IntoNonEmptyIterator for I {
 
 /// Similar to [`std::iter::Map`], but with additional non-emptiness guarantees.
 #[derive(Clone)]
-#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+#[must_use = "Non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Map<I: NonEmptyIterator, F> {
     iter: std::iter::Map<I::IntoIter, F>,
 }
@@ -1229,7 +1229,7 @@ where
 ///
 /// See also [`std::iter::Cloned`].
 #[derive(Clone)]
-#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+#[must_use = "Non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Cloned<I> {
     iter: I,
 }
@@ -1265,7 +1265,7 @@ impl<I: std::fmt::Debug> std::fmt::Debug for Cloned<I> {
 ///
 /// See also [`std::iter::Enumerate`].
 #[derive(Clone)]
-#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+#[must_use = "Non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Enumerate<I> {
     iter: I,
 }
@@ -1295,7 +1295,7 @@ impl<I: std::fmt::Debug> std::fmt::Debug for Enumerate<I> {
 ///
 /// See also [`Iterator::take`].
 #[derive(Clone)]
-#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+#[must_use = "Non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Take<I: NonEmptyIterator> {
     iter: std::iter::Take<I::IntoIter>,
 }
@@ -1342,7 +1342,7 @@ where
 ///
 /// See also [`std::iter::Rev`].
 #[derive(Clone)]
-#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+#[must_use = "Non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Rev<I: NonEmptyIterator> {
     iter: std::iter::Rev<I::IntoIter>,
 }
@@ -1380,7 +1380,7 @@ where
 
 /// A non-empty iterator that links two iterators together, in a chain.
 #[derive(Clone)]
-#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+#[must_use = "Non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Chain<A, B> {
     inner: std::iter::Chain<A, B>,
 }
@@ -1418,7 +1418,7 @@ where
 
 /// A non-empty iterator that yields an element exactly once.
 #[derive(Clone)]
-#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+#[must_use = "Non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Once<T> {
     inner: std::iter::Once<T>,
 }
@@ -1451,7 +1451,7 @@ impl<T: std::fmt::Debug> std::fmt::Debug for Once<T> {
 
 /// A non-empty iterator that endlessly repeats a single element.
 #[derive(Clone)]
-#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+#[must_use = "Non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Repeat<T> {
     inner: std::iter::Repeat<T>,
 }
@@ -1487,7 +1487,7 @@ impl<T: Clone + std::fmt::Debug> std::fmt::Debug for Repeat<T> {
 ///
 /// See also [`std::iter::Copied`].
 #[derive(Clone)]
-#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+#[must_use = "Non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Copied<I> {
     iter: std::iter::Copied<I>,
 }
@@ -1526,7 +1526,7 @@ where
 ///
 /// See also [`std::iter::Zip`].
 #[derive(Clone)]
-#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+#[must_use = "Non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Zip<A, B> {
     inner: std::iter::Zip<A, B>,
 }
@@ -1653,7 +1653,7 @@ where
 /// Flatten nested, non-empty structures.
 ///
 /// See also [`std::iter::FlatMap`].
-#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+#[must_use = "Non-empty iterators are lazy and do nothing unless consumed"]
 pub struct FlatMap<I, U: IntoIterator, F> {
     inner: std::iter::FlatMap<I, U, F>,
 }
@@ -1705,7 +1705,7 @@ where
 
 /// An adapter for regular iterators that are known to be non-empty.
 #[derive(Clone)]
-#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+#[must_use = "Non-empty iterators are lazy and do nothing unless consumed"]
 pub struct NonEmptyIterAdapter<I> {
     inner: I,
 }
@@ -1791,7 +1791,7 @@ where
 ///
 /// [`peekable`]: NonEmptyIterator::peekable
 #[derive(Debug, Clone)]
-#[must_use = "non-empty iterators are lazy and do nothing unless consumed"]
+#[must_use = "Non-empty iterators are lazy and do nothing unless consumed"]
 pub struct Peekable<I: Iterator> {
     first: I::Item,
     rest: I,

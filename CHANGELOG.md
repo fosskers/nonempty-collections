@@ -6,6 +6,10 @@
 
 - `Arbitrary` impls for the main collection types.
 - join: new optional module for `join`ing on streams of `Future`s.
+- iter: Added `repeat` and `rev`.
+- iter: Like with `Result`, you can now `collect` into an `Option<I>` where `I`
+  is a non-empty collection of your choice, and the original elements were
+  themselves all `Option<T>`.
 
 ## 1.4.0 (2026-07-28)
 
