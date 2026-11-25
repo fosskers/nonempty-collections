@@ -5,6 +5,7 @@
 #### Added
 
 - `Arbitrary` impls for the main collection types.
+- join: new optional module for `join`ing on streams of `Future`s.
 
 ## 1.4.0 (2026-07-28)
 
