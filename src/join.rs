@@ -1,10 +1,21 @@
-//! `join_all`/`try_join_all` for non-empty iterators of [`Future`]s, using the
-//! [`futures-util`](https://docs.rs/futures-util) crate.
-
-use std::future::Future;
+//! `join_all` / `try_join_all` for non-empty iterators of [`Future`]s.
+//! Enables you to await a stream of futures all at once, yielding their results in a single container.
+//!
+//! ```
+//! use nonempty_collections::{nev, join};
+//!
+//! // Some Future.
+//! async fn ready(n: i32) -> i32 {
+//!     n
+//! }
+//!
+//! let r = futures_executor::block_on(join::join_all(nev![ready(1), ready(2), ready(3)]));
+//! assert_eq!(nev![1, 2, 3], r);
+//! ```
 
 use crate::IntoNonEmptyIterator;
 use crate::NEVec;
+use std::future::Future;
 
 /// Creates a future which represents a non-empty collection of the outputs
 /// of the futures given.
@@ -75,6 +86,8 @@ where
     I::Item: Future<Output = Result<T, E>>,
 {
     let v = futures_util::future::try_join_all(iter.into_nonempty_iter()).await?;
-    Ok(NEVec::try_from_vec(v)
-        .expect("try_join_all preserves the length of its non-empty input on success"))
+    let n = NEVec::try_from_vec(v)
+        .expect("try_join_all preserves the length of its non-empty input on success");
+
+    Ok(n)
 }

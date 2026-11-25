@@ -1,8 +1,8 @@
 //! Non-empty [`Iterator`]s.
 
-use crate::nev;
 use crate::NEVec;
 use crate::Singleton;
+use crate::nev;
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::cmp::Ordering;
@@ -50,7 +50,6 @@ pub trait NonEmptyIterator: IntoIterator {
     /// Advances this non-empty iterator, consuming its ownership. Yields the
     /// first item and a possibly empty iterator containing the rest of the
     /// elements.
-    #[must_use]
     fn next(self) -> (Self::Item, Self::IntoIter)
     where
         Self: Sized,
@@ -1738,8 +1737,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::nem;
     use crate::NEMap;
+    use crate::nem;
 
     #[test]
     fn into_hashset() {
